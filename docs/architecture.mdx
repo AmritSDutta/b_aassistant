@@ -1,0 +1,40 @@
+---
+title: System Architecture
+description: Technical architecture of the zero-backend bAssistant application and data flow.
+---
+
+# System Architecture
+
+bAssistant operates entirely within the browser sandbox with zero server dependencies or API secret exposure.
+
+```mermaid
+flowchart TD
+  subgraph Client["Browser Cockpit (100% Client-Side)"]
+    Sidebar["Sidebar: FileUpload (<1MB Doc/PDF)"]
+    Canvas["HTML5 Canvas 2D Engine (40% pane)"]
+    Chat["Chat Stream (60% pane)"]
+    IDB[("IndexedDB (bAssistantDB): BM25 Index")]
+    Provider["Unified WebMCP Provider"]
+  end
+
+  subgraph External["External Services / LLM"]
+    LLM["Visiting LLM / Browser Extension"]
+    DDG["DuckDuckGo CORS API"]
+    ArXiv["ArXiv Public Export API"]
+  end
+
+  Sidebar -->|LiteParse WASM| IDB
+  LLM <-->|WebMCP Standards| Provider
+  Provider -->|search_document| IDB
+  Provider -->|canvas_draw| Canvas
+  Provider -->|chat_post / get_chat_history| Chat
+  Provider -->|search_web| DDG
+  Provider -->|search_research| ArXiv
+```
+
+## Core Subsystems
+
+1. **Presentation Layer**: Built with React and styled with Tailwind CSS supporting persistent dark/light cockpit themes.
+2. **WebMCP Bridge**: Exposes 9 tools across `window.webmcp`, `navigator.modelContext`, and `window.postMessage`.
+3. **Lexical Retrieval Engine**: Client-side BM25 index stored in IndexedDB for instant, private text search.
+4. **2D Rendering Engine**: Dynamic HTML5 canvas drawing shapes, flowcharts, graphs, and annotations from structured LLM tool arguments.

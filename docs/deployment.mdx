@@ -1,0 +1,32 @@
+---
+title: Deployment & Hosting
+description: Build instructions and Cloudflare Pages static hosting configuration.
+---
+
+# Deployment & Hosting
+
+bAssistant is packaged as a pure static bundle without any Node or server-side runtime requirements.
+
+## Build Commands
+
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Run hermetic test suite
+npm run test
+
+# Compile production bundle
+npm run build
+```
+
+## Cloudflare Pages Configuration
+
+- **Framework Preset**: None (or Vite)
+- **Build Command**: `npm run build`
+- **Build Output Directory**: `dist`
+- **Root Directory**: `/`
+- **Environment Variables**: None required

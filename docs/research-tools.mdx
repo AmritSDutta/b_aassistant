@@ -1,0 +1,24 @@
+---
+title: Research & Math Tools
+description: Overview of free-tier DuckDuckGo, ArXiv, and decimal calculator tools available in bAssistant.
+---
+
+# Research & Math Tools
+
+To empower visiting AI agents without requiring external paid API keys, bAssistant provides free client-side research and calculation tools.
+
+## Available Tools
+
+### 1. `search_web`
+- **Provider**: DuckDuckGo API
+- **Endpoint**: `https://api.duckduckgo.com/?q={query}&format=json`
+- **Output**: Returns top title, snippet, and URL summaries.
+
+### 2. `search_research`
+- **Provider**: ArXiv Public Export API
+- **Endpoint**: `https://export.arxiv.org/api/query?search_query=all:{query}&max_results=5`
+- **Output**: Returns academic paper titles, summaries, author lists, and ArXiv IDs.
+
+### 3. `calculate`
+- **Implementation**: Pure JavaScript sanitized evaluator with precision rounding.
+- **Capabilities**: Standard operators (`+`, `-`, `*`, `/`, `×`, `÷`, `^`), parenthetical groupings, and floating-point correction.

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>bAssistant - App Map</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      background: #0f172a;
+      color: #f1f5f9;
+      padding: 40px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 { color: #38bdf8; margin-bottom: 8px; }
+    h2 { color: #7dd3fc; border-bottom: 1px solid #334155; padding-bottom: 6px; margin-top: 32px; }
+    .badge {
+      display: inline-block;
+      background: #0369a1;
+      color: #e0f2fe;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .card h3 { margin-top: 0; color: #38bdf8; font-size: 16px; }
+    .card p { font-size: 13px; color: #94a3b8; margin-bottom: 8px; }
+    .card code { font-family: monospace; font-size: 12px; color: #a5f3fc; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #334155; }
+    th { color: #38bdf8; background: #1e293b; }
+    td { color: #cbd5e1; }
+  </style>
+</head>
+<body>
+  <h1>bAssistant - Visual App Map & Tour</h1>
+  <div class="badge">Build with AI Basics Hackathon - Final Deliverable</div>
+  <p>A zero-backend browser assistant empowering visiting LLMs via standard browser WebMCP with live canvas diagramming, local document querying (LiteParse WASM + BM25 in IndexedDB), and research tools.</p>
+
+  <h2>1. UI Architecture & Viewport Split</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Left Sidebar (20%)</h3>
+      <p>Hosts <b>Branding</b> (title, logo, theme toggle), <b>FileUpload</b> (&lt; 1MB Doc/PDF dropzone, page count, "Indexed" badge, rejection modal), and a reserved <b>BlankSlot</b>.</p>
+      <code>src/components/Branding.tsx<br>src/components/FileUpload.tsx</code>
+    </div>
+    <div class="card">
+      <h3>Top Canvas Area (40% pane)</h3>
+      <p>Interactive 2D HTML5 canvas engine. Renders lines, shapes, text, and graphs dynamically via LLM tool calls. Includes user "Clear Canvas" toolbar button.</p>
+      <code>src/components/CanvasArea.tsx<br>src/lib/canvasEngine.ts</code>
+    </div>
+    <div class="card">
+      <h3>Bottom Chat Area (60% pane)</h3>
+      <p>Dialogue stream with <code>user:</code> prefixed user messages and agent streaming. Supports direct user typing and WebMCP agent posting.</p>
+      <code>src/components/ChatArea.tsx</code>
+    </div>
+  </div>
+
+  <h2>2. Multi-Standard WebMCP Suite</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Tool</th>
+        <th>Input Arguments</th>
+        <th>Purpose / Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>get_chat_history</code></td>
+        <td><code>{}</code></td>
+        <td>Retrieves recent messages with <code>user:</code> prefixing.</td>
+      </tr>
+      <tr>
+        <td><code>chat_post</code></td>
+        <td><code>{ text: string }</code></td>
+        <td>Appends agent explanation into the chat dialogue stream.</td>
+      </tr>
+      <tr>
+        <td><code>canvas_draw</code></td>
+        <td><code>{ command: object }</code></td>
+        <td>Renders 2D diagram primitives (rect, circle, line, text, graph).</td>
+      </tr>
+      <tr>
+        <td><code>canvas_clear</code></td>
+        <td><code>{}</code></td>
+        <td>Clears all canvas drawings.</td>
+      </tr>
+      <tr>
+        <td><code>search_document</code></td>
+        <td><code>{ query: string }</code></td>
+        <td>Queries IndexedDB using client-side BM25 relevance scoring.</td>
+      </tr>
+      <tr>
+        <td><code>clean_document</code></td>
+        <td><code>{}</code></td>
+        <td>Purges stored chunks and BM25 index from IndexedDB.</td>
+      </tr>
+      <tr>
+        <td><code>search_web</code></td>
+        <td><code>{ query: string }</code></td>
+        <td>Queries DuckDuckGo CORS API for web summaries.</td>
+      </tr>
+      <tr>
+        <td><code>search_research</code></td>
+        <td><code>{ query: string }</code></td>
+        <td>Queries ArXiv public API for academic preprints.</td>
+      </tr>
+      <tr>
+        <td><code>calculate</code></td>
+        <td><code>{ expression: string }</code></td>
+        <td>Evaluates decimal math with floating-point precision correction.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>3. Local Data Engine & Privacy</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>LiteParse WASM</h3>
+      <p>Zero-backend browser parser extracting text &amp; page counts without sending files to any server.</p>
+      <code>src/lib/liteparseService.ts</code>
+    </div>
+    <div class="card">
+      <h3>IndexedDB (bAssistantDB)</h3>
+      <p>Stores <code>documents</code>, <code>chunks</code>, and <code>bm25_index</code> locally in the browser sandbox.</p>
+      <code>src/lib/idbStorage.ts</code>
+    </div>
+    <div class="card">
+      <h3>BM25 Lexical Scorer</h3>
+      <p>Inverted index scoring term frequency against normalized document length with k1=1.5 and b=0.75.</p>
+      <code>src/lib/bm25.ts</code>
+    </div>
+  </div>
+
+  <h2>4. Production & Documentation Suite</h2>
+  <p>Static bundle compiled to <code>dist/</code> for Cloudflare Pages. Documentation managed via <code>docs7</code>, with <code>README.md</code>, <code>CLAUDE.md</code>, and <code>AGENTS.md</code>.</p>
+</body>
+</html>

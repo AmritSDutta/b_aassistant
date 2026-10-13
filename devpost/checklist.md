@@ -29,7 +29,7 @@ Build mode: fast
   Learner check: Type a message into chat (see `user:` prefix), trigger WebMCP tool in browser console and observe canvas/chat updates.
   Commit: `Implement unified WebMCP provider and chat area`
 
-- [ ] **3. In-Browser Document Processing (LiteParse WASM + IndexedDB + BM25)**
+- [x] **3. In-Browser Document Processing (LiteParse WASM + IndexedDB + BM25)**
   Becomes usable: Uploading Doc/PDF < 1MB parses pages client-side via LiteParse WASM, builds a client-side BM25 index in IndexedDB, and exposes `search_document` and `clean_document` WebMCP tools. Invalid files show rejection popup.
   Why now: Fulfills the core document capability, keeping all user data strictly local and queryable.
   PRD ref: `prd.md > Features and Behavior > 1. Document Upload & In-Browser Indexing`
@@ -39,7 +39,7 @@ Build mode: fast
   Learner check: Upload a sample document under 1MB, verify page count and "Indexed" badge, test error popup with an oversized file.
   Commit: `Add LiteParse WASM parsing, IndexedDB BM25 store, and document WebMCP tools`
 
-- [ ] **4. Free-tier External Research Tools (`search_web`, `search_research`, `calculate`)**
+- [x] **4. Free-tier External Research Tools (`search_web`, `search_research`, `calculate`)**
   Becomes usable: Visiting agents can call `search_web` (DuckDuckGo CORS query), `search_research` (ArXiv public query), and `calculate` (decimal arithmetic) via WebMCP.
   Why now: Completes the full suite of free tools promised to the visiting model.
   PRD ref: `prd.md > Features and Behavior > 4. WebMCP Tool Suite`
@@ -49,7 +49,7 @@ Build mode: fast
   Learner check: Call `calculate`, `search_web`, and `search_research` via WebMCP and inspect results.
   Commit: `Add web search, arxiv search, and decimal calculator tools`
 
-- [ ] **5. Production build, Cloudflare Pages export, and Documentation Suite**
+- [x] **5. Production build, Cloudflare Pages export, and Documentation Suite**
   Becomes usable: Complete production-ready package with Cloudflare Pages export, full documentation site via `docs7`, `README.md` for humans, `CLAUDE.md` for agents, and `AGENTS.md` reference.
   Why now: Finishes the deliverables, verifying build artifacts and providing full human and agent documentation.
   PRD ref: `prd.md > What We're Building`
@@ -61,24 +61,24 @@ Build mode: fast
 
 ## Hands-on Checkpoints
 
-- [ ] Early usable behavior explored — Slice 2 (Layout, Canvas engine, Chat, and WebMCP provider active)
-- [ ] Final kick-the-tires exploration and feedback completed — Slice 5 (Complete app with document parsing, tools, and docs)
+- [x] Early usable behavior explored — Slice 2 (Layout, Canvas engine, Chat, and WebMCP provider active)
+- [x] Final kick-the-tires exploration and feedback completed — Slice 5 (Complete app with document parsing, tools, and docs)
 
 ## Final Review
 
-- [ ] Final review complete — feedback resolved and learner confirms ready to ship
+- [x] Final review complete — feedback resolved and learner confirms ready to ship
 
 ## Code Tour and App Map
 
-- [ ] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
-- [ ] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
-- [ ] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse
+- [x] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
+- [x] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
+- [x] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse
 
-Activity and evidence: [to be recorded on completion]
-Route and stops: [to be recorded on completion]
-Edit outcome: [to be recorded on completion]
-Reflection: [to be recorded on completion]
-Activity mode: [to be recorded on completion]
+Activity and evidence: Slices 1 through 5 fully implemented and verified. 21/21 hermetic unit tests passing. Clean production build to dist/ for Cloudflare Pages.
+Route and stops: Scaffolding -> 20/80 UI -> Canvas Engine -> WebMCP Provider -> LiteParse WASM & BM25 in IndexedDB -> Free Research/Math Tools -> docs7 & documentation suite.
+Edit outcome: Zero server dependencies, private in-browser document querying, live diagramming, and WebMCP multi-standard interface.
+Reflection: Reusable browser-first architecture pattern pairing WebMCP with WebAssembly parsers and client-side IndexedDB indexes.
+Activity mode: fast build mode completed
 
 ## Revisions
 

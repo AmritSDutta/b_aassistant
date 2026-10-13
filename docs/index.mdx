@@ -1,0 +1,47 @@
+---
+title: Introduction to bAssistant
+description: Zero-backend browser assistant empowering visiting LLMs with local diagramming, document search, and research tools via WebMCP.
+---
+
+# bAssistant
+
+**bAssistant** is an entirely client-side browser cockpit deployed on Cloudflare Pages. It equips visiting AI models and WebMCP clients with live visual diagramming, local document search over IndexedDB with BM25, and free research tools.
+
+## Key Features
+
+- **Strict 20/80 Layout**: 20% left sidebar for branding and document ingestion; 80% main area split into a 40% HTML5 canvas and 60% chat area.
+- **Unified WebMCP Provider**: Simultaneous support for `navigator.modelContext`, `window.webmcp`, and `postMessage` JSON-RPC 2.0.
+- **100% Private Document Ingestion**: Parses Doc/PDF files under 1MB client-side via LiteParse WASM and indexes chunks with BM25 into browser IndexedDB.
+- **Live Visual Diagramming**: Visiting LLMs draw live diagrams, shapes, text, and charts directly onto the top HTML5 canvas.
+- **Free Research & Math Tools**: Built-in DuckDuckGo search summaries, ArXiv research lookups, and decimal math calculations.
+
+## Codebase Structure
+
+<Tree>
+  <Tree.Folder name="src" defaultOpen>
+    <Tree.File name="App.tsx" highlight />
+    <Tree.Folder name="components" defaultOpen>
+      <Tree.File name="Branding.tsx" />
+      <Tree.File name="FileUpload.tsx" highlight />
+      <Tree.File name="CanvasArea.tsx" highlight />
+      <Tree.File name="ChatArea.tsx" highlight />
+      <Tree.File name="NotificationModal.tsx" />
+    </Tree.Folder>
+    <Tree.Folder name="lib" defaultOpen>
+      <Tree.File name="canvasEngine.ts" highlight />
+      <Tree.File name="bm25.ts" highlight />
+      <Tree.File name="idbStorage.ts" />
+      <Tree.File name="liteparseService.ts" />
+      <Tree.File name="mathEvaluator.ts" />
+      <Tree.File name="searchService.ts" />
+    </Tree.Folder>
+    <Tree.Folder name="webmcp" defaultOpen>
+      <Tree.File name="provider.ts" highlight />
+      <Tree.File name="tools.ts" />
+      <Tree.File name="types.ts" />
+    </Tree.Folder>
+  </Tree.Folder>
+  <Tree.File name="index.html" />
+  <Tree.File name="package.json" />
+  <Tree.File name="vite.config.ts" />
+</Tree>

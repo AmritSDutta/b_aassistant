@@ -1,0 +1,29 @@
+---
+title: WebMCP Standard Implementation
+description: Specifications and interfaces for communicating with bAssistant via WebMCP.
+---
+
+# WebMCP Integration
+
+bAssistant implements multi-standard WebMCP support to maximize compatibility with visiting AI assistants, inspector extensions, and client scripts.
+
+## Registered Standards
+
+1. **`navigator.modelContext`**: Emerging browser standard for AI context injection.
+2. **`window.webmcp`**: Direct JavaScript bridge object offering `listTools()` and `callTool(name, args)`.
+3. **`postMessage` (JSON-RPC 2.0)**: Standard cross-window event interface (`tools/list` and `tools/call`).
+4. **CustomEvents**: Emits `webmcp:ready` upon initialization.
+
+## Tool Suite Overview
+
+| Tool | Parameters | Description |
+| :--- | :--- | :--- |
+| `get_chat_history` | `{}` | Returns recent dialogue history with user messages prefixed by `user:`. |
+| `chat_post` | `{ text: string }` | Posts text explanations into the chat log. |
+| `canvas_draw` | `{ command: object }` | Draws shapes (`rect`, `circle`, `line`, `text`, `graph`) on canvas. |
+| `canvas_clear` | `{}` | Clears all drawings from the canvas. |
+| `search_document` | `{ query: string }` | Queries IndexedDB using the client-side BM25 index. |
+| `clean_document` | `{}` | Purges IndexedDB tables and resets document UI. |
+| `search_web` | `{ query: string }` | Queries DuckDuckGo for web summaries. |
+| `search_research` | `{ query: string }` | Queries ArXiv for scientific preprints. |
+| `calculate` | `{ expression: string }` | Evaluates decimal math with floating-point correction. |

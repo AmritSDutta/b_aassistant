@@ -1,0 +1,22 @@
+---
+title: In-Browser Document Processing
+description: Client-side LiteParse WASM extraction, chunking, and BM25 search over IndexedDB.
+---
+
+# In-Browser Document Processing
+
+bAssistant prioritizes privacy by ensuring all document ingestion and search operations happen inside the user's browser sandbox.
+
+## Constraints
+
+- **File Formats**: `.pdf`, `.doc`, `.docx`
+- **Maximum File Size**: Strictly `< 1MB`
+- Any file exceeding 1MB or of an unsupported format is rejected with a clear notification popup modal.
+
+## Processing Pipeline
+
+1. **Upload & Validation**: Validates size and extension in `FileUpload.tsx`.
+2. **LiteParse WASM Extraction**: Extracts page text via WebAssembly with fallback string extraction in test environments.
+3. **BM25 Lexical Indexing**: Tokenizes text, computes term frequencies, document frequencies, and average document lengths.
+4. **IndexedDB Persistence**: Stores document metadata, chunks, and the inverted BM25 index in `bAssistantDB`.
+5. **Agent Retrieval**: Visiting models query `search_document` to retrieve the most relevant passages.

@@ -1,0 +1,26 @@
+{
+  "name": "bAssistant",
+  "theme": "maple",
+  "colors": {
+    "primary": "#0284c7",
+    "light": "#0284c7",
+    "dark": "#38bdf8"
+  },
+  "filterSidebar": true,
+  "navigation": {
+    "groups": [
+      {
+        "group": "Overview",
+        "pages": ["index", "architecture"]
+      },
+      {
+        "group": "Capabilities",
+        "pages": ["webmcp", "document-processing", "research-tools", "learnings"]
+      },
+      {
+        "group": "Deployment",
+        "pages": ["deployment"]
+      }
+    ]
+  }
+}
