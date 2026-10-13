@@ -13,22 +13,86 @@ export interface ToolContext {
 
 export const TOOL_DEFINITIONS: WebMCPTool[] = [
   {
+    name: 'chat_post',
+    description: 'Posts a response, answer, or status message to the bottom chat dialogue stream on behalf of the AI assistant.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        text: {
+          type: 'string',
+          description: 'The textual message or markdown content to display in the chat area.',
+        },
+      },
+      required: ['text'],
+    },
+  },
+  {
     name: 'canvas_draw',
-    description: 'Renders drawing primitives (rect, circle, line, text, graph) onto the top HTML canvas.',
+    description: 'Draws single or batch shapes, lines, or annotations onto the top HTML canvas. Accepts commands like rect, circle, line, text, or graph.',
     inputSchema: {
       type: 'object',
       properties: {
         command: {
           type: 'object',
-          description: 'A canvas drawing command: rect, circle, line, text, or graph.',
+          description: 'A drawing command object with "type" ("rect" | "circle" | "line" | "text" | "graph") and coordinates.',
+        },
+        commands: {
+          type: 'array',
+          items: { type: 'object' },
+          description: 'Optional batch of multiple drawing commands to render sequentially.',
         },
       },
-      required: ['command'],
+    },
+  },
+  {
+    name: 'draw_diagram',
+    description: 'Draws a connected architecture diagram, flowchart, or concept graph on the HTML canvas with nodes and directional edges.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        title: {
+          type: 'string',
+          description: 'Optional diagram title displayed at the top.',
+        },
+        nodes: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              label: { type: 'string' },
+              x: { type: 'number' },
+              y: { type: 'number' },
+              color: { type: 'string' },
+            },
+            required: ['id', 'label', 'x', 'y'],
+          },
+          description: 'List of graph nodes with id, label, x, y coordinates.',
+        },
+        edges: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              from: { type: 'string' },
+              to: { type: 'string' },
+              label: { type: 'string' },
+            },
+            required: ['from', 'to'],
+          },
+          description: 'List of connecting edges between node IDs with optional relationship labels.',
+        },
+        clearFirst: {
+          type: 'boolean',
+          description: 'Whether to clear existing canvas drawings before rendering this diagram (default: false).',
+        },
+      },
+      required: ['nodes', 'edges'],
     },
   },
   {
     name: 'canvas_clear',
-    description: 'Clears all drawings from the HTML canvas.',
+    description: 'Clears all drawings, diagrams, and shapes from the HTML canvas.',
     inputSchema: {
       type: 'object',
       properties: {},
@@ -40,20 +104,6 @@ export const TOOL_DEFINITIONS: WebMCPTool[] = [
     inputSchema: {
       type: 'object',
       properties: {},
-    },
-  },
-  {
-    name: 'chat_post',
-    description: 'Appends an explanatory textual message to the bottom chat dialogue area.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        text: {
-          type: 'string',
-          description: 'The textual content to post to the chat.',
-        },
-      },
-      required: ['text'],
     },
   },
   {
@@ -129,12 +179,47 @@ export async function executeToolCall(
 ): Promise<unknown> {
   switch (name) {
     case 'canvas_draw': {
+      if (Array.isArray(args?.commands)) {
+        globalCanvasEngine.executeBatch(args.commands as CanvasCommand[]);
+        return { success: true, message: `Rendered ${args.commands.length} commands on canvas` };
+      }
       const command = (args?.command as CanvasCommand) || (args as unknown as CanvasCommand);
       if (!command || !command.type) {
-        throw new Error('Invalid canvas command object');
+        throw new Error('Invalid canvas command object. Expected command with type (rect, circle, line, text, graph).');
       }
       globalCanvasEngine.execute(command);
       return { success: true, message: `Rendered ${command.type} on canvas` };
+    }
+
+    case 'draw_diagram': {
+      if (args?.clearFirst) {
+        globalCanvasEngine.clear();
+      }
+      const nodes = Array.isArray(args?.nodes) ? args.nodes : [];
+      const edges = Array.isArray(args?.edges) ? args.edges : [];
+      const title = typeof args?.title === 'string' ? args.title : undefined;
+
+      if (title) {
+        globalCanvasEngine.execute({
+          type: 'text',
+          x: 20,
+          y: 30,
+          text: title,
+          color: '#38bdf8',
+          fontSize: 16,
+        });
+      }
+
+      globalCanvasEngine.execute({
+        type: 'graph',
+        nodes: nodes as any,
+        edges: edges as any,
+      });
+
+      return {
+        success: true,
+        message: `Diagram rendered with ${nodes.length} nodes and ${edges.length} edges`,
+      };
     }
 
     case 'canvas_clear': {

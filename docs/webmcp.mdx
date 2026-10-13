@@ -19,8 +19,9 @@ bAssistant implements multi-standard WebMCP support to maximize compatibility wi
 | Tool | Parameters | Description |
 | :--- | :--- | :--- |
 | `get_chat_history` | `{}` | Returns recent dialogue history with user messages prefixed by `user:`. |
-| `chat_post` | `{ text: string }` | Posts text explanations into the chat log. |
-| `canvas_draw` | `{ command: object }` | Draws shapes (`rect`, `circle`, `line`, `text`, `graph`) on canvas. |
+| `chat_post` | `{ text: string }` | Posts textual responses, markdown, or status updates to the chat area for the visiting LLM. |
+| `canvas_draw` | `{ command?: object, commands?: object[] }` | Draws shapes (`rect`, `circle`, `line`, `text`, `graph`) in single or batch mode. |
+| `draw_diagram` | `{ nodes: object[], edges: object[], title?: string, clearFirst?: boolean }` | Draws a high-level connected flowchart or concept diagram with nodes and labeled edges. |
 | `canvas_clear` | `{}` | Clears all drawings from the canvas. |
 | `search_document` | `{ query: string }` | Queries IndexedDB using the client-side BM25 index. |
 | `clean_document` | `{}` | Purges IndexedDB tables and resets document UI. |

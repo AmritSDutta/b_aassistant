@@ -81,4 +81,39 @@ describe('WebMCP Provider & Tools', () => {
     await provider.callTool('canvas_clear');
     expect(globalCanvasEngine.getHistory().length).toBe(0);
   });
+
+  it('executes draw_diagram tool for LLM connected architecture graphs', async () => {
+    const res = await provider.callTool('draw_diagram', {
+      title: 'Microservices Architecture',
+      nodes: [
+        { id: 'client', label: 'Web Client', x: 50, y: 100 },
+        { id: 'gateway', label: 'API Gateway', x: 200, y: 100 },
+        { id: 'service', label: 'Auth Service', x: 350, y: 100 },
+      ],
+      edges: [
+        { from: 'client', to: 'gateway', label: 'HTTPS' },
+        { from: 'gateway', to: 'service', label: 'gRPC' },
+      ],
+      clearFirst: true,
+    });
+
+    expect(res).toHaveProperty('success', true);
+    // Should have title text + graph command
+    const history = globalCanvasEngine.getHistory();
+    expect(history.length).toBe(2);
+    expect(history[0].type).toBe('text');
+    expect(history[1].type).toBe('graph');
+  });
+
+  it('supports batch drawing commands via canvas_draw', async () => {
+    await provider.callTool('canvas_draw', {
+      commands: [
+        { type: 'rect', x: 0, y: 0, width: 50, height: 50 },
+        { type: 'circle', x: 80, y: 80, radius: 25 },
+        { type: 'line', x1: 0, y1: 0, x2: 80, y2: 80 },
+      ],
+    });
+
+    expect(globalCanvasEngine.getHistory().length).toBe(3);
+  });
 });

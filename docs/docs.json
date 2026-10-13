@@ -15,7 +15,7 @@
       },
       {
         "group": "Capabilities",
-        "pages": ["webmcp", "document-processing", "research-tools", "learnings"]
+        "pages": ["webmcp", "document-processing", "liteparse-research", "research-tools", "learnings"]
       },
       {
         "group": "Deployment",

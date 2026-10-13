@@ -71,16 +71,50 @@ export const App: React.FC = () => {
   }, []);
 
   const handleSearchDocument = useCallback(async (query: string) => {
-    const ranked = bm25Ref.current.search(query, 5);
+    // If no document is currently loaded in memory, try loading from IndexedDB
+    if (chunksRef.current.length === 0) {
+      try {
+        const storedChunks = await globalIDBStorage.getChunks();
+        const storedIndex = await globalIDBStorage.getBM25Index();
+        if (storedChunks && storedChunks.length > 0) {
+          chunksRef.current = storedChunks;
+          if (storedIndex) {
+            bm25Ref.current.loadData(storedIndex);
+          } else {
+            bm25Ref.current.buildIndex(storedChunks.map((c) => ({ id: c.id, text: c.text })));
+          }
+        }
+      } catch (err) {
+        console.warn('Error reading stored chunks from IDB:', err);
+      }
+    }
+
+    if (chunksRef.current.length === 0) {
+      return [];
+    }
+
     const chunkMap = new Map(chunksRef.current.map((c) => [c.id, c]));
-    return ranked.map((r) => {
-      const chunk = chunkMap.get(r.chunkId);
-      return {
-        pageNumber: chunk?.pageNumber || 1,
-        text: chunk?.text || '',
-        score: Number(r.score.toFixed(4)),
-      };
-    });
+    const ranked = bm25Ref.current.search(query, 5);
+
+    // If BM25 found matches, return them
+    if (ranked.length > 0) {
+      return ranked.map((r) => {
+        const chunk = chunkMap.get(r.chunkId);
+        return {
+          pageNumber: chunk?.pageNumber || 1,
+          text: chunk?.text || '',
+          score: Number(r.score.toFixed(4)),
+        };
+      });
+    }
+
+    // Fallback: If query was broad (e.g. "what is in the document") or had no keyword overlap,
+    // return the first available document chunks with a baseline preview score so the LLM has context
+    return chunksRef.current.slice(0, 3).map((chunk) => ({
+      pageNumber: chunk.pageNumber,
+      text: chunk.text,
+      score: 0.1,
+    }));
   }, []);
 
   const handleCleanDocument = useCallback(async () => {
@@ -222,6 +256,8 @@ export const App: React.FC = () => {
         pageCount: parseResult.pages.length,
         status: 'indexed',
       });
+
+      updateWebMCPContext();
     } catch (err: any) {
       console.error('File parsing failed:', err);
       setActiveDoc({

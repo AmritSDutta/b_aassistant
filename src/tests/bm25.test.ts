@@ -44,4 +44,17 @@ describe('BM25 Lexical Indexer and Scorer', () => {
     expect(searchRes.length).toBe(1);
     expect(searchRes[0].chunkId).toBe('page1');
   });
+
+  it('matches conversational queries containing stop words using fuzzy fallback', () => {
+    const bm25 = new BM25Index();
+    bm25.buildIndex([
+      { id: 'page1', text: 'This document explains the WebMCP protocol and browser AI assistants.' },
+      { id: 'page2', text: 'Financial quarterly earnings report showing revenue growth.' },
+    ]);
+
+    // Query: "what is in the documents" -> stops words filtered or fuzzy matched against "document"
+    const results = bm25.search('what is in the documents');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].chunkId).toBe('page1');
+  });
 });

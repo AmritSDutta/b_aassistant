@@ -16,6 +16,13 @@ export interface BM25IndexData {
   invertedIndex: Record<string, BM25Posting[]>;
 }
 
+const STOP_WORDS = new Set([
+  'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
+  'has', 'he', 'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the',
+  'to', 'was', 'were', 'will', 'with', 'what', 'there', 'this', 'these',
+  'those', 'document', 'documents', 'uploaded', 'file', 'files',
+]);
+
 export function tokenize(text: string): string[] {
   return text
     .toLowerCase()
@@ -35,6 +42,10 @@ export class BM25Index {
   constructor(k1: number = 1.5, b: number = 0.75) {
     this.k1 = k1;
     this.b = b;
+  }
+
+  public getDocCount(): number {
+    return this.docCount;
   }
 
   public buildIndex(docs: Array<{ id: string; text: string }>): void {
@@ -68,17 +79,22 @@ export class BM25Index {
   public search(query: string, topK: number = 5): Array<{ chunkId: string; score: number }> {
     if (this.docCount === 0) return [];
 
-    const queryTokens = tokenize(query);
-    if (queryTokens.length === 0) return [];
+    const allQueryTokens = tokenize(query);
+    if (allQueryTokens.length === 0) return [];
+
+    // Prioritize non-stop words; if all were stop words, fallback to all tokens
+    const filteredTokens = allQueryTokens.filter((t) => !STOP_WORDS.has(t));
+    const searchTokens = filteredTokens.length > 0 ? filteredTokens : allQueryTokens;
 
     const scores = new Map<string, number>();
 
-    for (const token of queryTokens) {
+    for (const token of searchTokens) {
       const postings = this.invertedIndex.get(token);
       if (!postings || postings.length === 0) continue;
 
       const df = postings.length;
-      const idf = Math.log(1 + (this.docCount - df + 0.5) / (df + 0.5));
+      // Standard Robertson-Spärck Jones IDF with floor to ensure positive scores
+      const idf = Math.max(0.1, Math.log(1 + (this.docCount - df + 0.5) / (df + 0.5)));
 
       for (const posting of postings) {
         const docLen = this.docLengths.get(posting.chunkId) || this.avgDocLength;
@@ -86,6 +102,19 @@ export class BM25Index {
         const score = (idf * (posting.tf * (this.k1 + 1))) / (posting.tf + this.k1 * normLen);
 
         scores.set(posting.chunkId, (scores.get(posting.chunkId) || 0) + score);
+      }
+    }
+
+    // Substring / broad match fallback if exact tokens didn't hit inverted index
+    if (scores.size === 0) {
+      for (const token of searchTokens) {
+        for (const [indexedTerm, postings] of this.invertedIndex.entries()) {
+          if (indexedTerm.includes(token) || token.includes(indexedTerm)) {
+            for (const posting of postings) {
+              scores.set(posting.chunkId, (scores.get(posting.chunkId) || 0) + 0.5 * posting.tf);
+            }
+          }
+        }
       }
     }
 
