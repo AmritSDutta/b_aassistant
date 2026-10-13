@@ -1,0 +1,65 @@
+---
+doc: scope
+status: approved
+---
+
+# WebMCP Browser Assistant
+
+A zero-backend, single-page browser environment that empowers visiting LLMs with free WebMCP tools for live HTML canvas diagramming, local document querying, and free-tier web/academic research.
+
+## The Unique Kernel
+Instead of paying for expensive multimodal generative models or backend infrastructure, this single-page app acts as a browser-native tool provider via WebMCP. Any visiting LLM can immediately draw interactive diagrams live on an HTML canvas, search free external knowledge sources (DuckDuckGo, ArXiv), and query user documents kept strictly in local browser storage.
+
+## Who It's For
+Anyone who wants to learn, research, and explore any topic with AI in a cost-efficient, visually rich manner using their own affordable LLM, without sacrificing privacy or paying for high-tier generative image services.
+
+## The Core Loop
+1. The user opens the single page to investigate any topic (and optionally uploads a doc or PDF < 1MB, which is pagewise-chunked in-browser using LiteParse and indexed with a client-side BM25 search index in local datastore).
+2. The user's visiting LLM connects to the page via WebMCP and discovers the page's exposed tools.
+3. The LLM calls free research tools (DuckDuckGo, ArXiv) and local document tools (querying the BM25 index) to gather information.
+4. The LLM streams its written explanation into the bottom 60% chat area and simultaneously calls canvas tools to draw live diagrams and graphs in the top 40% canvas area.
+5. The user absorbs the text and visuals together and continues the dialogue.
+
+## Inspiration & Identity
+- **Mood / Feel:** Clean, utilitarian, responsive, split-screen cockpit for AI-augmented research and visual thinking.
+- **Visual Structure:**
+  - Left 20%: Branding (top), File Upload (middle), blank area for future tools (bottom).
+  - Right 80%: HTML Canvas (top 40%), Textual Chat Area (bottom 60%).
+
+## Why This Matters to the Learner
+Enables a practical, genuinely beneficial tool for the community that proves WebMCP's potential in the browser: running multimodal interactions on cheap models, keeping all user data strictly local, and using free-tier tools rather than costly subscriptions.
+
+## What "Working" Looks Like
+A user opens the single-page application and activates the WebMCP Inspector testing mode. The inspector shows the exposed WebMCP tools registered and operational:
+- `search_web`: DuckDuckGo search (DDGS).
+- `search_research`: ArXiv search.
+- `calculate`: Decimal math calculations.
+- `search_document`: Searches uploaded doc content in IndexedDB via BM25 index.
+- `clean_document`: Removes stored content from IndexedDB.
+- Canvas drawing & chat tools: Live drawing on the top 40% canvas and streaming text into the bottom 60% chat area.
+A test run demonstrates a visiting agent calling these tools, retrieving data, updating chat, and drawing on the canvas live.
+
+## The POC Boundary
+- **In Now:**
+  - React-based single-page application with responsive layout (20% sidebar with branding and file uploader strictly for Doc/PDF < 1MB; 80% main area split into 40% HTML canvas and 60% chat area).
+  - Post-upload processing: in-browser pagewise chunking using LiteParse (browser WASM) and client-side BM25 searchable index generation stored in browser datastore (IndexedDB) for accepted files (< 1MB only).
+  - Starting WebMCP tool provider layer exposing:
+    - `search_web` (using DDGS behind)
+    - `search_research` (using ArXiv search)
+    - `calculate` (decimal math)
+    - `search_document` (IndexedDB BM25 content search)
+    - `clean_document` (remove stored IndexedDB content)
+    - Canvas drawing & chat tools for the 80% workspace
+  - WebMCP Inspector testing mode for direct verification and tool execution.
+  - Deployment: Deployed to Cloudflare Pages.
+
+## Later
+- Additional free-tier tools as project progresses.
+- Features for the 3rd (blank) sidebar section.
+- Exporting canvas drawings and chat records.
+
+## Explicitly Cut
+- **Files ≥ 1MB:** Strictly rejected; only doc and PDF files under 1MB are supported.
+- **Server-side database / backend servers:** Strictly browser-storage only; zero server footprint.
+- **Direct generative image/video AI APIs:** Eliminated by design in favor of fast, free programmatic HTML canvas drawing.
+- **Built-in paid LLM billing/routing:** Visiting LLM connectivity is handled by the user's environment/agent via WebMCP.

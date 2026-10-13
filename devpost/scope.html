@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scope Companion — WebMCP Browser Assistant</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.15);
+      --green: #34d399;
+      --amber: #fbbf24;
+      --rose: #f43f5e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 2.5rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 1.5rem;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      margin-bottom: 0.75rem;
+    }
+    h1 { font-size: 2.25rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .tagline { color: var(--text-muted); font-size: 1.15rem; }
+    
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    h2 { font-size: 1.35rem; margin-bottom: 1rem; color: var(--accent); display: flex; align-items: center; gap: 0.5rem; }
+    
+    .diagram-container {
+      background: #090d16;
+      border: 1px solid var(--card-border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin: 1.25rem 0;
+      display: flex;
+      justify-content: center;
+    }
+    svg text { font-family: inherit; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 720px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    /* Reveals / Details */
+    details {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 0.5rem;
+      padding: 0.85rem 1.2rem;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+    }
+    details summary {
+      font-weight: 600;
+      color: var(--text);
+      outline: none;
+      user-select: none;
+    }
+    details[open] { border-color: var(--accent); }
+    details p, details ul { margin-top: 0.75rem; color: var(--text-muted); font-size: 0.95rem; }
+    ul { padding-left: 1.25rem; }
+    li { margin-bottom: 0.4rem; }
+
+    .tag-now { color: var(--green); font-weight: bold; }
+    .tag-later { color: var(--amber); font-weight: bold; }
+    .tag-cut { color: var(--rose); font-weight: bold; }
+
+    .pill-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+    .pill {
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      border-radius: 0.35rem;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.85rem;
+      font-family: monospace;
+      color: #38bdf8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge" style="border-color: var(--green); color: var(--green); background: rgba(52, 211, 153, 0.15);">Scope Plan Companion — Status: Approved</span>
+      <h1>WebMCP Browser Assistant</h1>
+      <p class="tagline">A zero-backend single-page workspace empowering visiting LLMs with WebMCP tools for live canvas diagramming, local document querying, and free-tier research.</p>
+    </header>
+
+    <div class="card">
+      <h2>The Core Architecture &amp; Loop</h2>
+      <div class="diagram-container">
+        <svg viewBox="0 0 800 300" width="100%" height="auto">
+          <!-- Entire Browser Window (100%) -->
+          <rect x="20" y="20" width="760" height="260" rx="8" fill="#0f172a" stroke="#334155" stroke-width="2"/>
+          <text x="35" y="40" fill="#64748b" font-size="11" font-weight="bold">BROWSER WINDOW (100% WIDTH)</text>
+
+          <!-- Left 20% Division -->
+          <rect x="35" y="55" width="145" height="210" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="107" y="75" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">LEFT (20%)</text>
+          
+          <rect x="45" y="85" width="125" height="30" rx="4" fill="#090d16" stroke="#475569"/>
+          <text x="107" y="104" fill="#94a3b8" font-size="10" text-anchor="middle">1. Branding</text>
+          
+          <rect x="45" y="122" width="125" height="42" rx="4" fill="#090d16" stroke="#475569"/>
+          <text x="107" y="139" fill="#94a3b8" font-size="10" text-anchor="middle">2. File Upload</text>
+          <text x="107" y="153" fill="#64748b" font-size="8" text-anchor="middle">Doc/PDF &lt;1MB (BM25 Index)</text>
+          
+          <rect x="45" y="172" width="125" height="80" rx="4" fill="#090d16" stroke="#334155" stroke-dasharray="3,3"/>
+          <text x="107" y="215" fill="#64748b" font-size="10" text-anchor="middle">3. Blank</text>
+
+          <!-- Right 80% Division -->
+          <rect x="195" y="55" width="580" height="210" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="485" y="75" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">RIGHT (80%)</text>
+
+          <!-- Top 40% Canvas -->
+          <rect x="210" y="85" width="550" height="75" rx="4" fill="#090d16" stroke="#34d399" stroke-width="1.5"/>
+          <text x="485" y="112" fill="#34d399" font-size="12" font-weight="bold" text-anchor="middle">HTML Canvas (Top 40%)</text>
+          <text x="485" y="132" fill="#94a3b8" font-size="10" text-anchor="middle">Diagrams, graphs, and images drawn live via WebMCP canvas tools</text>
+
+          <!-- Bottom 60% Chat -->
+          <rect x="210" y="167" width="550" height="88" rx="4" fill="#090d16" stroke="#475569" stroke-width="1.5"/>
+          <text x="485" y="197" fill="#f8fafc" font-size="12" font-weight="bold" text-anchor="middle">Textual Chat Area (Bottom 60%)</text>
+          <text x="485" y="217" fill="#94a3b8" font-size="10" text-anchor="middle">Where visiting agent fills and streams textual responses</text>
+        </svg>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">
+        The single-page application is split strictly 20% (left sidebar: branding, &lt;1MB file upload with pagewise BM25 indexing, blank slot) and 80% (right main area: 40% top canvas, 60% bottom chat). Visiting agents interact with the page purely through exposed WebMCP tools.
+      </p>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>The Unique Kernel</h2>
+        <p style="color: var(--text-muted);">
+          Replaces costly generative image/video models with fast, free programmatic HTML canvas drawing tools. Provides zero-backend local document privacy (pagewise BM25 index) and free-tier web/academic tools for any visiting model.
+        </p>
+      </div>
+      <div class="card">
+        <h2>What "Working" Looks Like</h2>
+        <p style="color: var(--text-muted);">
+          A user opens the single page, uploads a doc/PDF (&lt; 1MB) which is pagewise-chunked and indexed via BM25, and activates WebMCP Inspector testing mode. The inspector verifies exposed tools, and a test run showcases live diagram drawing and synchronized chat output.
+        </p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Proof of Concept Boundary</h2>
+      
+      <details open>
+        <summary><span class="tag-now">NOW (In Scope for PoC)</span></summary>
+        <ul>
+          <li>React-based single-page application with responsive layout (20/80 vertical division).</li>
+          <li>Left sidebar: Branding, File upload (Doc/PDF &lt; 1MB only), Blank 3rd section.</li>
+          <li>Right main view: Top 40% HTML Canvas with drawing engine, Bottom 60% Chat display.</li>
+          <li>Post-upload processing: In-browser pagewise chunking using LiteParse (browser WASM) and client-side BM25 searchable index in IndexedDB for files &lt; 1MB.</li>
+          <li>Starting WebMCP Tool Suite:
+            <ul>
+              <li><code>search_web</code> (DuckDuckGo / DDGS)</li>
+              <li><code>search_research</code> (ArXiv search)</li>
+              <li><code>calculate</code> (decimal math)</li>
+              <li><code>search_document</code> (IndexedDB BM25 content search)</li>
+              <li><code>clean_document</code> (removes stored content from IndexedDB)</li>
+              <li>Canvas drawing &amp; chat tools (for top 40% canvas &amp; bottom 60% chat)</li>
+            </ul>
+          </li>
+          <li>WebMCP Inspector testing mode for live validation and tool calling.</li>
+          <li>Deployment: Deployed to Cloudflare Pages.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary><span class="tag-later">LATER (Future Phases)</span></summary>
+        <ul>
+          <li>Additional free-tier tools as project progresses.</li>
+          <li>Features for the 3rd (blank) sidebar section.</li>
+          <li>Exporting canvas drawings and chat records.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary><span class="tag-cut">CUT (Explicitly Excluded)</span></summary>
+        <ul>
+          <li><strong>Files &ge; 1MB:</strong> Strictly rejected; only doc and PDF files under 1MB accepted.</li>
+          <li><strong>Backend server / database:</strong> Purely in-browser; zero cloud infrastructure needed.</li>
+          <li><strong>Direct generative image/video models:</strong> Replaced by programmatic canvas graphics.</li>
+          <li><strong>In-app API key billing:</strong> Connection responsibility sits with the visiting agent.</li>
+        </ul>
+      </details>
+    </div>
+  </div>
+</body>
+</html>

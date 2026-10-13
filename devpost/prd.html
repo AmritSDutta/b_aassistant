@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRD Companion — bAssistant</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.15);
+      --green: #34d399;
+      --amber: #fbbf24;
+      --rose: #f43f5e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 1.5rem;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      margin-bottom: 0.75rem;
+    }
+    h1 { font-size: 2.25rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .tagline { color: var(--text-muted); font-size: 1.1rem; }
+    
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    h2 { font-size: 1.35rem; margin-bottom: 1rem; color: var(--accent); }
+    
+    .diagram-container {
+      background: #090d16;
+      border: 1px solid var(--card-border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin: 1.25rem 0;
+      display: flex;
+      justify-content: center;
+    }
+    svg text { font-family: inherit; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 720px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    /* Interactive reveals */
+    details {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 0.5rem;
+      padding: 0.85rem 1.2rem;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+    }
+    details summary {
+      font-weight: 600;
+      color: var(--text);
+      outline: none;
+      user-select: none;
+    }
+    details[open] { border-color: var(--accent); }
+    details p, details ul { margin-top: 0.75rem; color: var(--text-muted); font-size: 0.95rem; }
+    ul { padding-left: 1.25rem; }
+    li { margin-bottom: 0.4rem; }
+
+    .step-badge {
+      display: inline-block;
+      background: #38bdf8;
+      color: #0f172a;
+      font-weight: bold;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      text-align: center;
+      line-height: 22px;
+      font-size: 0.8rem;
+      margin-right: 0.5rem;
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .tool-card {
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+    }
+    .tool-name {
+      font-family: monospace;
+      color: #38bdf8;
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+    .tool-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge" style="border-color: var(--green); color: var(--green); background: rgba(52, 211, 153, 0.15);">Product Requirements Companion — Status: Approved</span>
+      <h1>bAssistant</h1>
+      <p class="tagline">Zero-backend React SPA deployed to Cloudflare Pages. Empowers visiting LLMs via WebMCP with live canvas diagramming, in-browser LiteParse + BM25 local doc querying, and free research tools.</p>
+    </header>
+
+    <div class="card">
+      <h2>The Core User &amp; Agent Journey</h2>
+      <div class="diagram-container">
+        <svg viewBox="0 0 800 280" width="100%" height="auto">
+          <!-- Step 1 -->
+          <rect x="20" y="30" width="130" height="90" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="85" y="55" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">1. Arrival</text>
+          <text x="85" y="75" fill="#94a3b8" font-size="9" text-anchor="middle">Loads SPA in</text>
+          <text x="85" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Light/Dark Mode</text>
+          <text x="85" y="105" fill="#64748b" font-size="8" text-anchor="middle">Canvas/Chat blank</text>
+
+          <!-- Arrow 1-2 -->
+          <line x1="150" y1="75" x2="175" y2="75" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+          <!-- Step 2 -->
+          <rect x="180" y="30" width="130" height="90" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="245" y="55" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">2. File Ingest</text>
+          <text x="245" y="75" fill="#94a3b8" font-size="9" text-anchor="middle">Doc/PDF &lt;1MB</text>
+          <text x="245" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">LiteParse WASM</text>
+          <text x="245" y="105" fill="#34d399" font-size="8" text-anchor="middle">Indexed in IndexedDB</text>
+
+          <!-- Arrow 2-3 -->
+          <line x1="310" y1="75" x2="335" y2="75" stroke="#475569" stroke-width="2"/>
+
+          <!-- Step 3 -->
+          <rect x="340" y="30" width="130" height="90" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="405" y="55" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">3. User Prompt</text>
+          <text x="405" y="75" fill="#94a3b8" font-size="9" text-anchor="middle">Types into input</text>
+          <text x="405" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Stored with</text>
+          <text x="405" y="105" fill="#fbbf24" font-size="9" font-family="monospace" text-anchor="middle">"user:" prefix</text>
+
+          <!-- Arrow 3-4 -->
+          <line x1="470" y1="75" x2="495" y2="75" stroke="#475569" stroke-width="2"/>
+
+          <!-- Step 4 -->
+          <rect x="500" y="30" width="130" height="90" rx="6" fill="#1e293b" stroke="#a855f7" stroke-width="1.5"/>
+          <text x="565" y="55" fill="#c084fc" font-size="11" font-weight="bold" text-anchor="middle">4. WebMCP Visit</text>
+          <text x="565" y="75" fill="#94a3b8" font-size="9" text-anchor="middle">Visiting LLM connects</text>
+          <text x="565" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Reads chat history</text>
+          <text x="565" y="105" fill="#94a3b8" font-size="9" text-anchor="middle">Calls search/math</text>
+
+          <!-- Arrow 4-5 -->
+          <line x1="630" y1="75" x2="655" y2="75" stroke="#475569" stroke-width="2"/>
+
+          <!-- Step 5 -->
+          <rect x="660" y="30" width="120" height="90" rx="6" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+          <text x="720" y="55" fill="#34d399" font-size="11" font-weight="bold" text-anchor="middle">5. Live Output</text>
+          <text x="720" y="75" fill="#94a3b8" font-size="9" text-anchor="middle">Canvas (Top 40%)</text>
+          <text x="720" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Chat Stream (60%)</text>
+          <text x="720" y="105" fill="#64748b" font-size="8" text-anchor="middle">Multimodal answer</text>
+
+          <!-- Bottom Summary Box -->
+          <rect x="20" y="150" width="760" height="100" rx="6" fill="#0f172a" stroke="#334155"/>
+          <text x="400" y="180" fill="#f8fafc" font-size="12" font-weight="bold" text-anchor="middle">Zero-Backend Architecture</text>
+          <text x="400" y="205" fill="#94a3b8" font-size="11" text-anchor="middle">Standard browser-native WebMCP endpoints &bull; IndexedDB BM25 store &bull; LiteParse WASM &bull; Cloudflare Pages</text>
+          <text x="400" y="225" fill="#64748b" font-size="10" text-anchor="middle">Canvas controls callable both from UI buttons and WebMCP tool invocations</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>WebMCP Exposed Tool Suite</h2>
+      <div class="tool-grid">
+        <div class="tool-card">
+          <div class="tool-name">search_web</div>
+          <div class="tool-desc">DuckDuckGo search (via DDGS) returning relevant web summaries.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">search_research</div>
+          <div class="tool-desc">ArXiv paper search returning title, authors, and abstracts.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">calculate</div>
+          <div class="tool-desc">Evaluates decimal math expressions accurately.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">search_document</div>
+          <div class="tool-desc">Queries uploaded document chunks in IndexedDB using BM25.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">clean_document</div>
+          <div class="tool-desc">Purges stored document chunks from IndexedDB and resets upload box.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">get_chat_history</div>
+          <div class="tool-desc">Returns dialogue stream containing user messages prefixed with "user:".</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">canvas_draw</div>
+          <div class="tool-desc">Renders shapes, lines, text, flowcharts, and diagrams on the HTML canvas.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">canvas_clear</div>
+          <div class="tool-desc">Wipes the canvas clean (also accessible via UI Clear Canvas button).</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">chat_post</div>
+          <div class="tool-desc">Appends or streams agent responses into the 60% chat area.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Key States and Boundaries</h2>
+
+      <details open>
+        <summary><span class="step-badge">1</span> Initial &amp; Blank State</summary>
+        <p>Both the HTML canvas (top 40%) and chat area (bottom 60%) start completely blank. File upload dropzone is empty. Theme applies based on Light/Dark toggle in branding header.</p>
+      </details>
+
+      <details>
+        <summary><span class="step-badge">2</span> File Upload Processing &amp; Success</summary>
+        <p>When user selects/drops Doc or PDF &lt; 1MB: LiteParse WASM parses pages client-side, builds BM25 index in IndexedDB, and UI updates with filename, total page count, and an "Indexed" badge.</p>
+      </details>
+
+      <details>
+        <summary><span class="step-badge">3</span> File Upload Rejection (Error State)</summary>
+        <p>If user selects a file &ge; 1MB or unsupported format: A notification popup explains the exact rejection reason. The upload input resets cleanly without error.</p>
+      </details>
+
+      <details>
+        <summary><span class="step-badge">4</span> Storage Reset (clean_document)</summary>
+        <p>When <code>clean_document</code> is invoked by agent or user: IndexedDB tables are cleared and the file upload UI immediately returns to its empty initial state.</p>
+      </details>
+
+      <details>
+        <summary><span class="step-badge">5</span> Chat Flow &amp; User Prefix</summary>
+        <p>User types in the bottom text input. Sent messages appear in chat with <code>user:</code> prefix and are made available to visiting LLMs via <code>get_chat_history</code>.</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>Documentation Deliverables</h2>
+      <ul>
+        <li><strong>Docs Site:</strong> Built using the <code>docs7</code> skill.</li>
+        <li><strong>README.md:</strong> User documentation tailored for humans.</li>
+        <li><strong>CLAUDE.md:</strong> Guidelines and instructions for AI agents.</li>
+        <li><strong>AGENTS.md:</strong> References <code>CLAUDE.md</code> and <code>README.md</code> (and nothing else).</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
