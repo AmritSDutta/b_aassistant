@@ -33,6 +33,7 @@ export class WebMCPProvider {
       name: t.name,
       description: t.description,
       inputSchema: t.inputSchema,
+      readOnlyHint: t.readOnlyHint,
       execute: async (args: Record<string, unknown>) => {
         const res = await this.callTool(t.name, args);
         return {

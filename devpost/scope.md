@@ -31,6 +31,7 @@ Enables a practical, genuinely beneficial tool for the community that proves Web
 
 ## What "Working" Looks Like
 A user opens the single-page application and activates the WebMCP Inspector testing mode. The inspector shows the exposed WebMCP tools registered and operational:
+- `get_tool_usage_prompt`: Read-only, zero-argument tool returning the agent operating guide for using every other tool (agents call it first).
 - `search_web`: DuckDuckGo search (DDGS).
 - `search_research`: ArXiv search.
 - `calculate`: Decimal math calculations.
@@ -41,7 +42,8 @@ A user opens the single-page application and activates the WebMCP Inspector test
 - `canvas2d_modify_shape`: Surgical in-place editing of shape label, position, or colors.
 - `canvas2d_clear`: Clears the Canvas2D scene graph.
 - `export_pdf`: Generates downloadable publication-quality PDF combining canvas diagram and chat dialogue.
-- Canvas drawing & chat tools: Live drawing on the top 60% canvas and streaming text into the bottom 40% chat area.
+- `canvas_draw` / `draw_diagram` / `canvas_clear`: Legacy drawing tools for quick graphs on the top 60% canvas.
+- `chat_post` / `get_chat_history`: Stream text into the bottom 40% chat area and read dialogue context.
 A test run demonstrates a visiting agent calling these tools, retrieving data, updating chat, and drawing on the canvas live.
 
 ## The POC Boundary
@@ -50,7 +52,8 @@ A test run demonstrates a visiting agent calling these tools, retrieving data, u
   - Post-upload processing: in-browser natural per-page extraction using LiteParse (browser WASM / PDF decompressor stream) and client-side BM25 searchable index generation stored in browser datastore (IndexedDB) for accepted files (< 1MB only).
   - Advanced HTML Canvas2D scene graph with perimeter edge-to-edge docking for auto-anchoring arrows, soft-translucent color palette (indigo client, emerald gateway, purple database, orange cache/queue, amber logic, sticky-note stickers), and HiDPI resolution.
   - Client-side PDF export (`exportSessionPdf`) with blank session validation (blocking download and alerting when canvas and chat are empty), Markdown humanization, and multilingual Indic script rendering (supporting Bengali বাংলা and Hindi हिन्दी via native browser complex text shaping).
-  - Starting WebMCP tool provider layer exposing:
+  - WebMCP tool provider layer exposing 16 tools:
+    - `get_tool_usage_prompt` (read-only, zero-arg: returns the agent operating guide for all other tools)
     - `search_web` (using DDGS behind)
     - `search_research` (using ArXiv search)
     - `calculate` (decimal math)
@@ -58,7 +61,8 @@ A test run demonstrates a visiting agent calling these tools, retrieving data, u
     - `clean_document` (remove stored IndexedDB content)
     - `canvas2d_draw_shapes`, `canvas2d_inspect_shapes`, `canvas2d_modify_shape`, `canvas2d_clear`
     - `export_pdf`
-    - Canvas drawing & chat tools for the 80% workspace
+    - `canvas_draw`, `draw_diagram`, `canvas_clear` (legacy drawing tools)
+    - `chat_post`, `get_chat_history` (chat tools for the 80% workspace)
   - WebMCP Inspector testing mode for direct verification and tool execution.
   - Deployment: Deployed to Cloudflare Pages.
 

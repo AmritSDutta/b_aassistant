@@ -1,6 +1,7 @@
 import { WebMCPTool } from './types';
 import { globalCanvasEngine, CanvasCommand } from '../lib/canvasEngine';
 import { Canvas2dShape } from '../types/canvas2d';
+import { AGENT_TOOL_GUIDE } from './agentGuide';
 
 export interface ToolContext {
   getMessages: () => Array<{ sender: 'user' | 'agent'; text: string; timestamp: number }>;
@@ -14,6 +15,16 @@ export interface ToolContext {
 }
 
 export const TOOL_DEFINITIONS: WebMCPTool[] = [
+  {
+    name: 'get_tool_usage_prompt',
+    description:
+      'Returns the official bAssistant agent operating guide: how to use every other tool correctly (document retrieval, canvas diagramming, chat, PDF export, and session conventions). Call this FIRST before using any other bAssistant tool.',
+    readOnlyHint: true,
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+  },
   {
     name: 'chat_post',
     description: 'Posts a response, answer, or status message to the bottom chat dialogue stream on behalf of the AI assistant.',
@@ -256,6 +267,10 @@ export async function executeToolCall(
   context: ToolContext
 ): Promise<unknown> {
   switch (name) {
+    case 'get_tool_usage_prompt': {
+      return AGENT_TOOL_GUIDE;
+    }
+
     case 'canvas2d_draw_shapes': {
       let rawShapes: unknown[] = [];
       if (Array.isArray(args?.shapes)) {

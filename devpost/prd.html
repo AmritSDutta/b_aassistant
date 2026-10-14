@@ -184,7 +184,7 @@
           <rect x="500" y="30" width="130" height="90" rx="6" fill="#1e293b" stroke="#a855f7" stroke-width="1.5"/>
           <text x="565" y="55" fill="#c084fc" font-size="11" font-weight="bold" text-anchor="middle">4. WebMCP Visit</text>
           <text x="565" y="75" fill="#94a3b8" font-size="9" text-anchor="middle">Visiting LLM connects</text>
-          <text x="565" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Reads chat history</text>
+          <text x="565" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Reads guide + history</text>
           <text x="565" y="105" fill="#94a3b8" font-size="9" text-anchor="middle">Calls search/math</text>
 
           <!-- Arrow 4-5 -->
@@ -193,8 +193,8 @@
           <!-- Step 5 -->
           <rect x="660" y="30" width="120" height="90" rx="6" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
           <text x="720" y="55" fill="#34d399" font-size="11" font-weight="bold" text-anchor="middle">5. Live Output</text>
-          <text x="720" y="75" fill="#94a3b8" font-size="9" text-anchor="middle">Canvas (Top 40%)</text>
-          <text x="720" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Chat Stream (60%)</text>
+          <text x="720" y="75" fill="#94a3b8" font-size="9" text-anchor="middle">Canvas (Top 60%)</text>
+          <text x="720" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Chat Stream (40%)</text>
           <text x="720" y="105" fill="#64748b" font-size="8" text-anchor="middle">Multimodal answer</text>
 
           <!-- Bottom Summary Box -->
@@ -243,7 +243,35 @@
         </div>
         <div class="tool-card">
           <div class="tool-name">chat_post</div>
-          <div class="tool-desc">Appends or streams agent responses into the 60% chat area.</div>
+          <div class="tool-desc">Appends or streams agent responses into the 40% chat area.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">get_tool_usage_prompt</div>
+          <div class="tool-desc">Read-only, zero-arg: returns the agent operating guide explaining how to use every other tool. Agents call it first.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">canvas2d_draw_shapes</div>
+          <div class="tool-desc">Appends structured scene-graph shapes (rectangles, ellipses, diamonds, text, stickers) with arrows that stay attached to nodes.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">canvas2d_inspect_shapes</div>
+          <div class="tool-desc">Returns the active scene graph and an ASCII topology graph so agents can inspect layout before modifying.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">canvas2d_modify_shape</div>
+          <div class="tool-desc">Targeted in-place edits (label, colors, position) by nodeId, keeping connected arrows attached.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">canvas2d_clear</div>
+          <div class="tool-desc">Resets all shapes from the Canvas2D scene graph.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">draw_diagram</div>
+          <div class="tool-desc">Draws a connected flowchart or architecture graph with labeled edges.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">export_pdf</div>
+          <div class="tool-desc">Generates the multilingual session PDF: canvas snapshot + humanized chat transcript. Blank sessions are rejected with a popup.</div>
         </div>
       </div>
     </div>
@@ -253,7 +281,7 @@
 
       <details open>
         <summary><span class="step-badge">1</span> Initial &amp; Blank State</summary>
-        <p>Both the HTML canvas (top 40%) and chat area (bottom 60%) start completely blank. File upload dropzone is empty. Theme applies based on Light/Dark toggle in branding header.</p>
+        <p>Both the HTML canvas (top 60%) and chat area (bottom 40%) start completely blank. File upload dropzone is empty. Theme applies based on Light/Dark toggle in branding header.</p>
       </details>
 
       <details>
@@ -273,7 +301,12 @@
 
       <details>
         <summary><span class="step-badge">5</span> Chat Flow &amp; User Prefix</summary>
-        <p>User types in the bottom text input. Sent messages appear in chat with <code>user:</code> prefix and are made available to visiting LLMs via <code>get_chat_history</code>.</p>
+        <p>User types in the bottom text input. Sent messages appear in chat with <code>user:</code> prefix and are made available to visiting LLMs via <code>get_chat_history</code>. Agent responses are humanized (raw markdown asterisk noise stripped) for executive readability.</p>
+      </details>
+
+      <details>
+        <summary><span class="step-badge">6</span> PDF Export &amp; Blank Session Protection</summary>
+        <p>When <code>export_pdf</code> is invoked (sidebar button or tool): if the session is blank (no canvas content and no chat messages), a notification popup blocks the export. Otherwise a dual-section PDF downloads with the canvas snapshot on top and the chat transcript beneath, including native Bengali and Hindi complex-script rendering.</p>
       </details>
     </div>
 

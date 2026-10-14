@@ -9,16 +9,18 @@ A zero-backend, React-based single-page browser assistant deployed to Cloudflare
 
 ## How This Works, In Plain Language
 `bAssistant` is a client-side application built with React and Vite. When a user opens it:
-1. The page renders a 20/80 layout: a left sidebar (branding with light/dark toggle, file upload, and a blank reserved space) and an 80% main area split into a top 40% HTML canvas and a bottom 60% chat interface.
+1. The page renders a 20/80 layout: a left sidebar (branding with light/dark toggle, file upload, and a blank reserved space) and an 80% main area split into a top 60% HTML canvas and a bottom 40% chat interface.
 2. If the user uploads a Doc or PDF file (< 1MB), `LiteParse` runs directly inside the browser using WebAssembly (WASM). It extracts text page-by-page. A client-side BM25 indexer tokenizes and scores the text, saving the chunks and index into the browser's IndexedDB.
 3. The user types messages into the chat box. Each message is tagged with a `user:` prefix and kept in application state.
-4. The page initializes a **Unified WebMCP Provider** that registers tools onto `navigator.modelContext`, `window.webmcp`, and listens on `window.postMessage` for standard JSON-RPC 2.0 MCP commands.
+4. The page initializes a **Unified WebMCP Provider** that registers 16 tools onto six discovery surfaces: `document.modelContext`, `navigator.modelContext`, `window.webmcp`, hidden DOM tool forms, ready custom events, and `window.postMessage` for standard JSON-RPC 2.0 MCP commands.
 5. Any visiting LLM, extension, or WebMCP inspector discovers the exposed tools:
+   - `get_tool_usage_prompt`: returns the read-only operating guide for using all other tools (call first).
    - `search_document`: queries the local BM25 index in IndexedDB.
    - `clean_document`: wipes the IndexedDB chunks and resets the upload box.
    - `get_chat_history`: retrieves conversation logs including `user:` prompts.
-   - `canvas_draw`: renders shapes, lines, text, and graphs onto the HTML canvas.
-   - `canvas_clear`: clears the canvas.
+   - `canvas2d_draw_shapes` / `canvas2d_inspect_shapes` / `canvas2d_modify_shape` / `canvas2d_clear`: structured scene-graph drawing, inspection, and in-place editing.
+   - `export_pdf`: generates the session PDF report (canvas snapshot + transcript).
+   - `canvas_draw` / `draw_diagram` / `canvas_clear`: legacy drawing commands onto the HTML canvas.
    - `chat_post`: streams or posts agent explanations into the chat log.
    - `calculate`: runs exact decimal math in the browser.
    - `search_web`: calls DuckDuckGo's browser-accessible search API.
@@ -94,9 +96,10 @@ Modal popup showing rejection details when a file is ≥ 1MB or unsupported.
 
 ### 6. `WebMCPProvider`
 Implements `prd.md > Features and Behavior > 5. WebMCP Tool Suite`.
-Central service registering and dispatching all WebMCP tools:
-- Supports `navigator.modelContext`, `window.webmcp`, and `window.addEventListener('message')` JSON-RPC 2.0 events.
+Central service registering and dispatching all 16 WebMCP tools:
+- Registers on six discovery surfaces: `document.modelContext`, `navigator.modelContext` (+ `modelContextTesting`), `window.webmcp`, hidden DOM tool forms, `webmcp:ready`/`modelcontext:ready` custom events, and `window.addEventListener('message')` JSON-RPC 2.0. Forwards `readOnlyHint` annotations for read-only tools.
 - Tools exposed:
+  - `get_tool_usage_prompt`: Read-only, zero-arg tool returning the agent operating guide (sourced from `webmcp/agentGuide.ts`); agents should call it before other tools.
   - `search_web`: DuckDuckGo query API.
   - `search_research`: ArXiv API export query.
   - `calculate`: Evaluates decimal math strings.
@@ -161,11 +164,14 @@ C:/codebase/b_aassistant/
 │   ├── components/
 │   │   ├── Branding.tsx         # Title, logo placeholder, theme toggle
 │   │   ├── FileUpload.tsx       # Dropzone, LiteParse trigger, status badge
-│   │   ├── NotificationModal.tsx# Rejection error popup
-│   │   ├── CanvasArea.tsx       # 40% HTML5 canvas view & toolbar
-│   │   └── ChatArea.tsx         # 60% chat stream, user input & send button
+│   │   ├── BlankSlot.tsx        # Reserved 3rd sidebar section
+│   │   ├── NotificationModal.tsx# Rejection / blank-session error popup
+│   │   ├── CanvasArea.tsx       # 60% HTML5 canvas view & toolbar
+│   │   ├── ChatArea.tsx         # 40% chat stream, user input & send button
+│   │   └── HumanizedMessage.tsx # Markdown-noise cleaner for chat bubbles
 │   ├── lib/
-│   │   ├── canvasEngine.ts      # 2D canvas drawing command renderer
+│   │   ├── canvasEngine.ts      # Canvas2D scene graph & legacy command renderer
+│   │   ├── pdfExportService.ts  # Multilingual dual-section PDF export engine
 │   │   ├── liteparseService.ts  # LiteParse WASM initialization and parser
 │   │   ├── idbStorage.ts        # IndexedDB connection and document store
 │   │   ├── bm25.ts              # Client-side BM25 indexer and query scorer
@@ -173,12 +179,19 @@ C:/codebase/b_aassistant/
 │   │   └── mathEvaluator.ts     # Decimal math calculator
 │   ├── webmcp/
 │   │   ├── types.ts             # WebMCP tool interfaces & JSON-RPC schema
-│   │   ├── tools.ts             # Tool declarations (schemas & handlers)
-│   │   └── provider.ts          # Unified bridge (navigator, window, postMessage)
-│   └── tests/
-│       ├── bm25.test.ts         # Hermetic tests for BM25 indexing & scoring
-│       ├── mathEvaluator.test.ts# Hermetic tests for decimal calculations
-│       └── webmcp.test.ts       # Hermetic tests for WebMCP tool dispatching
+│   │   ├── tools.ts             # 16 tool declarations (schemas & dispatch)
+│   │   ├── agentGuide.ts        # Read-only get_tool_usage_prompt guide text
+│   │   └── provider.ts          # Unified bridge (6 discovery surfaces)
+│   └── tests/                   # 9 hermetic Vitest suites
+│       ├── bm25.test.ts         # BM25 indexing & scoring
+│       ├── mathEvaluator.test.ts# Decimal calculations
+│       ├── webmcp.test.ts       # WebMCP tool dispatching
+│       ├── canvasEngine.test.ts # Canvas command engine
+│       ├── canvas2dAdvanced.test.ts  # Scene graph shapes & arrows
+│       ├── pdfExportService.test.ts  # PDF export & markdown cleaning
+│       ├── humanizedMessage.test.tsx # Chat humanization
+│       ├── documentProcessing.test.ts# LiteParse parsing pipeline
+│       └── searchService.test.ts# Web/research fallbacks
 ├── docs/                        # docs7 documentation site
 ├── devpost/                     # Devpost hackathon project artifacts
 │   ├── learner-profile.md
@@ -211,7 +224,7 @@ C:/codebase/b_aassistant/
   - Build stack: React + Vite SPA.
   - Deployment: Cloudflare Pages.
   - Ingestion: LiteParse (browser WASM) for pagewise chunking + BM25 index in IndexedDB (< 1MB Doc/PDF).
-  - WebMCP standard: Multi-standard support (`navigator.modelContext`, `window.webmcp`, `postMessage`).
+  - WebMCP standard: Multi-standard support (`document.modelContext`, `navigator.modelContext`, `window.webmcp`, DOM forms, `postMessage`).
   - Documentation: `docs7`, `README.md`, `CLAUDE.md`, `AGENTS.md`.
   - Development Rules: Strict token efficiency, hermetic tests only, no subagents without permission, no reading `.env` / system variables, only `git status` permitted.
 - **Open Issues:**

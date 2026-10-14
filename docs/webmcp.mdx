@@ -18,6 +18,7 @@ bAssistant implements multi-standard WebMCP support to maximize compatibility wi
 
 | Tool | Parameters | Description |
 | :--- | :--- | :--- |
+| `get_tool_usage_prompt` | `{}` | Read-only: returns the official agent operating guide explaining how to use every other bAssistant tool (retrieval, canvas, chat, PDF export, conventions). |
 | `get_chat_history` | `{}` | Returns recent dialogue history with user messages prefixed by `user:`. |
 | `chat_post` | `{ text: string }` | Posts textual responses, markdown, or status updates to the chat area for the visiting LLM. |
 | `canvas2d_draw_shapes` | `{ shapes: object[] }` | Appends structured Canvas2D shapes (rectangles, ellipses, diamonds, text, stickers) and perimeter-docked arrows. |

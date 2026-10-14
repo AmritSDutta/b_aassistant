@@ -26,6 +26,7 @@ describe('WebMCP Provider & Tools', () => {
     const tools = provider.listTools();
     const names = tools.map((t) => t.name);
 
+    expect(names).toContain('get_tool_usage_prompt');
     expect(names).toContain('canvas_draw');
     expect(names).toContain('canvas_clear');
     expect(names).toContain('canvas2d_draw_shapes');
@@ -40,6 +41,20 @@ describe('WebMCP Provider & Tools', () => {
     expect(names).toContain('search_web');
     expect(names).toContain('search_research');
     expect(names).toContain('calculate');
+  });
+
+  it('returns the read-only tool usage prompt guide with zero arguments', async () => {
+    const def = provider.listTools().find((t) => t.name === 'get_tool_usage_prompt');
+    expect(def?.readOnlyHint).toBe(true);
+    expect(Object.keys(def?.inputSchema.properties || {})).toHaveLength(0);
+
+    const guide = (await provider.callTool('get_tool_usage_prompt', {})) as string;
+    expect(typeof guide).toBe('string');
+    expect(guide.length).toBeGreaterThan(0);
+    expect(guide).toContain('search_document');
+    expect(guide).toContain('canvas2d_draw_shapes');
+    expect(guide).toContain('chat_post');
+    expect(guide).toContain('export_pdf');
   });
 
   it('executes canvas_draw and updates canvas history', async () => {

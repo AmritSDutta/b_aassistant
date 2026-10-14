@@ -10,6 +10,7 @@ export interface WebMCPToolParameter {
 export interface WebMCPTool {
   name: string;
   description: string;
+  readOnlyHint?: boolean;
   inputSchema: {
     type: 'object';
     properties: Record<string, WebMCPToolParameter>;

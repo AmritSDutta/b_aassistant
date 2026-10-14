@@ -14,9 +14,9 @@ Source: `scope.md > The Core Loop`, `scope.md > What "Working" Looks Like`.
 1. **Arrival:** User loads `bAssistant` in their browser. The UI renders the 20/80 layout in their chosen theme (Light/Dark toggle in branding header). Both canvas and chat areas initialize blank.
 2. **Document Ingestion (Optional):** User drags or selects a Doc or PDF file (< 1MB) into the upload area. LiteParse (browser WASM) parses the document pagewise, and a client-side BM25 index is generated in IndexedDB. The upload area updates to display the file name, page count, and an "Indexed" badge. If a file is ≥ 1MB or unsupported, a popup explains why it was rejected.
 3. **User Input:** User enters an inquiry or prompt into the chat text input. The message is displayed in the chat stream with a `user:` prefix.
-4. **Agent Connection & Tool Discovery:** A visiting LLM connects to `bAssistant` using standard browser-native WebMCP, discovering the exposed tools without requiring a specialized in-app inspector UI.
+4. **Agent Connection & Tool Discovery:** A visiting LLM connects to `bAssistant` using standard browser-native WebMCP, discovering the exposed tools without requiring a specialized in-app inspector UI. The read-only `get_tool_usage_prompt` tool returns the operating guide for every other tool, so the agent learns the intended workflow before acting.
 5. **Tool Execution:** The visiting LLM queries the user's message history, calls `search_document` (BM25), `search_web` (DDGS), `search_research` (ArXiv), or `calculate` as appropriate.
-6. **Multimodal Output:** The visiting LLM streams its written explanation into the 60% chat area and simultaneously calls canvas tools to render live diagrams, graphs, and illustrations on the top 40% canvas.
+6. **Multimodal Output:** The visiting LLM streams its written explanation into the 40% chat area and simultaneously calls canvas tools to render live diagrams, graphs, and illustrations on the top 60% canvas.
 7. **Canvas & Storage Control:** User or agent can clear the canvas via a UI button or corresponding WebMCP tool. User or agent can execute `clean_document` to wipe stored IndexedDB chunks and reset the upload interface.
 
 ## Screens and Layout
@@ -85,7 +85,8 @@ Source: `scope.md > The POC Boundary`.
 
 ### 5. WebMCP Tool Suite
 Source: `scope.md > The POC Boundary`.
-The application exposes standard WebMCP tools for visiting LLMs:
+The application exposes 16 standard WebMCP tools for visiting LLMs:
+- `get_tool_usage_prompt`: Read-only, zero-argument tool returning the agent operating guide for using every other tool; marked `readOnlyHint: true` and meant to be called first.
 - `search_web`: Executes web search queries using DuckDuckGo (DDGS).
 - `search_research`: Executes academic literature searches via ArXiv.
 - `calculate`: Evaluates decimal math expressions.
@@ -98,6 +99,7 @@ The application exposes standard WebMCP tools for visiting LLMs:
 - `canvas2d_clear`: Clears the Canvas2D scene graph (mirrors UI button).
 - `export_pdf`: Generates and triggers download of the session PDF report.
 - `chat_post`: Appends or streams text into the chat stream.
+- `canvas_draw` / `draw_diagram` / `canvas_clear`: Legacy canvas tools for quick single-command drawing and connected node/edge graphs.
 
 ## States and Boundaries
 
@@ -124,7 +126,7 @@ The application exposes standard WebMCP tools for visiting LLMs:
 - File upload for Doc/PDF < 1MB with LiteParse WASM parsing, natural per-page chunking, and IndexedDB BM25 indexing.
 - HTML canvas with live 2D scene graph engine, Clear button, and Export PDF button.
 - Chat stream formatted in Lora longform reading typography, multi-line prompt textarea, and auto-scroll to newest message.
-- Complete WebMCP tool suite (`search_web`, `search_research`, `calculate`, `search_document` [returning top 3 pages with stop-word stripping], `clean_document`, `canvas2d_draw_shapes`, `canvas2d_inspect_shapes`, `canvas2d_modify_shape`, `canvas2d_clear`, `export_pdf`, chat tools).
+- Complete WebMCP tool suite (16 tools: `get_tool_usage_prompt` [read-only agent operating guide], `search_web`, `search_research`, `calculate`, `search_document` [returning top 3 pages with stop-word stripping], `clean_document`, `canvas2d_draw_shapes`, `canvas2d_inspect_shapes`, `canvas2d_modify_shape`, `canvas2d_clear`, `export_pdf`, `canvas_draw`, `draw_diagram`, `canvas_clear`, `chat_post`, `get_chat_history`).
 - Cloudflare Pages deployment configuration.
 - Project documentation:
   - Documentation site created via `docs7` skill.

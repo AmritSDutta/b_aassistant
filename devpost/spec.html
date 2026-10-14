@@ -167,13 +167,13 @@
 
           <rect x="285" y="165" width="220" height="40" rx="4" fill="#090d16" stroke="#475569"/>
           <text x="395" y="185" fill="#38bdf8" font-size="10" font-weight="bold" text-anchor="middle">Canvas 2D Engine</text>
-          <text x="395" y="198" fill="#94a3b8" font-size="8" text-anchor="middle">Shapes, lines, graphs, clear</text>
+          <text x="395" y="198" fill="#94a3b8" font-size="8" text-anchor="middle">Scene graph: shapes, arrows, snapshot</text>
 
           <rect x="285" y="215" width="220" height="70" rx="4" fill="#090d16" stroke="#c084fc"/>
           <text x="395" y="235" fill="#c084fc" font-size="10" font-weight="bold" text-anchor="middle">Unified WebMCP Provider</text>
-          <text x="395" y="250" fill="#94a3b8" font-size="8" text-anchor="middle">navigator.modelContext</text>
-          <text x="395" y="262" fill="#94a3b8" font-size="8" text-anchor="middle">window.webmcp / postMessage</text>
-          <text x="395" y="274" fill="#94a3b8" font-size="8" text-anchor="middle">JSON-RPC 2.0 tool endpoints</text>
+          <text x="395" y="250" fill="#94a3b8" font-size="8" text-anchor="middle">document/navigator.modelContext</text>
+          <text x="395" y="262" fill="#94a3b8" font-size="8" text-anchor="middle">window.webmcp + hidden DOM forms</text>
+          <text x="395" y="274" fill="#94a3b8" font-size="8" text-anchor="middle">postMessage JSON-RPC 2.0 + events</text>
 
           <!-- External Agents / MCP Clients -->
           <rect x="550" y="20" width="230" height="280" rx="6" fill="#1e293b" stroke="#c084fc" stroke-width="1.5"/>
@@ -211,15 +211,19 @@
         </details>
         <details>
           <summary>CanvasArea.tsx</summary>
-          <p>Top 40% HTML5 canvas with Clear Canvas button. Connects to <code>canvasEngine.ts</code> for live drawing commands.</p>
+          <p>Top 60% HTML5 canvas with Clear Canvas and Export PDF controls. Connects to <code>canvasEngine.ts</code> for scene-graph rendering.</p>
         </details>
         <details>
-          <summary>ChatArea.tsx</summary>
-          <p>Bottom 60% chat stream showing <code>user:</code> messages, agent posts, and bottom input text box.</p>
+          <summary>ChatArea.tsx + HumanizedMessage.tsx</summary>
+          <p>Bottom 40% chat stream showing <code>user:</code> messages and agent posts. <code>HumanizedMessage</code> strips raw markdown asterisk noise for executive readability.</p>
         </details>
         <details>
           <summary>WebMCPProvider.ts</summary>
-          <p>Unified bridge exposing all tools via <code>navigator.modelContext</code>, <code>window.webmcp</code>, and <code>postMessage</code>.</p>
+          <p>Unified bridge exposing all 16 tools on six surfaces: <code>document.modelContext</code>, <code>navigator.modelContext</code>, <code>window.webmcp</code>, hidden DOM forms, <code>postMessage</code> JSON-RPC 2.0, and ready custom events. Forwards <code>readOnlyHint</code> annotations.</p>
+        </details>
+        <details>
+          <summary>pdfExportService.ts</summary>
+          <p>Multilingual dual-section PDF export: canvas snapshot + cleaned chat transcript, with 3x HiDPI rasterization for Bengali/Hindi complex scripts and blank-session protection.</p>
         </details>
       </div>
 
@@ -259,11 +263,14 @@ C:/codebase/b_aassistant/
 │   ├── components/
 │   │   ├── Branding.tsx         # Title, logo placeholder, theme toggle
 │   │   ├── FileUpload.tsx       # Dropzone, LiteParse trigger, status badge
-│   │   ├── NotificationModal.tsx# Rejection error popup
-│   │   ├── CanvasArea.tsx       # 40% HTML5 canvas view & toolbar
-│   │   └── ChatArea.tsx         # 60% chat stream, user input & send button
+│   │   ├── BlankSlot.tsx        # Reserved 3rd sidebar section
+│   │   ├── NotificationModal.tsx# Rejection / blank-session error popup
+│   │   ├── CanvasArea.tsx       # 60% HTML5 canvas view & toolbar
+│   │   ├── ChatArea.tsx         # 40% chat stream, user input & send button
+│   │   └── HumanizedMessage.tsx # Markdown-noise cleaner for chat bubbles
 │   ├── lib/
-│   │   ├── canvasEngine.ts      # 2D canvas drawing command renderer
+│   │   ├── canvasEngine.ts      # Canvas2D scene graph & legacy command renderer
+│   │   ├── pdfExportService.ts  # Multilingual dual-section PDF export engine
 │   │   ├── liteparseService.ts  # LiteParse WASM initialization and parser
 │   │   ├── idbStorage.ts        # IndexedDB connection and document store
 │   │   ├── bm25.ts              # Client-side BM25 indexer and query scorer
@@ -271,12 +278,19 @@ C:/codebase/b_aassistant/
 │   │   └── mathEvaluator.ts     # Decimal math calculator
 │   ├── webmcp/
 │   │   ├── types.ts             # WebMCP tool interfaces & JSON-RPC schema
-│   │   ├── tools.ts             # Tool declarations (schemas & handlers)
-│   │   └── provider.ts          # Unified bridge (navigator, window, postMessage)
-│   └── tests/
-│       ├── bm25.test.ts         # Hermetic tests for BM25 indexing & scoring
-│       ├── mathEvaluator.test.ts# Hermetic tests for decimal calculations
-│       └── webmcp.test.ts       # Hermetic tests for WebMCP tool dispatching
+│   │   ├── tools.ts             # 16 tool declarations (schemas & dispatch)
+│   │   ├── agentGuide.ts        # Read-only get_tool_usage_prompt guide text
+│   │   └── provider.ts          # Unified bridge (6 discovery surfaces)
+│   └── tests/                   # 9 hermetic Vitest suites
+│       ├── bm25.test.ts         # BM25 indexing & scoring
+│       ├── mathEvaluator.test.ts# Decimal calculations
+│       ├── webmcp.test.ts       # WebMCP tool dispatching
+│       ├── canvasEngine.test.ts # Canvas command engine
+│       ├── canvas2dAdvanced.test.ts  # Scene graph shapes & arrows
+│       ├── pdfExportService.test.ts  # PDF export & markdown cleaning
+│       ├── humanizedMessage.test.tsx # Chat humanization
+│       ├── documentProcessing.test.ts# LiteParse parsing pipeline
+│       └── searchService.test.ts# Web/research fallbacks
 ├── docs/                        # docs7 documentation site
 ├── devpost/                     # Devpost hackathon project artifacts
 ├── README.md                    # Human-facing overview & quickstart
