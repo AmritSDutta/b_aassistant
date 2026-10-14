@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import { ChatMessage } from '../components/ChatArea';
 import { BASSISTANT_LIGHT_BASE64 } from './logoBase64';
+import { SessionTurnRecord } from './idbStorage';
 
 const PNG_IHDR_MIN_BYTES = 24;
 const PNG_WIDTH_BYTE_OFFSET = 16;
@@ -9,6 +10,15 @@ const PNG_HEIGHT_BYTE_OFFSET = 20;
 export interface ExportPdfResult {
   success: boolean;
   error?: string;
+}
+
+export interface ExportSessionPdfOptions {
+  sessionId?: string;
+  turns?: SessionTurnRecord[];
+  canvasDataUrl?: string | null;
+  messages?: ChatMessage[];
+  docName?: string;
+  hasCanvasContent?: boolean;
 }
 
 export function containsIndicScript(text: string): boolean {
@@ -385,15 +395,55 @@ export function renderHumanizedMarkdown(
 }
 
 export function exportSessionPdf(
-  canvasDataUrl: string | null,
-  messages: ChatMessage[],
-  docName?: string,
-  hasCanvasContent: boolean = false
+  arg1?: ExportSessionPdfOptions | string | null,
+  arg2?: ChatMessage[],
+  arg3?: string,
+  arg4?: boolean,
+  arg5?: SessionTurnRecord[],
+  arg6?: string
 ): ExportPdfResult {
+  let sessionId: string | undefined;
+  let turns: SessionTurnRecord[] | undefined;
+  let canvasDataUrl: string | null = null;
+  let messages: ChatMessage[] = [];
+  let docName: string | undefined;
+  let hasCanvasContent = false;
+
+  if (
+    arg1 &&
+    typeof arg1 === 'object' &&
+    !Array.isArray(arg1) &&
+    ('turns' in arg1 || 'sessionId' in arg1 || 'messages' in arg1 || 'canvasDataUrl' in arg1)
+  ) {
+    const opts = arg1 as ExportSessionPdfOptions;
+    sessionId = opts.sessionId;
+    turns = opts.turns;
+    canvasDataUrl = opts.canvasDataUrl ?? null;
+    messages = opts.messages ?? [];
+    docName = opts.docName;
+    hasCanvasContent = opts.hasCanvasContent ?? Boolean(canvasDataUrl);
+  } else {
+    canvasDataUrl = (arg1 as string | null) ?? null;
+    messages = arg2 ?? [];
+    docName = arg3;
+    hasCanvasContent = arg4 ?? Boolean(canvasDataUrl);
+    turns = arg5;
+    sessionId = arg6;
+  }
+
+  const hasSequentialTurns =
+    Array.isArray(turns) &&
+    turns.length > 0 &&
+    turns.some(
+      (t) =>
+        (t.userPrompt && t.userPrompt.trim().length > 0) ||
+        (t.agentMessage && t.agentMessage.trim().length > 0) ||
+        Boolean(t.canvasSnapshot)
+    );
   const hasDialogue = Array.isArray(messages) && messages.some((m) => m.text && m.text.trim().length > 0);
 
-  // Validate blank content: if both canvas and dialogue are blank, reject export
-  if (!hasCanvasContent && !hasDialogue) {
+  // Validate blank content: if no sequential turns, no canvas, and no dialogue, reject export
+  if (!hasSequentialTurns && !hasCanvasContent && !hasDialogue) {
     return {
       success: false,
       error: 'Cannot export an empty session without canvas diagrams or chat messages.',
@@ -438,73 +488,150 @@ export function exportSessionPdf(
   doc.setFontSize(8.5);
   doc.setTextColor(100, 116, 139); // slate-500
   const dateStr = new Date().toLocaleString();
-  const subTitle = docName ? `Document: ${docName} | Generated: ${dateStr}` : `Generated: ${dateStr}`;
+  let subTitle = docName ? `Document: ${docName} | Generated: ${dateStr}` : `Generated: ${dateStr}`;
+  if (sessionId) {
+    subTitle = `Session: ${sessionId} | ${subTitle}`;
+  }
   doc.text(subTitle, textX, cursor.y + 8);
   cursor.y += Math.max(logoSize + 4, 12);
 
-  // Section 1: HTML Canvas Snapshot (if available and not empty)
-  if (canvasDataUrl && hasCanvasContent) {
-    const dims = readPngDimensions(canvasDataUrl) || { width: 1200, height: 600 };
-    const fitted = fitContain(dims.width, dims.height, contentWidth, 85);
+  if (hasSequentialTurns && turns) {
+    // Sequential Turn-by-Turn Deliberation Rendering
+    for (let i = 0; i < turns.length; i++) {
+      const turn = turns[i];
+      const turnNum = turn.turnNumber || i + 1;
+      const timeStr = turn.timestamp
+        ? new Date(turn.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : '';
 
-    ensureSpace(fitted.height + 4);
-    doc.setDrawColor(226, 232, 240); // slate-200
-    doc.setFillColor(248, 250, 252); // slate-50
-    doc.roundedRect(margin, cursor.y, contentWidth, fitted.height + 4, 3, 3, 'FD');
-
-    try {
-      doc.addImage(
-        canvasDataUrl,
-        'PNG',
-        margin + (contentWidth - fitted.width) / 2,
-        cursor.y + 2,
-        fitted.width,
-        fitted.height
-      );
-    } catch (e) {
-      console.warn('Could not render image to PDF:', e);
-    }
-
-    cursor.y += fitted.height + 12;
-  }
-
-  // Section 2: Dialogue Stream
-  ensureSpace(12);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  doc.setTextColor(15, 23, 42);
-  doc.text('Dialogue Transcript', margin, cursor.y);
-  cursor.y += 6;
-
-  if (!hasDialogue) {
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(10);
-    doc.setTextColor(148, 163, 184);
-    doc.text('No dialogue messages recorded for this session.', margin, cursor.y);
-    cursor.y += 10;
-  } else {
-    for (const msg of messages) {
-      if (!msg.text || !msg.text.trim()) continue;
-
-      const isUser = msg.sender === 'user';
-      const timeStr = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const senderBadge = isUser ? `USER [${timeStr}]` : `ASSISTANT [${timeStr}]`;
-
+      // Turn Section Header Badge
+      ensureSpace(12);
+      doc.setFillColor(241, 245, 249); // slate-100
+      doc.setDrawColor(203, 213, 225); // slate-300
+      doc.roundedRect(margin, cursor.y, contentWidth, 7, 1.5, 1.5, 'FD');
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(9);
-      if (isUser) {
+      doc.setTextColor(15, 23, 42);
+      const turnLabel = timeStr ? `TURN ${turnNum} [${timeStr}]` : `TURN ${turnNum}`;
+      doc.text(turnLabel, margin + 3, cursor.y + 4.8);
+      cursor.y += 10;
+
+      // 1. User Prompt (if present)
+      if (turn.userPrompt && turn.userPrompt.trim()) {
+        ensureSpace(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
         doc.setTextColor(2, 132, 199); // sky-600
-      } else {
-        doc.setTextColor(5, 150, 105); // emerald-600
+        doc.text('USER INQUIRY', margin + 2, cursor.y);
+        cursor.y += 4.5;
+
+        renderHumanizedMarkdown(doc, turn.userPrompt, margin + 2, contentWidth - 4, cursor, ensureSpace);
+        cursor.y += 3;
       }
 
-      ensureSpace(12);
-      doc.text(senderBadge, margin, cursor.y);
-      cursor.y += 4.5;
+      // 2. Canvas Snapshot (if present for this turn)
+      if (turn.canvasSnapshot && turn.canvasSnapshot.startsWith('data:image')) {
+        try {
+          const dims = readPngDimensions(turn.canvasSnapshot) || { width: 1200, height: 600 };
+          const fitted = fitContain(dims.width, dims.height, contentWidth - 4, 80);
 
-      // Humanize LLM generated markdown with Indic script support into publication-quality structured PDF blocks
-      renderHumanizedMarkdown(doc, msg.text, margin, contentWidth, cursor, ensureSpace);
-      cursor.y += 3.5;
+          ensureSpace(fitted.height + 6);
+          doc.setDrawColor(226, 232, 240);
+          doc.setFillColor(248, 250, 252);
+          doc.roundedRect(margin, cursor.y, contentWidth, fitted.height + 4, 2, 2, 'FD');
+
+          doc.addImage(
+            turn.canvasSnapshot,
+            'PNG',
+            margin + (contentWidth - fitted.width) / 2,
+            cursor.y + 2,
+            fitted.width,
+            fitted.height
+          );
+          cursor.y += fitted.height + 8;
+        } catch (e) {
+          console.warn('Could not render turn image to PDF:', e);
+        }
+      }
+
+      // 3. AI Deliberation / Response (if present)
+      if (turn.agentMessage && turn.agentMessage.trim()) {
+        ensureSpace(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(5, 150, 105); // emerald-600
+        doc.text('AI DELIBERATION', margin + 2, cursor.y);
+        cursor.y += 4.5;
+
+        renderHumanizedMarkdown(doc, turn.agentMessage, margin + 2, contentWidth - 4, cursor, ensureSpace);
+        cursor.y += 5;
+      }
+    }
+  } else {
+    // Section 1: HTML Canvas Snapshot (if available and not empty)
+    if (canvasDataUrl && hasCanvasContent) {
+      const dims = readPngDimensions(canvasDataUrl) || { width: 1200, height: 600 };
+      const fitted = fitContain(dims.width, dims.height, contentWidth, 85);
+
+      ensureSpace(fitted.height + 4);
+      doc.setDrawColor(226, 232, 240); // slate-200
+      doc.setFillColor(248, 250, 252); // slate-50
+      doc.roundedRect(margin, cursor.y, contentWidth, fitted.height + 4, 3, 3, 'FD');
+
+      try {
+        doc.addImage(
+          canvasDataUrl,
+          'PNG',
+          margin + (contentWidth - fitted.width) / 2,
+          cursor.y + 2,
+          fitted.width,
+          fitted.height
+        );
+      } catch (e) {
+        console.warn('Could not render image to PDF:', e);
+      }
+
+      cursor.y += fitted.height + 12;
+    }
+
+    // Section 2: Dialogue Stream
+    ensureSpace(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(15, 23, 42);
+    doc.text('Dialogue Transcript', margin, cursor.y);
+    cursor.y += 6;
+
+    if (!hasDialogue) {
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(10);
+      doc.setTextColor(148, 163, 184);
+      doc.text('No dialogue messages recorded for this session.', margin, cursor.y);
+      cursor.y += 10;
+    } else {
+      for (const msg of messages) {
+        if (!msg.text || !msg.text.trim()) continue;
+
+        const isUser = msg.sender === 'user';
+        const timeStr = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const senderBadge = isUser ? `USER [${timeStr}]` : `ASSISTANT [${timeStr}]`;
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        if (isUser) {
+          doc.setTextColor(2, 132, 199); // sky-600
+        } else {
+          doc.setTextColor(5, 150, 105); // emerald-600
+        }
+
+        ensureSpace(12);
+        doc.text(senderBadge, margin, cursor.y);
+        cursor.y += 4.5;
+
+        // Humanize LLM generated markdown with Indic script support into publication-quality structured PDF blocks
+        renderHumanizedMarkdown(doc, msg.text, margin, contentWidth, cursor, ensureSpace);
+        cursor.y += 3.5;
+      }
     }
   }
 
@@ -530,7 +657,7 @@ export function exportSessionPdf(
   }
 
   // Trigger browser download
-  const filename = `bAssistant-Session-${Date.now()}.pdf`;
+  const filename = sessionId ? `bAssistant-Session-${sessionId}.pdf` : `bAssistant-Session-${Date.now()}.pdf`;
   doc.save(filename);
 
   return { success: true };

@@ -48,9 +48,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - BM25 search returns top-3 chunks; if the query has no keyword overlap it falls back to returning the first 3 chunks as a preview.
 
 ### PDF Export Engine
-- `src/lib/pdfExportService.ts` exports dual-section executive PDFs:
-  - Header stamps the top-left branding logo (`bassistant_light.jpg`) alongside title and metadata.
-  - Canvas snapshot on top of Page 1.
+- `src/lib/pdfExportService.ts` exports sequential executive deliberation PDFs:
+  - Header stamps the top-left branding logo (`bassistant_light.jpg`) alongside title `"bAssistant Deliberation Session"`, session ID, and timestamp metadata.
+  - Sequential turn-by-turn deliberation reporting (`TURN X [HH:MM]`): renders user prompt (when present), per-turn canvas diagram snapshot (when present, fitted without distortion), and AI response with structured Markdown blocks.
+  - Backward-compatible single snapshot + dialogue transcript fallback.
   - Chat dialogue rendered with shared `PdfCursor` across blocks, reserving a 10mm bottom buffer for automatic multipage pagination.
   - Every page stamps the exact centered disclaimer: `AI generated analysis, verify before applying.` with right-aligned page counter (`Page X of Y`).
   - Rasterizes complex scripts (Bengali বাংলা, Hindi हिन्दी) via 3x HiDPI Canvas2D text strips because jsPDF can't shape Indic scripts natively.
@@ -61,7 +62,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - All user messages rendered in chat history must be prefixed with `user:` (agents get `agent:`) — see `src/components/ChatArea.tsx`.
 
 ### Storage
-- Pure IndexedDB database `bAssistantDB` with stores `documents`, `chunks`, `bm25_index`. Reference URLs cached in `localStorage['b_reference_urls']`. No external servers, no vector databases.
+- Pure IndexedDB database `bAssistantDB` with stores:
+  - `documents`: uploaded document metadata (< 1MB)
+  - `chunks`: natural per-page text chunks
+  - `bm25_index`: serialized BM25 inverted index
+  - `session_turns`: sequential turn-by-turn records (`id`, `sessionId`, `turnNumber`, `userPrompt?`, `agentMessage?`, `canvasSnapshot?`, `timestamp`)
+  - `session_meta`: key-value metadata store (`active_session_id`)
+- Reference URLs cached in `localStorage['b_reference_urls']`. No external servers, no vector databases.
 
 ### Testing
 - All unit tests live in `src/tests/` (12 Vitest suites, 80 tests) and must remain strictly hermetic and isolated — no network, no real IndexedDB dependencies leaking between tests.

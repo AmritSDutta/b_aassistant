@@ -1,4 +1,4 @@
-import { Canvas2dShape, ShapeBounds } from '../types/canvas2d';
+import { Canvas2dShape, ShapeBounds, Canvas2dView } from '../types/canvas2d';
 
 export interface DrawRectCommand {
   type: 'rect';
@@ -149,12 +149,43 @@ function roundedRectPath(
   }
 }
 
+export function applyThemeAlpha(color: string | undefined, theme: 'dark' | 'light'): string | undefined {
+  if (!color || color === 'transparent') return color;
+  if (theme === 'light') {
+    const match = color.match(/^rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)$/i);
+    if (match) {
+      const r = match[1];
+      const g = match[2];
+      const b = match[3];
+      const a = parseFloat(match[4]);
+      const boosted = Math.min(0.88, Math.max(0.2, a * 1.8));
+      return `rgba(${r}, ${g}, ${b}, ${boosted})`;
+    }
+  }
+  return color;
+}
+
+export function applyShadow(ctx: CanvasRenderingContext2D, theme: 'dark' | 'light'): void {
+  ctx.shadowColor = theme === 'light' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 0, 0, 0.45)';
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 4;
+}
+
+export function clearShadow(ctx: CanvasRenderingContext2D): void {
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+}
+
 export class CanvasEngine {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private theme: 'dark' | 'light' = 'dark';
   private shapes: Canvas2dShape[] = [];
   private legacyCommands: CanvasCommand[] = [];
+  private view: Canvas2dView = { scale: 1, offsetX: 0, offsetY: 0 };
 
   public attach(canvas: HTMLCanvasElement): void {
     this.canvas = canvas;
@@ -172,6 +203,87 @@ export class CanvasEngine {
     this.redraw();
   }
 
+  public getView(): Canvas2dView {
+    return { ...this.view };
+  }
+
+  public setView(view: Canvas2dView): void {
+    this.view = { ...view };
+    this.redraw();
+  }
+
+  public resetView(): void {
+    this.view = { scale: 1, offsetX: 0, offsetY: 0 };
+    this.redraw();
+  }
+
+  public pan(dx: number, dy: number): void {
+    this.view.offsetX += dx;
+    this.view.offsetY += dy;
+    this.redraw();
+  }
+
+  public zoomAtPoint(deltaY: number, screenX: number, screenY: number): void {
+    const factor = deltaY < 0 ? 1.1 : 0.9;
+    const newScale = Math.min(Math.max(this.view.scale * factor, 0.2), 4);
+    if (newScale === this.view.scale) return;
+
+    this.view.offsetX = screenX - (screenX - this.view.offsetX) * (newScale / this.view.scale);
+    this.view.offsetY = screenY - (screenY - this.view.offsetY) * (newScale / this.view.scale);
+    this.view.scale = newScale;
+    this.redraw();
+  }
+
+  public fitToContent(padding = 50): void {
+    if (!this.canvas || this.shapes.length === 0) {
+      this.resetView();
+      return;
+    }
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (const shape of this.shapes) {
+      const b = getShapeBounds(shape);
+      minX = Math.min(minX, b.x);
+      minY = Math.min(minY, b.y);
+      maxX = Math.max(maxX, b.x + b.width);
+      maxY = Math.max(maxY, b.y + b.height);
+
+      if (typeof shape.startX === 'number') {
+        minX = Math.min(minX, shape.startX);
+        maxX = Math.max(maxX, shape.startX);
+      }
+      if (typeof shape.startY === 'number') {
+        minY = Math.min(minY, shape.startY);
+        maxY = Math.max(maxY, shape.startY);
+      }
+      if (typeof shape.endX === 'number') {
+        minX = Math.min(minX, shape.endX);
+        maxX = Math.max(maxX, shape.endX);
+      }
+      if (typeof shape.endY === 'number') {
+        minY = Math.min(minY, shape.endY);
+        maxY = Math.max(maxY, shape.endY);
+      }
+    }
+
+    const w = maxX - minX;
+    const h = maxY - minY;
+    if (w <= 0 || h <= 0) return;
+
+    const availW = Math.max(this.canvas.width - padding * 2, 100);
+    const availH = Math.max(this.canvas.height - padding * 2, 100);
+    const scale = Math.min(Math.max(Math.min(availW / w, availH / h), 0.2), 1.5);
+
+    this.view.scale = scale;
+    this.view.offsetX = (this.canvas.width - w * scale) / 2 - minX * scale;
+    this.view.offsetY = (this.canvas.height - h * scale) / 2 - minY * scale;
+    this.redraw();
+  }
+
   public getShapes(): Canvas2dShape[] {
     return [...this.shapes];
   }
@@ -184,7 +296,7 @@ export class CanvasEngine {
   public appendShapes(shapes: Canvas2dShape[]): number {
     const sanitized = sanitizeCanvas2dShapes(shapes);
     this.shapes.push(...sanitized);
-    this.redraw();
+    this.fitToContent();
     return sanitized.length;
   }
 
@@ -290,13 +402,88 @@ export class CanvasEngine {
 
   public getSnapshotDataUrl(): string | null {
     if (!this.canvas) return null;
-    return this.canvas.toDataURL('image/png');
+    if (this.shapes.length === 0 && this.legacyCommands.length === 0) {
+      return this.canvas.toDataURL('image/png');
+    }
+
+    try {
+      const padding = 40;
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+
+      for (const s of this.shapes) {
+        const b = getShapeBounds(s);
+        minX = Math.min(minX, b.x);
+        minY = Math.min(minY, b.y);
+        maxX = Math.max(maxX, b.x + b.width);
+        maxY = Math.max(maxY, b.y + b.height);
+        if (typeof s.startX === 'number') {
+          minX = Math.min(minX, s.startX);
+          maxX = Math.max(maxX, s.startX);
+        }
+        if (typeof s.startY === 'number') {
+          minY = Math.min(minY, s.startY);
+          maxY = Math.max(maxY, s.startY);
+        }
+        if (typeof s.endX === 'number') {
+          minX = Math.min(minX, s.endX);
+          maxX = Math.max(maxX, s.endX);
+        }
+        if (typeof s.endY === 'number') {
+          minY = Math.min(minY, s.endY);
+          maxY = Math.max(maxY, s.endY);
+        }
+      }
+
+      if (minX === Infinity || maxX === -Infinity) {
+        return this.canvas.toDataURL('image/png');
+      }
+
+      const contentW = Math.max(maxX - minX, 100);
+      const contentH = Math.max(maxY - minY, 100);
+      const offCanvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
+      if (!offCanvas) return this.canvas.toDataURL('image/png');
+
+      offCanvas.width = contentW + padding * 2;
+      offCanvas.height = contentH + padding * 2;
+      const offCtx = offCanvas.getContext('2d');
+      if (!offCtx) return this.canvas.toDataURL('image/png');
+
+      offCtx.fillStyle = this.theme === 'light' ? '#ffffff' : '#09090b';
+      offCtx.fillRect(0, 0, offCanvas.width, offCanvas.height);
+
+      offCtx.save();
+      offCtx.translate(padding - minX, padding - minY);
+
+      const byId = new Map(this.shapes.map((s) => [s.id, s]));
+      for (const shape of this.shapes) {
+        if (shape.type !== 'arrow' && shape.type !== 'line') {
+          this.renderShape(offCtx, shape);
+        }
+      }
+      for (const shape of this.shapes) {
+        if (shape.type === 'arrow' || shape.type === 'line') {
+          this.renderConnector(offCtx, shape, byId);
+        }
+      }
+      offCtx.restore();
+
+      return offCanvas.toDataURL('image/png');
+    } catch {
+      return this.canvas.toDataURL('image/png');
+    }
   }
 
   public redraw(): void {
     if (!this.ctx || !this.canvas) return;
     const ctx = this.ctx;
+
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.setTransform(this.view.scale, 0, 0, this.view.scale, this.view.offsetX, this.view.offsetY);
 
     // 1. Render Scene Graph Shapes
     if (this.shapes.length > 0) {
@@ -321,6 +508,8 @@ export class CanvasEngine {
     for (const cmd of this.legacyCommands) {
       this.renderLegacyCommand(cmd);
     }
+
+    ctx.restore();
   }
 
   private renderShape(
@@ -331,14 +520,18 @@ export class CanvasEngine {
     ctx.strokeStyle = shape.strokeColor || (this.theme === 'light' ? '#475569' : '#94a3b8');
     ctx.lineWidth = typeof shape.strokeWidth === 'number' ? shape.strokeWidth : DEFAULT_STROKE_WIDTH;
 
+    const effectiveFill = applyThemeAlpha(shape.fillColor, this.theme);
+
     switch (shape.type) {
       case 'rectangle': {
         const w = shape.width ?? DEFAULT_WIDTH;
         const h = shape.height ?? DEFAULT_HEIGHT;
         roundedRectPath(ctx, shape.x, shape.y, w, h, 10);
-        if (shape.fillColor && shape.fillColor !== 'transparent') {
-          ctx.fillStyle = shape.fillColor;
+        if (effectiveFill && effectiveFill !== 'transparent') {
+          applyShadow(ctx, this.theme);
+          ctx.fillStyle = effectiveFill;
           ctx.fill();
+          clearShadow(ctx);
         }
         ctx.stroke();
         if (shape.text) {
@@ -351,9 +544,11 @@ export class CanvasEngine {
         const h = shape.height ?? 90;
         ctx.beginPath();
         ctx.ellipse(shape.x + w / 2, shape.y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
-        if (shape.fillColor && shape.fillColor !== 'transparent') {
-          ctx.fillStyle = shape.fillColor;
+        if (effectiveFill && effectiveFill !== 'transparent') {
+          applyShadow(ctx, this.theme);
+          ctx.fillStyle = effectiveFill;
           ctx.fill();
+          clearShadow(ctx);
         }
         ctx.stroke();
         if (shape.text) {
@@ -372,9 +567,11 @@ export class CanvasEngine {
         ctx.lineTo(cx, shape.y + h);
         ctx.lineTo(shape.x, cy);
         ctx.closePath();
-        if (shape.fillColor && shape.fillColor !== 'transparent') {
-          ctx.fillStyle = shape.fillColor;
+        if (effectiveFill && effectiveFill !== 'transparent') {
+          applyShadow(ctx, this.theme);
+          ctx.fillStyle = effectiveFill;
           ctx.fill();
+          clearShadow(ctx);
         }
         ctx.stroke();
         if (shape.text) {
@@ -387,14 +584,16 @@ export class CanvasEngine {
         const h = shape.height ?? 90;
         const color = shape.stickerColor || 'yellow';
         const fills: Record<string, string> = {
-          yellow: 'rgba(254, 240, 138, 0.9)',
-          mint: 'rgba(167, 243, 208, 0.9)',
-          rose: 'rgba(254, 205, 211, 0.9)',
+          yellow: 'rgba(254, 240, 138, 0.95)',
+          mint: 'rgba(167, 243, 208, 0.95)',
+          rose: 'rgba(254, 205, 211, 0.95)',
         };
+        applyShadow(ctx, this.theme);
         ctx.fillStyle = fills[color] || fills.yellow;
         ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
         roundedRectPath(ctx, shape.x, shape.y, w, h, 6);
         ctx.fill();
+        clearShadow(ctx);
         ctx.stroke();
 
         let display = shape.text || '';

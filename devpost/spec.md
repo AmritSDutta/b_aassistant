@@ -81,8 +81,8 @@ Hosts:
 ### 3. `CanvasArea`
 Implements `prd.md > Features and Behavior > 3. Live HTML Canvas Rendering & Scene Graph`.
 Top 60% pane of the main workspace. Renders the HTML5 `<canvas>` element and toolbar:
-- Toolbar with "Clear Canvas" and "Export PDF" buttons (mirrored by `canvas2d_clear` and `export_pdf` WebMCP tools).
-- `CanvasEngine`: Manages reactive scene graph (`Canvas2dShape[]`), perimeter-docked connectors, soft-translucent colors, HiDPI scaling, and snapshot capture.
+- Toolbar with "New Session", "Fit View", "Reset View", "Export PDF", and "Clear Canvas" buttons.
+- `CanvasEngine`: Manages reactive scene graph (`Canvas2dShape[]`), auto-centering viewport matrix (`fitToContent`), interactive drag-to-pan, cursor-pinned wheel zoom (`zoomAtPoint`), perimeter-docked connectors with pill badges, 2.5D drop shadows, light-mode alpha scaling, HiDPI scaling, and snapshot capture.
 
 ### 4. `ChatArea`
 Implements `prd.md > Features and Behavior > 2. Chat Conversation & History` and `> 6. Long-Dwell Reading Comfort`.
@@ -106,7 +106,13 @@ First-load how-to-use popup (shown while `localStorage['b_onboarded']` is unset;
 - Six numbered steps over the warm paper token surface: upload a document → connect your AI agent (WebMCP) → ask questions → star key answers → read comfortably (A-/A+, expand) → export the session PDF.
 - "Get started" dismisses; backdrop click also dismisses; the sidebar "tips" link re-opens it at any time.
 
-### 7. `WebMCPProvider`
+### 7. `HistoryModal`
+Implements `prd.md > Features and Behavior > 4. Session History Management`.
+Modal dialog listing all past deliberation sessions stored in IndexedDB:
+- Displays session ID, turn counts, initial question preview, and formatted timestamps.
+- Action buttons: "Restore" (rehydrates messages and diagram shapes into cockpit), "Export PDF" (downloads the session's PDF directly), and "Delete" (purges from IndexedDB).
+
+### 8. `WebMCPProvider`
 Implements `prd.md > Features and Behavior > 5. WebMCP Tool Suite`.
 Central service registering and dispatching all 16 WebMCP tools:
 - Registers on six discovery surfaces: `document.modelContext`, `navigator.modelContext` (+ `modelContextTesting`), `window.webmcp`, hidden DOM tool forms, `webmcp:ready`/`modelcontext:ready` custom events, and `window.addEventListener('message')` JSON-RPC 2.0. Forwards `readOnlyHint` annotations for read-only tools.
@@ -132,7 +138,7 @@ In-browser report generation engine:
 - **Blank Session Guard:** Validates session content; prevents exporting empty sessions and triggers `NotificationModal` validation alert.
 - **LLM Markdown Humanizer:** Parses Markdown headers (`#`, `##`, `###`), lists (`•`, `1.`), code blocks (Courier font with background tint), blockquotes, dividers, and strips inline tokens (`**`, `*`, `` ` ``, `[label](url)`) into clean typography.
 - **Multilingual Indic Script Support (Bengali & Hindi):** Detects Indic Unicode characters (`[\u0900-\u09FF]`) and renders them using browser Canvas2D text shaping (HarfBuzz/Uniscribe engine) embedded into jsPDF as high-resolution vectors/images, ensuring perfect ligature and matra rendering for Bengali (বাংলা) and Hindi (हिन्दी).
-- Fits canvas diagram snapshot and formats dialogue transcript with pagination.
+- Fits canvas diagram snapshots and formats dialogue transcript with sequential turn-by-turn pagination.
 
 ## Data Model
 
@@ -155,9 +161,23 @@ In-browser report generation engine:
   - `avgDocLength`: number
   - `docLengths`: Record<string, number>
   - `invertedIndex`: Record<string, Array<{ chunkId: string, tf: number }>>
+- **Store `session_turns`**:
+  - `id`: string (`turn_<timestamp>_<rand>`)
+  - `sessionId`: string (foreign key index)
+  - `turnNumber`: number (sequential 1-based order)
+  - `userPrompt`: optional string
+  - `agentMessage`: optional string
+  - `canvasSnapshot`: optional string (base64 PNG)
+  - `canvasShapes`: optional array (Canvas2D shapes snapshot)
+  - `timestamp`: number (index)
+- **Store `session_meta`**:
+  - `key`: string (`active_session_id`)
+  - `value`: string
 
 ### 2. Application State (React State / Local Storage)
 - `theme`: `'dark' | 'light'` (persisted in `localStorage`).
+- `sessionId`: string (persisted in IndexedDB `session_meta`).
+- `sessionTurns`: Array<SessionTurnRecord> (persisted in IndexedDB `session_turns`).
 - `chatMessages`: Array<{ id: string, sender: 'user' | 'agent', text: string, timestamp: number }>.
 - `activeDocument`: `{ name: string, pageCount: number, status: 'idle' | 'parsing' | 'indexed' | 'error' } | null`.
 

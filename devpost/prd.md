@@ -65,13 +65,30 @@ Source: `scope.md > The Core Loop`.
 Source: `scope.md > The Unique Kernel`.
 - **Drawing Engine:** Executes drawing tool calls from visiting agents to render structured Canvas2D shapes (`rectangle`, `ellipse`, `diamond`, `text`, `sticker`) and dynamic perimeter-docked connectors (`arrow`, `line`).
 - **Edge-to-Edge Perimeter Docking:** Connectors anchor to shape borders and stay attached when shapes move.
+- **Viewport Auto-Centering (`fitToContent`):** Measures total bounding box of all shapes and computes uniform scaling and offsets so diagrams never clip or land outside the visible canvas viewport.
+- **Interactive Pan & Smooth Wheel Zoom:** Allows users to drag-to-pan across the infinite canvas and zoom with mouse wheel (`zoomAtPoint`), keeping cursor focus stationary.
+- **Visual Elevation (2.5D Drop Shadows):** Ambient drop shadows on containers (`shadowOffsetY: 4`, `shadowBlur: 14`) for sharp contrast above the grid, cleared before stroking borders.
+- **Theme-Aware Alpha Boost:** Dynamically adjusts soft rgba fills in light mode (`alpha * 1.8`) to ensure crisp contrast on warm paper backgrounds.
 - **Color Palette:** Soft-translucent multi-tier palette (indigo client, emerald gateway, purple database, orange cache/queue, amber logic, and sticky-note stickers) with backdrop pills behind edge labels.
-- **Manual Control:** "Clear Canvas" and "Export PDF" buttons on the canvas toolbar; also callable as WebMCP tools.
+- **Manual Control:** "New Session", "Fit View", "Reset View", "Clear Canvas", and "Export PDF" buttons on the canvas toolbar; also callable as WebMCP tools.
 
-### 4. Client-Side PDF Generation
+### 4. Client-Side PDF Generation & Session History Management
 Source: `scope.md > The POC Boundary`.
-- Pure in-browser PDF generation using `jspdf`.
-- **Header Branding Logo:** Every generated PDF stamps the branding logo (`bassistant_light.jpg`) at top-left (`margin, cursor.y - 1`) alongside document title, subtitle, and date.
+- Pure in-browser PDF generation using `jspdf` and persistent browser session storage in IndexedDB.
+- **Active Session Persistence & History Modal:**
+  - Maintains single active session state in `bAssistantDB` across browser reloads via `session_turns` and `session_meta` stores.
+  - Dedicated **Session History Modal** accessible from the session strip: browse all past sessions, view turn counts and dates, restore past sessions, export historical sessions directly to PDF, or delete old sessions.
+  - Automatically records sequential deliberation turns (user prompt if present, canvas diagram snapshot if updated, and AI deliberation).
+  - Handles turns where user prompt is present or absent (e.g. autonomous agent calling `canvas2d_draw_shapes` or `chat_post` directly).
+  - Provides a clean "New Session" restart mechanism in the UI to reset state and initialize a fresh session ID.
+- **Sequential Turn-by-Turn PDF Export (`exportSessionPdf`):**
+  - Generates publication-ready A4 reports compiling active session turns sequentially in chronological order.
+  - Features top-left embedded branding logo (`bassistant_light.jpg`), session title `"bAssistant Deliberation Session"`, session ID, and timestamp metadata.
+  - For each turn:
+    - Renders turn section badge: `TURN X [HH:MM]`.
+    - Renders `USER INQUIRY` block with formatted text (when user prompt is present).
+    - Renders turn canvas visual diagram snapshot (aspect ratio preserved via PNG IHDR dimension parsing and `fitContain()`, enclosed in a subtle card frame).
+    - Renders `AI DELIBERATION` block with rich markdown parsing.
 - **Blank Content Validation:** Validates that at least one of either the canvas scene graph or the dialogue stream has substantive content before export. If both are blank, the export is aborted, a validation modal alert is presented to the user, and WebMCP `export_pdf` returns a descriptive rejection error.
 - **Markdown Humanization for LLM Content:** Parses and converts raw LLM-generated Markdown in the dialogue stream:
   - Formats headings (`#`, `##`, `###`) in bold Helvetica with proportional sizing and spacing.

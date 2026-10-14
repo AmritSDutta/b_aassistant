@@ -306,5 +306,46 @@ interface Config {
         expect.any(Number)
       );
     });
+
+    it('renders sequential turn-by-turn records with turn badges and inquiry/deliberation headers', () => {
+      const turns = [
+        {
+          id: 'turn_1',
+          sessionId: 'sess_123',
+          turnNumber: 1,
+          userPrompt: 'How does the architecture work?',
+          agentMessage: 'It consists of three tiers: client, gateway, and database.',
+          timestamp: 1728994500000,
+        },
+        {
+          id: 'turn_2',
+          sessionId: 'sess_123',
+          turnNumber: 2,
+          userPrompt: undefined, // user prompt absent
+          agentMessage: 'Agent autonomously added Redis cache.',
+          canvasSnapshot: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+          timestamp: 1728994600000,
+        },
+      ];
+
+      const res = exportSessionPdf({
+        sessionId: 'sess_123',
+        turns,
+      });
+
+      expect(res.success).toBe(true);
+      expect(mockText).toHaveBeenCalledWith(expect.stringContaining('TURN 1'), expect.any(Number), expect.any(Number));
+      expect(mockText).toHaveBeenCalledWith('USER INQUIRY', expect.any(Number), expect.any(Number));
+      expect(mockText).toHaveBeenCalledWith('AI DELIBERATION', expect.any(Number), expect.any(Number));
+      expect(mockText).toHaveBeenCalledWith(expect.stringContaining('TURN 2'), expect.any(Number), expect.any(Number));
+      expect(mockAddImage).toHaveBeenCalledWith(
+        expect.stringMatching(/^data:image\/png;base64,/),
+        'PNG',
+        expect.any(Number),
+        expect.any(Number),
+        expect.any(Number),
+        expect.any(Number)
+      );
+    });
   });
 });

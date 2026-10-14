@@ -7,10 +7,11 @@ import { CanvasArea } from './components/CanvasArea';
 import { ChatArea, ChatMessage } from './components/ChatArea';
 import { NotificationModal } from './components/NotificationModal';
 import { WelcomeModal } from './components/WelcomeModal';
+import { HistoryModal } from './components/HistoryModal';
 import { WebMCPProvider } from './webmcp/provider';
 import { ToolContext } from './webmcp/tools';
 import { BM25Index, removeStopWords } from './lib/bm25';
-import { globalIDBStorage, StoredDocument, StoredChunk } from './lib/idbStorage';
+import { globalIDBStorage, StoredDocument, StoredChunk, SessionTurnRecord, SessionSummary } from './lib/idbStorage';
 import { globalLiteParseService } from './lib/liteparseService';
 import { calculateMath } from './lib/mathEvaluator';
 import { searchWeb, searchResearch } from './lib/searchService';
@@ -27,6 +28,16 @@ export const App: React.FC = () => {
     return (localStorage.getItem('b_theme') as 'light' | 'dark') || 'dark';
   });
 
+  const [sessionId, setSessionId] = useState<string>(() => {
+    return `sess_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  });
+  const sessionIdRef = useRef<string>(sessionId);
+  sessionIdRef.current = sessionId;
+
+  const [turns, setTurns] = useState<SessionTurnRecord[]>([]);
+  const turnsRef = useRef<SessionTurnRecord[]>(turns);
+  turnsRef.current = turns;
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const messagesRef = useRef<ChatMessage[]>(messages);
   messagesRef.current = messages;
@@ -38,7 +49,18 @@ export const App: React.FC = () => {
     message: '',
   });
   const [showWelcome, setShowWelcome] = useState<boolean>(() => !localStorage.getItem(ONBOARD_KEY));
+  const [showHistory, setShowHistory] = useState<boolean>(false);
+  const [savedSessions, setSavedSessions] = useState<SessionSummary[]>([]);
   const [sessionMinutes, setSessionMinutes] = useState(0);
+
+  const refreshSavedSessions = useCallback(async () => {
+    try {
+      const summaries = await globalIDBStorage.getAllSessionsSummary();
+      setSavedSessions(summaries);
+    } catch (err) {
+      console.warn('Could not load session summaries from IDB:', err);
+    }
+  }, []);
 
   const [referenceUrls, setReferenceUrls] = useState<string[]>(() => {
     try {
@@ -69,10 +91,11 @@ export const App: React.FC = () => {
     localStorage.setItem(ONBOARD_KEY, '1');
   }, []);
 
-  // Restore stored document on mount if exists
+  // Restore stored document and active session turns on mount
   useEffect(() => {
     (async () => {
       try {
+        // 1. Restore document if exists
         const storedDoc = await globalIDBStorage.getActiveDocument();
         const storedIndex = await globalIDBStorage.getBM25Index();
         const storedChunks = await globalIDBStorage.getChunks();
@@ -87,13 +110,108 @@ export const App: React.FC = () => {
             status: 'indexed',
           });
         }
+
+        // 2. Restore active session ID
+        let activeSid = await globalIDBStorage.getActiveSessionId();
+        if (!activeSid) {
+          activeSid = sessionIdRef.current;
+          await globalIDBStorage.setActiveSessionId(activeSid);
+        } else {
+          setSessionId(activeSid);
+          sessionIdRef.current = activeSid;
+        }
+
+        // 3. Restore active session turns
+        const storedTurns = await globalIDBStorage.getActiveSessionTurns(activeSid);
+        if (storedTurns && storedTurns.length > 0) {
+          setTurns(storedTurns);
+          turnsRef.current = storedTurns;
+
+          // Reconstruct messages from sequential turns
+          const restoredMessages: ChatMessage[] = [];
+          for (const turn of storedTurns) {
+            if (turn.userPrompt && turn.userPrompt.trim()) {
+              restoredMessages.push({
+                id: `user-${turn.id}`,
+                sender: 'user',
+                text: turn.userPrompt,
+                timestamp: turn.timestamp,
+              });
+            }
+            if (turn.agentMessage && turn.agentMessage.trim()) {
+              restoredMessages.push({
+                id: `agent-${turn.id}`,
+                sender: 'agent',
+                text: turn.agentMessage,
+                timestamp: turn.timestamp,
+              });
+            }
+          }
+          if (restoredMessages.length > 0) {
+            setMessages(restoredMessages);
+            messagesRef.current = restoredMessages;
+          }
+
+          // Restore latest canvas shapes if saved in any turn
+          const turnWithShapes = [...storedTurns]
+            .reverse()
+            .find((t) => Array.isArray(t.canvasShapes) && t.canvasShapes.length > 0);
+          if (turnWithShapes && turnWithShapes.canvasShapes) {
+            globalCanvasEngine.setShapes(turnWithShapes.canvasShapes as any);
+          }
+        }
+        await refreshSavedSessions();
       } catch (err) {
-        console.warn('Could not restore stored document:', err);
+        console.warn('Could not restore stored document or session:', err);
       }
     })();
-  }, []);
+  }, [refreshSavedSessions]);
 
   const handlePostAgentMessage = useCallback((text: string) => {
+    const currentTurnCount = turnsRef.current.length;
+    const lastTurn = currentTurnCount > 0 ? turnsRef.current[currentTurnCount - 1] : null;
+    const canvasSnapshot = globalCanvasEngine.hasContent()
+      ? globalCanvasEngine.getSnapshotDataUrl() || undefined
+      : undefined;
+    const canvasShapes = globalCanvasEngine.getShapes();
+
+    if (lastTurn && !lastTurn.agentMessage) {
+      // Complete existing user turn
+      const completedTurn: SessionTurnRecord = {
+        ...lastTurn,
+        agentMessage: text,
+        canvasSnapshot,
+        canvasShapes,
+      };
+      const updatedTurns = turnsRef.current.map((t) => (t.id === lastTurn.id ? completedTurn : t));
+      setTurns(updatedTurns);
+      turnsRef.current = updatedTurns;
+      globalIDBStorage
+        .saveSessionTurn(completedTurn)
+        .then(() => refreshSavedSessions())
+        .catch((e) => console.warn('Failed to save turn to IDB:', e));
+    } else {
+      // Standalone agent turn (userPrompt is absent/undefined)
+      const turnId = `turn_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const newTurn: SessionTurnRecord = {
+        id: turnId,
+        sessionId: sessionIdRef.current,
+        turnNumber: currentTurnCount + 1,
+        userPrompt: undefined,
+        agentMessage: text,
+        canvasSnapshot,
+        canvasShapes,
+        timestamp: Date.now(),
+      };
+      const updatedTurns = [...turnsRef.current, newTurn];
+      setTurns(updatedTurns);
+      turnsRef.current = updatedTurns;
+      globalIDBStorage
+        .saveSessionTurn(newTurn)
+        .then(() => refreshSavedSessions())
+        .catch((e) => console.warn('Failed to save turn to IDB:', e));
+    }
+
     const newMessage: ChatMessage = {
       id: `${Date.now()}-${Math.random()}`,
       sender: 'agent',
@@ -101,7 +219,7 @@ export const App: React.FC = () => {
       timestamp: Date.now(),
     };
     setMessages((prev) => [...prev, newMessage]);
-  }, []);
+  }, [refreshSavedSessions]);
 
   const handleSearchDocument = useCallback(async (query: string) => {
     // If no document is currently loaded in memory, try loading from IndexedDB
@@ -162,10 +280,19 @@ export const App: React.FC = () => {
   }, []);
 
   const handleExportPdf = useCallback(() => {
+    const activeTurns = turnsRef.current;
     const hasCanvas = globalCanvasEngine.hasContent();
     const hasDialogue = messagesRef.current.some((m) => m.text && m.text.trim().length > 0);
+    const hasSequentialTurns =
+      activeTurns.length > 0 &&
+      activeTurns.some(
+        (t) =>
+          (t.userPrompt && t.userPrompt.trim().length > 0) ||
+          (t.agentMessage && t.agentMessage.trim().length > 0) ||
+          Boolean(t.canvasSnapshot)
+      );
 
-    if (!hasCanvas && !hasDialogue) {
+    if (!hasSequentialTurns && !hasCanvas && !hasDialogue) {
       setErrorModal({
         isOpen: true,
         title: 'Cannot Export Empty Session',
@@ -178,8 +305,27 @@ export const App: React.FC = () => {
       };
     }
 
+    // Attach latest canvas snapshot to latest turn if missing
+    const turnsToExport = [...activeTurns];
+    if (hasCanvas && turnsToExport.length > 0) {
+      const lastIdx = turnsToExport.length - 1;
+      if (!turnsToExport[lastIdx].canvasSnapshot) {
+        turnsToExport[lastIdx] = {
+          ...turnsToExport[lastIdx],
+          canvasSnapshot: globalCanvasEngine.getSnapshotDataUrl() || undefined,
+        };
+      }
+    }
+
     const dataUrl = hasCanvas ? globalCanvasEngine.getSnapshotDataUrl() : null;
-    return exportSessionPdf(dataUrl, messagesRef.current, activeDoc?.name, hasCanvas);
+    return exportSessionPdf({
+      sessionId: sessionIdRef.current,
+      turns: turnsToExport,
+      canvasDataUrl: dataUrl,
+      messages: messagesRef.current,
+      docName: activeDoc?.name,
+      hasCanvasContent: hasCanvas,
+    });
   }, [activeDoc]);
 
   // Update WebMCP Context
@@ -240,7 +386,139 @@ export const App: React.FC = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
+  const handleNewSession = useCallback(async () => {
+    const newSid = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    setSessionId(newSid);
+    sessionIdRef.current = newSid;
+    setTurns([]);
+    turnsRef.current = [];
+    setMessages([]);
+    messagesRef.current = [];
+    globalCanvasEngine.clear();
+    try {
+      await globalIDBStorage.setActiveSessionId(newSid);
+      await refreshSavedSessions();
+    } catch (e) {
+      console.warn('Failed to update active session ID in IDB:', e);
+    }
+  }, [refreshSavedSessions]);
+
+  const handleOpenHistory = useCallback(async () => {
+    await refreshSavedSessions();
+    setShowHistory(true);
+  }, [refreshSavedSessions]);
+
+  const handleRestoreSession = useCallback(async (targetSid: string) => {
+    try {
+      const storedTurns = await globalIDBStorage.getActiveSessionTurns(targetSid);
+      setSessionId(targetSid);
+      sessionIdRef.current = targetSid;
+      await globalIDBStorage.setActiveSessionId(targetSid);
+
+      setTurns(storedTurns);
+      turnsRef.current = storedTurns;
+
+      const restoredMessages: ChatMessage[] = [];
+      for (const turn of storedTurns) {
+        if (turn.userPrompt && turn.userPrompt.trim()) {
+          restoredMessages.push({
+            id: `user-${turn.id}`,
+            sender: 'user',
+            text: turn.userPrompt,
+            timestamp: turn.timestamp,
+          });
+        }
+        if (turn.agentMessage && turn.agentMessage.trim()) {
+          restoredMessages.push({
+            id: `agent-${turn.id}`,
+            sender: 'agent',
+            text: turn.agentMessage,
+            timestamp: turn.timestamp,
+          });
+        }
+      }
+      setMessages(restoredMessages);
+      messagesRef.current = restoredMessages;
+
+      const turnWithShapes = [...storedTurns]
+        .reverse()
+        .find((t) => Array.isArray(t.canvasShapes) && t.canvasShapes.length > 0);
+
+      if (turnWithShapes && turnWithShapes.canvasShapes) {
+        globalCanvasEngine.setShapes(turnWithShapes.canvasShapes as any);
+      } else {
+        globalCanvasEngine.clear();
+      }
+
+      setShowHistory(false);
+    } catch (err) {
+      console.warn('Failed to restore session:', err);
+    }
+  }, []);
+
+  const handleDeleteSession = useCallback(
+    async (targetSid: string) => {
+      try {
+        await globalIDBStorage.deleteSession(targetSid);
+        if (targetSid === sessionIdRef.current) {
+          await handleNewSession();
+        }
+        await refreshSavedSessions();
+      } catch (err) {
+        console.warn('Failed to delete session:', err);
+      }
+    },
+    [handleNewSession, refreshSavedSessions]
+  );
+
+  const handleExportPastSessionPdf = useCallback(
+    async (targetSid: string) => {
+      try {
+        const pastTurns = await globalIDBStorage.getActiveSessionTurns(targetSid);
+        const pastMessages: ChatMessage[] = [];
+        for (const t of pastTurns) {
+          if (t.userPrompt && t.userPrompt.trim()) {
+            pastMessages.push({ id: `user-${t.id}`, sender: 'user', text: t.userPrompt, timestamp: t.timestamp });
+          }
+          if (t.agentMessage && t.agentMessage.trim()) {
+            pastMessages.push({ id: `agent-${t.id}`, sender: 'agent', text: t.agentMessage, timestamp: t.timestamp });
+          }
+        }
+        const turnWithSnap = [...pastTurns].reverse().find((t) => Boolean(t.canvasSnapshot));
+        const canvasDataUrl = turnWithSnap?.canvasSnapshot || null;
+
+        exportSessionPdf({
+          sessionId: targetSid,
+          turns: pastTurns,
+          canvasDataUrl,
+          messages: pastMessages,
+          docName: activeDoc?.name,
+          hasCanvasContent: Boolean(canvasDataUrl),
+        });
+      } catch (err) {
+        console.warn('Failed to export past session PDF:', err);
+      }
+    },
+    [activeDoc]
+  );
+
   const handleSendMessage = (text: string) => {
+    const turnId = `turn_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const newTurn: SessionTurnRecord = {
+      id: turnId,
+      sessionId: sessionIdRef.current,
+      turnNumber: turnsRef.current.length + 1,
+      userPrompt: text,
+      timestamp: Date.now(),
+    };
+    const updatedTurns = [...turnsRef.current, newTurn];
+    setTurns(updatedTurns);
+    turnsRef.current = updatedTurns;
+    globalIDBStorage
+      .saveSessionTurn(newTurn)
+      .then(() => refreshSavedSessions())
+      .catch((e) => console.warn('Failed to save turn to IDB:', e));
+
     const newMessage: ChatMessage = {
       id: `${Date.now()}-${Math.random()}`,
       sender: 'user',
@@ -403,14 +681,26 @@ export const App: React.FC = () => {
           <span>
             {messages.length} messages · {highlights.length} highlights · {sessionMinutes} min
           </span>
-          <button
-            type="button"
-            onClick={() => setShowWelcome(true)}
-            className="uppercase tracking-[0.06em] font-bold hover:underline"
-            aria-label="Show tips again"
-          >
-            tips
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={handleOpenHistory}
+              className="uppercase tracking-[0.06em] font-bold hover:underline"
+              style={{ color: 'var(--accent)' }}
+              title="Open archived deliberation sessions"
+            >
+              sessions
+            </button>
+            <span>·</span>
+            <button
+              type="button"
+              onClick={() => setShowWelcome(true)}
+              className="uppercase tracking-[0.06em] font-bold hover:underline"
+              aria-label="Show tips again"
+            >
+              tips
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -419,7 +709,8 @@ export const App: React.FC = () => {
         <CanvasArea
           theme={theme}
           onExportPdf={handleExportPdf}
-          onClear={handleCleanDocument}
+          onNewSession={handleNewSession}
+          onClear={() => globalCanvasEngine.clear()}
         />
         <ChatArea
           messages={messages}
@@ -430,6 +721,17 @@ export const App: React.FC = () => {
 
       {/* First-load onboarding */}
       <WelcomeModal isOpen={showWelcome} onClose={handleCloseWelcome} />
+
+      {/* Session History Modal */}
+      <HistoryModal
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+        currentSessionId={sessionId}
+        sessions={savedSessions}
+        onRestoreSession={handleRestoreSession}
+        onExportSessionPdf={handleExportPastSessionPdf}
+        onDeleteSession={handleDeleteSession}
+      />
 
       {/* Modal Popup */}
       <NotificationModal

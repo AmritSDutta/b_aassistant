@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { CanvasEngine, perimeterEdgeToEdge, sanitizeCanvas2dShapes } from '../lib/canvasEngine';
+import { CanvasEngine, perimeterEdgeToEdge, sanitizeCanvas2dShapes, applyThemeAlpha } from '../lib/canvasEngine';
 import { Canvas2dShape } from '../types/canvas2d';
 
 describe('Canvas2D Advanced Engine & Scene Graph', () => {
@@ -71,5 +71,30 @@ describe('Canvas2D Advanced Engine & Scene Graph', () => {
     expect(updated[0].text).toBe('Redis Cluster v7');
     expect(updated[0].strokeColor).toBe('#f97316');
     expect(updated[0].x).toBe(120);
+  });
+
+  it('manages 2D viewport pan, zoomAtPoint, and resetView', () => {
+    expect(engine.getView()).toEqual({ scale: 1, offsetX: 0, offsetY: 0 });
+
+    engine.pan(50, -30);
+    expect(engine.getView()).toEqual({ scale: 1, offsetX: 50, offsetY: -30 });
+
+    // Zoom in pinned around point (100, 100)
+    engine.zoomAtPoint(-100, 100, 100);
+    const viewAfterZoom = engine.getView();
+    expect(viewAfterZoom.scale).toBeCloseTo(1.1, 2);
+
+    engine.resetView();
+    expect(engine.getView()).toEqual({ scale: 1, offsetX: 0, offsetY: 0 });
+  });
+
+  it('boosts contrast alpha in light theme while preserving dark theme fills', () => {
+    const fill = 'rgba(99, 102, 241, 0.18)';
+
+    const lightBoosted = applyThemeAlpha(fill, 'light');
+    expect(lightBoosted).toContain('0.324'); // 0.18 * 1.8
+
+    const darkPreserved = applyThemeAlpha(fill, 'dark');
+    expect(darkPreserved).toBe(fill);
   });
 });
