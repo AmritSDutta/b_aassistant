@@ -8,7 +8,7 @@ interface WelcomeModalProps {
 const STEPS: Array<{ title: string; body: string }> = [
   {
     title: 'Upload a document',
-    body: 'Drop a PDF or Word file (under 1MB) into the sidebar. It is parsed and indexed privately in your browser — nothing leaves your machine.',
+    body: 'Drop a PDF or Word file (under 2MB) into the sidebar. It is parsed and indexed privately in your browser — nothing leaves your machine.',
   },
   {
     title: 'Connect your AI agent',

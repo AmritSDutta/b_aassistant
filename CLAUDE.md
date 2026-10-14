@@ -43,7 +43,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `canvas2d_draw_shapes` descriptions embed the approved translucent color palette (client/gateway/db/queue/decision rgba values) — keep tool descriptions in sync with renderer capabilities.
 
 ### Document Ingestion & Retrieval
-- Files must be strictly `< 1MB` and `.pdf`, `.doc`, or `.docx`; violations trigger the `NotificationModal` popup (`src/App.tsx`).
+- Files must be strictly `< 2MB` and `.pdf`, `.doc`, or `.docx`; violations trigger the `NotificationModal` popup (`src/App.tsx`).
 - Pipeline: FileUpload → LiteParse WASM (`@llamaindex/liteparse-wasm`, with browser stream-parser fallback, hex token decoding `<...> Tj` / `[...] TJ`, and in-browser DOCX PKZip `word/document.xml` decompression) → natural page chunks → `BM25Index` → IndexedDB. On mount, the app restores doc/chunks/index from IndexedDB; `search_document` lazily rehydrates from IDB when memory is empty.
 - BM25 search returns top-3 chunks; if the query has no keyword overlap it falls back to returning the first 3 chunks as a preview.
 
@@ -63,7 +63,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Storage
 - Pure IndexedDB database `bAssistantDB` with stores:
-  - `documents`: uploaded document metadata (< 1MB)
+  - `documents`: uploaded document metadata (< 2MB)
   - `chunks`: natural per-page text chunks
   - `bm25_index`: serialized BM25 inverted index
   - `session_turns`: sequential turn-by-turn records (`id`, `sessionId`, `turnNumber`, `userPrompt?`, `agentMessage?`, `canvasSnapshot?`, `timestamp`)

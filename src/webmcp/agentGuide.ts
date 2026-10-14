@@ -8,7 +8,7 @@ This guide explains how to use every other tool correctly. Read it before acting
 - \`get_chat_history\` returns the dialogue so far; user messages are prefixed with \`user:\`.
 
 ## Document Retrieval
-- \`search_document\` queries the user's uploaded document (<1MB PDF/DOC/DOCX) via a BM25 index.
+- \`search_document\` queries the user's uploaded document (<2MB PDF/DOC/DOCX) via a BM25 index.
   Pass targeted keywords or topic entities ("authentication", "revenue", "architecture"),
   NOT conversational sentences. Returns the top 3 pages with scores.
 - \`clean_document\` wipes all stored document data. Only use this when the user explicitly asks.

@@ -15,7 +15,9 @@ describe('Document Processing and Validation', () => {
 
   it('correctly reports file metadata', async () => {
     const service = new LiteParseService();
-    const mockPdfBytes = new TextEncoder().encode('%PDF-1.4 sample content for parsing');
+    const mockPdfBytes = new TextEncoder().encode(
+      '%PDF-1.4\n1 0 obj\n<< /Length 40 >>\nstream\n(sample content for parsing) Tj\nendstream\nendobj\n'
+    );
     const file = new File([mockPdfBytes], 'whitepaper.pdf', { type: 'application/pdf' });
 
     const result = await service.parseFile(file);
@@ -92,5 +94,55 @@ describe('Document Processing and Validation', () => {
     expect(result.fileName).toBe('specification.docx');
     expect(result.pages.length).toBe(1);
     expect(result.pages[0].text).toContain('Architecture Review: Browser WebMCP & LiteParse.');
+  });
+
+  it('filters out raw PDF object and stream bytecode from parsed output', async () => {
+    const service = new LiteParseService();
+    const garbagePdf = `
+%PDF-1.4
+2 0 obj
+<</Type /Page /Resources <</ProcSet [/PDF /Text /ImageB /ImageC] /ExtGState <</G3 3 0 R>>>>
+/MediaBox [0 0 595.92 841.92]
+/Contents 12 0 R>>
+endobj
+12 0 obj
+<</Filter /FlateDecode /Length 50>>
+stream
+(Clean Title for Architecture Plan) Tj
+endstream
+endobj
+`;
+    const file = new File([new TextEncoder().encode(garbagePdf)], 'messy.pdf', { type: 'application/pdf' });
+    const result = await service.parseFile(file);
+
+    expect(result.pages.length).toBeGreaterThan(0);
+    for (const page of result.pages) {
+      expect(page.text).not.toContain('%PDF');
+      expect(page.text).not.toContain('endstream');
+      expect(page.text).not.toContain('endobj');
+      expect(page.text).not.toContain('/ProcSet');
+      expect(page.text).not.toContain('/MediaBox');
+      expect(page.text).not.toContain('/FlateDecode');
+      expect(page.text).toContain('Clean Title for Architecture Plan');
+    }
+  });
+
+  it('parses real multi-line PDF documents cleanly via LiteParse', async () => {
+    const { jsPDF } = await import('jspdf');
+    const doc = new jsPDF();
+    doc.text('Summary Overview of System Architecture', 20, 20);
+    doc.text('This document details event driven messaging and PostgreSQL databases.', 20, 30);
+    const pdfBytes = new Uint8Array(doc.output('arraybuffer'));
+
+    const service = new LiteParseService();
+    const file = new File([pdfBytes], 'architecture.pdf', { type: 'application/pdf' });
+    const result = await service.parseFile(file);
+
+    expect(result.fileName).toBe('architecture.pdf');
+    expect(result.pages.length).toBeGreaterThanOrEqual(1);
+    expect(result.pages[0].text).toContain('Summary Overview of System Architecture');
+    expect(result.pages[0].text).toContain('PostgreSQL');
+    expect(result.pages[0].text).not.toContain('%PDF');
+    expect(result.pages[0].text).not.toContain('endobj');
   });
 });

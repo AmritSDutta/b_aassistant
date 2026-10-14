@@ -18,7 +18,7 @@ import { searchWeb, searchResearch } from './lib/searchService';
 import { globalCanvasEngine } from './lib/canvasEngine';
 import { exportSessionPdf } from './lib/pdfExportService';
 
-const MAX_FILE_SIZE = 1024 * 1024; // 1MB strictly
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB strictly
 const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
 const ONBOARD_KEY = 'b_onboarded';
 const URLS_STORAGE_KEY = 'b_reference_urls';
@@ -571,12 +571,12 @@ export const App: React.FC = () => {
   );
 
   const handleFileSelect = async (file: File) => {
-    // 1. Check size strictly < 1MB
+    // 1. Check size strictly < 2MB
     if (file.size >= MAX_FILE_SIZE) {
       setErrorModal({
         isOpen: true,
         title: 'File Size Exceeded',
-        message: `File "${file.name}" is ${(file.size / (1024 * 1024)).toFixed(2)} MB. bAssistant accepts files strictly under 1MB for client-side processing.`,
+        message: `File "${file.name}" is ${(file.size / (1024 * 1024)).toFixed(2)} MB. bAssistant accepts files strictly under 2MB for client-side processing.`,
       });
       return;
     }

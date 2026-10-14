@@ -61,7 +61,7 @@ To guarantee zero placeholder text (`Page X Content`) under all conditions (incl
 
 ```mermaid
 flowchart TD
-  Upload["File Upload (< 1MB)"] --> CheckFormat{"Format Check"}
+  Upload["File Upload (< 2MB)"] --> CheckFormat{"Format Check"}
   CheckFormat -->|PDF| WASM["Tier 1: @llamaindex/liteparse-wasm"]
   WASM -->|Success| IndexedDB[("IndexedDB Chunks & BM25 Index")]
   WASM -->|WASM Unavailable / Fails| StreamParser["Tier 2: DecompressionStream('deflate-raw')"]

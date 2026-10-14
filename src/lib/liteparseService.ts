@@ -1,3 +1,5 @@
+import initWasm, { LiteParse } from '@llamaindex/liteparse-wasm';
+
 export interface ParsedPage {
   pageNumber: number;
   text: string;
@@ -11,31 +13,72 @@ export interface ParseResult {
 
 export class LiteParseService {
   private wasmLoaded: boolean = false;
-  private liteparseModule: any = null;
+  private initPromise: Promise<void> | null = null;
 
   public async init(): Promise<void> {
     if (this.wasmLoaded) return;
-    try {
-      const moduleName = '@llamaindex/' + 'liteparse-wasm';
-      const lp = await import(/* @vite-ignore */ moduleName);
-      if (typeof lp.default === 'function') {
-        try {
-          const isRealBrowser = typeof window !== 'undefined' && window.location && window.location.protocol.startsWith('http');
-          if (isRealBrowser) {
-            await lp.default({ module_or_path: '/liteparse_wasm_bg.wasm' });
-            this.wasmLoaded = true;
-          } else {
-            // Node / Vitest testing environment (fallback to high-fidelity stream & zip decompressors)
-            this.wasmLoaded = false;
+    if (this.initPromise) return this.initPromise;
+
+    this.initPromise = (async () => {
+      try {
+        const proc = (globalThis as any).process;
+        const isNode = typeof proc !== 'undefined' && Boolean(proc?.versions?.node);
+
+        if (isNode) {
+          // Node.js / Vitest testing environment: load directly from disk
+          try {
+            const fsModule = 'fs';
+            const pathModule = 'path';
+            const fs = await import(/* @vite-ignore */ fsModule);
+            const path = await import(/* @vite-ignore */ pathModule);
+            const cwd = typeof proc.cwd === 'function' ? proc.cwd() : '.';
+            const wasmPath = path.resolve(cwd, 'public/liteparse_wasm_bg.wasm');
+            if (fs.existsSync(wasmPath)) {
+              const wasmBytes = fs.readFileSync(wasmPath);
+              await initWasm(wasmBytes);
+              this.wasmLoaded = true;
+              return;
+            }
+          } catch (nodeErr) {
+            console.warn('Node WASM disk load error:', nodeErr);
           }
-        } catch {
-          this.wasmLoaded = false;
         }
+
+        // Browser environment: load wasm asset from root public path
+        await initWasm({ module_or_path: '/liteparse_wasm_bg.wasm' });
+        this.wasmLoaded = true;
+      } catch (err) {
+        console.warn('LiteParse WASM initialization failed:', err);
+        this.wasmLoaded = false;
       }
-      this.liteparseModule = lp;
-    } catch {
-      this.wasmLoaded = false;
+    })();
+
+    await this.initPromise;
+  }
+
+  public cleanExtractedText(text: string): string {
+    if (!text) return '';
+    // Strip common binary PDF object and stream artifacts if any leaked
+    let cleaned = text
+      .replace(/%PDF-\d+\.\d+[\s\S]*?(obj\b|stream\b)/gi, '')
+      .replace(/endstream\s*endobj/gi, '')
+      .replace(/<<[\s\S]*?>>/g, '')
+      .replace(/[^\x20-\x7E\n\r\t\u00A0-\uFFFF]/g, ' ')
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n\s*\n/g, '\n\n')
+      .trim();
+
+    // If text only consists of raw PDF keyword syntax, discard it
+    if (
+      cleaned.length < 5 ||
+      /^(obj|endobj|stream|endstream|\d+\s+\d+\s+R|\/Type|\/Page|\/MediaBox|\/ProcSet|\/Font)+$/i.test(
+        cleaned.replace(/\s+/g, '')
+      )
+    ) {
+      return '';
     }
+
+    return cleaned;
   }
 
   public async parseFile(file: File): Promise<ParseResult> {
@@ -59,29 +102,30 @@ export class LiteParseService {
       if (!this.wasmLoaded) {
         await this.init();
       }
-      if (this.wasmLoaded && this.liteparseModule) {
+
+      if (this.wasmLoaded) {
         try {
-          const ParserClass = this.liteparseModule.LiteParse || this.liteparseModule.DocumentParser;
-          if (ParserClass) {
-            const parser = new ParserClass({ outputFormat: 'text' });
-            const result = await parser.parse(uint8);
+          const parser = new LiteParse({ outputFormat: 'text' });
+          const result = await parser.parse(uint8);
 
-            if (result && Array.isArray(result.pages) && result.pages.length > 0) {
-              const pages: ParsedPage[] = result.pages
-                .map((p: any, idx: number) => ({
-                  pageNumber: p.pageNum || p.pageNumber || idx + 1,
-                  text: (p.text || p.markdown || '').trim(),
-                }))
-                .filter((p: ParsedPage) => p.text.length > 0);
+          if (result && Array.isArray(result.pages) && result.pages.length > 0) {
+            const pages: ParsedPage[] = result.pages
+              .map((p, idx) => ({
+                pageNumber: p.pageNum || idx + 1,
+                text: this.cleanExtractedText(p.text || p.markdown || ''),
+              }))
+              .filter((p) => p.text.length > 0);
 
-              if (pages.length > 0) {
-                return { fileName: file.name, fileSize: file.size, pages };
-              }
-            } else if (result && typeof result.text === 'string' && result.text.trim()) {
+            if (pages.length > 0) {
+              return { fileName: file.name, fileSize: file.size, pages };
+            }
+          } else if (result && typeof result.text === 'string' && result.text.trim()) {
+            const cleaned = this.cleanExtractedText(result.text);
+            if (cleaned.length > 0) {
               return {
                 fileName: file.name,
                 fileSize: file.size,
-                pages: [{ pageNumber: 1, text: result.text.trim() }],
+                pages: [{ pageNumber: 1, text: cleaned }],
               };
             }
           }
@@ -99,6 +143,18 @@ export class LiteParseService {
           pages: decompressedPages,
         };
       }
+
+      // CRITICAL: NEVER dump raw PDF binary bytecode or syntax dictionaries as plain text!
+      return {
+        fileName: file.name,
+        fileSize: file.size,
+        pages: [
+          {
+            pageNumber: 1,
+            text: `Document "${file.name}" uploaded. No extractable text found in this PDF. It may be an image-only scan or use unsupported font encodings.`,
+          },
+        ],
+      };
     }
 
     // 3. Fast DOCX ZIP XML extractor for Word documents
@@ -113,7 +169,7 @@ export class LiteParseService {
       }
     }
 
-    // 4. Clean raw text / unstructured fallback
+    // 4. Clean raw text / unstructured fallback for .txt, .csv, .doc
     const pages = await this.extractTextFallback(uint8, file.name);
     return {
       fileName: file.name,
@@ -124,7 +180,7 @@ export class LiteParseService {
 
   private async decompressFlate(bytes: Uint8Array): Promise<string> {
     if (typeof DecompressionStream === 'undefined') {
-      return new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+      return '';
     }
 
     try {
@@ -144,10 +200,10 @@ export class LiteParseService {
       const text = await new Response(stream).text();
       if (text && text.trim().length > 0) return text;
     } catch {
-      // Fallback to raw text
+      // Fail closed rather than outputting raw binary bytes
     }
 
-    return new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+    return '';
   }
 
   private async extractPdfViaDecompression(uint8: Uint8Array): Promise<ParsedPage[]> {
@@ -165,8 +221,11 @@ export class LiteParseService {
         streamBytes[i] = streamContent.charCodeAt(i);
       }
 
-      const decompressed = await this.decompressFlate(streamBytes);
-      const extracted = this.extractPdfTokens(decompressed);
+      let textToParse = await this.decompressFlate(streamBytes);
+      if (!textToParse) {
+        textToParse = new TextDecoder('latin1').decode(streamBytes);
+      }
+      const extracted = this.extractPdfTokens(textToParse);
 
       if (extracted.trim().length > 0) {
         pages.push({
@@ -216,12 +275,10 @@ export class LiteParseService {
     }
 
     if (textPieces.length > 0) {
-      return textPieces.join(' ').replace(/[^\x20-\x7E\n]/g, ' ').replace(/\s+/g, ' ').trim();
+      return this.cleanExtractedText(textPieces.join(' '));
     }
 
-    // Direct printable string fallback
-    const allParen = Array.from(text.matchAll(/\(([A-Za-z0-9\s.,!?:;'-]{3,})\)/g)).map((m) => m[1]);
-    return allParen.join(' ').replace(/\s+/g, ' ').trim();
+    return '';
   }
 
   private async extractDocxViaZip(uint8: Uint8Array): Promise<ParsedPage[]> {
@@ -263,7 +320,7 @@ export class LiteParseService {
           .replace(/&gt;/g, '>')
           .replace(/&quot;/g, '"')
           .replace(/&apos;/g, "'")
-          .replace(/[^\x20-\x7E\n]/g, ' ')
+          .replace(/[^\x20-\x7E\n\r\t\u00A0-\uFFFF]/g, ' ')
           .replace(/\s+/g, ' ')
           .trim();
 
@@ -282,9 +339,14 @@ export class LiteParseService {
     const decoder = new TextDecoder('utf-8', { fatal: false });
     const raw = decoder.decode(uint8);
 
+    // Guard: If raw binary PDF bytes are passed, never dump PDF bytecode/syntax!
+    if (raw.startsWith('%PDF-') || raw.includes('<< /Type /Catalog') || raw.includes('endstream endobj')) {
+      return [{ pageNumber: 1, text: `Document "${fileName}" contains unextractable binary PDF content.` }];
+    }
+
     const rawParts = raw.split(/\f|\n(?=--- Page \d+ ---)|\n(?=Page \d+ of \d+)/i);
     const validParts = rawParts
-      .map((part) => part.replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim())
+      .map((part) => part.replace(/[^\x20-\x7E\n\r\t\u00A0-\uFFFF]/g, ' ').replace(/\s+/g, ' ').trim())
       .filter((p) => p.length > 0);
 
     if (validParts.length > 1) {
@@ -294,7 +356,7 @@ export class LiteParseService {
       }));
     }
 
-    const printable = raw.replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim();
+    const printable = raw.replace(/[^\x20-\x7E\n\r\t\u00A0-\uFFFF]/g, ' ').replace(/\s+/g, ' ').trim();
     if (printable.length === 0) {
       return [{ pageNumber: 1, text: `Document "${fileName}" was uploaded and indexed.` }];
     }

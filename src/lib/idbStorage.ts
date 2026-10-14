@@ -89,6 +89,11 @@ export class IDBStorage {
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
 
+      // Clear previous document data so stale chunks never leak into new active document
+      tx.objectStore('documents').clear();
+      tx.objectStore('chunks').clear();
+      tx.objectStore('bm25_index').clear();
+
       // Store document record
       const docStore = tx.objectStore('documents');
       docStore.put(doc);

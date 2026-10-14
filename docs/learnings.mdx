@@ -80,3 +80,42 @@ Rather than bundling multi-megabyte HarfBuzz shaping binaries into the browser b
    Lines containing Indic scripts are drawn onto a scaled off-screen canvas (3x device pixel ratio) styled with system Indic fonts (`'Noto Sans Bengali', 'Noto Sans Devanagari', 'Kalpurush', 'SolaimanLipi', 'Mangal', sans-serif`).
 4. **Seamless PDF Splicing**:
    The rasterized canvas is exported to a lossless PNG data URL and embedded directly into the jsPDF stream via `doc.addImage(...)`, while standard Latin text continues to use lightweight vector glyphs.
+
+## In-Browser PDF Parsing, WASM Bundling & Bytecode Isolation
+
+Running document parsing and BM25 full-text indexing 100% inside the browser sandbox presented subtle challenges around WebAssembly asset lifecycle, stream extraction fallback, and raw PDF bytecode leakage.
+
+### The Problem: Raw Bytecode & PDF Object Leakage
+When users uploaded non-standard, malformed, or highly compressed PDFs:
+1. **Vite Dynamic Import Asset Fragmentation**:
+   Using dynamic string imports (`await import(/* @vite-ignore */ url)`) bypassed Vite's static analysis, preventing the bundler from packaging the underlying `liteparse_wasm_bg.wasm` binary and leading to runtime loader failures in production.
+2. **Bytecode Stream Leakage**:
+   When fallback stream parsers processed raw deflate streams without strict token boundary checks, raw PDF object definitions (`%PDF-1.4`, `endstream`, `endobj`, `/ProcSet`, `/MediaBox`, `/ExtGState`) leaked into extracted text chunks.
+3. **BM25 Search Contamination**:
+   The BM25 index tokenized these PDF operators. Agent queries such as `"summary overview introduction"` matched structural dictionaries and returned unreadable PDF internals (`... Cl endstream endobj 2 0 obj <</Type /Page ...`).
+4. **Cross-Document IndexedDB Accumulation**:
+   If only the `documents` store was updated on file upload without purging the companion `chunks` and `bm25_index` stores, chunks from earlier sessions persisted and intermingled with subsequent document uploads.
+
+### The Solution: Multi-Tier Extraction & Strict Bytecode Filtering
+
+```mermaid
+flowchart TD
+  Input["PDF / DOCX File (< 2MB)"] --> Purge["1. Purge IDB documents, chunks & bm25_index"]
+  Purge --> Engine{"Engine Selection"}
+  Engine -->|Browser| FetchWasm["Fetch /liteparse_wasm_bg.wasm"]
+  Engine -->|Node / Vitest| ReadDisk["Read from disk via fs.readFileSync"]
+  FetchWasm --> LiteParse["LiteParse WASM Extractor"]
+  ReadDisk --> LiteParse
+  LiteParse --> Filter["2. Syntax & Bytecode Filter: Strip %PDF-, endstream, /ProcSet"]
+  LiteParse -.->|Fallback on error| StreamParser["DecompressionStream('deflate-raw') + Token Validator"]
+  StreamParser --> Filter
+  Filter --> Chunks["3. Clean Natural Page Chunks"]
+  Chunks --> BM25["4. BM25 Inverted Index & IDB Storage"]
+```
+
+1. **Static WASM ESM Import with Environment Detection**:
+   Importing `@llamaindex/liteparse-wasm` statically enables Vite's build pipeline to manage and fingerprint the `.wasm` asset. A universal detector initializes `/liteparse_wasm_bg.wasm` in browser environments and transparently falls back to local disk loading in Node.js test runners without external dependencies.
+2. **Heuristic PDF Syntax Scrubbing**:
+   The `cleanPdfSyntaxTokens()` sanitizer strips PDF structural delimiters (`%PDF-`, `endstream`, `endobj`, `/Font`, `/Length`, `/Filter /FlateDecode`, `/ProcSet`, `/MediaBox`) and rejects any extracted chunk containing residual binary bytecode before passing text to the chunk builder.
+3. **Atomic IDB Store Reset**:
+   `globalIDBStorage.saveDocument()` unconditionally clears the `documents`, `chunks`, and `bm25_index` stores prior to persisting newly parsed data, guaranteeing zero cross-document contamination.

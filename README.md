@@ -26,7 +26,7 @@
 | Theme Toggle    | | CANVAS2D SCENE GRAPH (60% Height)                           | |
 |                 | |                                                              | |
 | [Drop File]     | |  [Client App] -----> [WebMCP Bridge] -----> [IndexedDB]     | |
-| (<1MB Doc/PDF)  | |                                                              | |
+| (<2MB Doc/PDF)  | |                                                              | |
 |                 | +--------------------------------------------------------------+ |
 | [Export PDF]    | | CHAT STREAM (40% Height)                                     | |
 | (Multilingual)  | |                                                              | |
@@ -41,7 +41,7 @@
 ## User Journey: How to Use bAssistant
 
 ### 1. Ingest Your Business Documents
-Click or drag a file (`.pdf`, `.docx`, `.doc` up to 1MB) into the sidebar uploader. bAssistant leverages in-browser WebAssembly (`@llamaindex/liteparse-wasm` and browser stream decompilation) to extract text and build an in-memory BM25 index within seconds.
+Click or drag a file (`.pdf`, `.docx`, `.doc` up to 2MB) into the sidebar uploader. bAssistant leverages in-browser WebAssembly (`@llamaindex/liteparse-wasm` and browser stream decompilation) to extract text and build an in-memory BM25 index within seconds.
 
 ### 2. Collaborate with Your AI Assistant
 Chat naturally in the bottom stream. When you ask questions like *"What are the data flow bottlenecks in the document?"* or *"Map out the microservices"*:
