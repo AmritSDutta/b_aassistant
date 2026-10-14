@@ -37,7 +37,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ messages, onSendMessage }) =
   };
 
   return (
-    <div className="h-[60%] flex flex-col bg-white dark:bg-slate-950 font-serif">
+    <div className="h-[40%] flex flex-col bg-white dark:bg-slate-950 font-serif">
       {/* Message Stream */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg) => (

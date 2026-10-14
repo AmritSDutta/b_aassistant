@@ -38,7 +38,7 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({ onClear }) => {
   };
 
   return (
-    <div className="h-[40%] flex flex-col border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 relative overflow-hidden">
+    <div className="h-[60%] flex flex-col border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 relative overflow-hidden">
       {/* Canvas Toolbar */}
       <div className="px-3 py-1.5 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 bg-white/40 dark:bg-slate-900/40 backdrop-blur">
         <div className="flex items-center gap-2">

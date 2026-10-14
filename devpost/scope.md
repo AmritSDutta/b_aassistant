@@ -17,14 +17,14 @@ Anyone who wants to learn, research, and explore any topic with AI in a cost-eff
 1. The user opens the single page to investigate any topic (and optionally uploads a doc or PDF < 1MB, which is pagewise-chunked in-browser using LiteParse and indexed with a client-side BM25 search index in local datastore).
 2. The user's visiting LLM connects to the page via WebMCP and discovers the page's exposed tools.
 3. The LLM calls free research tools (DuckDuckGo, ArXiv) and local document tools (querying the BM25 index) to gather information.
-4. The LLM streams its written explanation into the bottom 60% chat area and simultaneously calls canvas tools to draw live diagrams and graphs in the top 40% canvas area.
+4. The LLM streams its written explanation into the bottom 40% chat area and simultaneously calls canvas tools to draw live diagrams and graphs in the top 60% canvas area.
 5. The user absorbs the text and visuals together and continues the dialogue.
 
 ## Inspiration & Identity
 - **Mood / Feel:** Clean, utilitarian, responsive, split-screen cockpit for AI-augmented research and visual thinking.
 - **Visual Structure:**
   - Left 20%: Branding (top), File Upload (middle), blank area for future tools (bottom).
-  - Right 80%: HTML Canvas (top 40%), Textual Chat Area (bottom 60%) formatted with Lora typography for optimal longform reading and auto-scrolling to the latest turn.
+  - Right 80%: HTML Canvas (top 60%), Textual Chat Area (bottom 40%) formatted with Lora typography for optimal longform reading and auto-scrolling to the latest turn.
 
 ## Why This Matters to the Learner
 Enables a practical, genuinely beneficial tool for the community that proves WebMCP's potential in the browser: running multimodal interactions on cheap models, keeping all user data strictly local, and using free-tier tools rather than costly subscriptions.
@@ -36,12 +36,12 @@ A user opens the single-page application and activates the WebMCP Inspector test
 - `calculate`: Decimal math calculations.
 - `search_document`: Searches uploaded doc content in IndexedDB via BM25 index.
 - `clean_document`: Removes stored content from IndexedDB.
-- Canvas drawing & chat tools: Live drawing on the top 40% canvas and streaming text into the bottom 60% chat area.
+- Canvas drawing & chat tools: Live drawing on the top 60% canvas and streaming text into the bottom 40% chat area.
 A test run demonstrates a visiting agent calling these tools, retrieving data, updating chat, and drawing on the canvas live.
 
 ## The POC Boundary
 - **In Now:**
-  - React-based single-page application with responsive layout (20% sidebar with branding and file uploader strictly for Doc/PDF < 1MB; 80% main area split into 40% HTML canvas and 60% chat area).
+  - React-based single-page application with responsive layout (20% sidebar with branding and file uploader strictly for Doc/PDF < 1MB; 80% main area split into 60% HTML canvas and 40% chat area).
   - Post-upload processing: in-browser natural per-page extraction using LiteParse (browser WASM / PDF decompressor stream) and client-side BM25 searchable index generation stored in browser datastore (IndexedDB) for accepted files (< 1MB only).
   - Starting WebMCP tool provider layer exposing:
     - `search_web` (using DDGS behind)

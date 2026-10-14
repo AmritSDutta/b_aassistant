@@ -75,13 +75,13 @@ Hosts:
 
 ### 3. `CanvasArea`
 Implements `prd.md > Features and Behavior > 3. Live HTML Canvas Rendering`.
-Top 40% pane of the main workspace. Renders the HTML5 `<canvas>` element and toolbar:
+Top 60% pane of the main workspace. Renders the HTML5 `<canvas>` element and toolbar:
 - Toolbar with "Clear Canvas" button (mirrored by `canvas_clear` WebMCP tool).
 - `CanvasEngine`: Interprets drawing commands (`line`, `rect`, `circle`, `text`, `graph`, `clear`).
 
 ### 4. `ChatArea`
 Implements `prd.md > Features and Behavior > 2. Chat Conversation & History`.
-Bottom 60% pane of the main workspace:
+Bottom 40% pane of the main workspace:
 - Message feed displaying dialogue history in **Lora** serif typography calibrated for longform reading (17px, line-height 1.75, max-width ~72ch measure). User messages rendered with uppercase `user:` badge and agent messages with `agent:` badge.
 - Automatic scrolling (`scrollIntoView({ behavior: 'smooth' })`) to the latest chat turn upon new message arrivals.
 - Multi-line textarea prompt input supporting Enter to submit and Shift+Enter for newlines.

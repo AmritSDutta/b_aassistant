@@ -28,8 +28,8 @@ A responsive, single-page cockpit filling 100% of the viewport, vertically parti
   - **Section 2 (Middle) — File Upload:** Dropzone and file picker for Doc/PDF files strictly under 1MB. Status display showing filename, page count, and "Indexed" badge upon processing.
   - **Section 3 (Bottom) — Blank Slot:** Unoccupied workspace reserved for future capabilities.
 - **Main Workspace (80% width):**
-  - **Top Area (40% height) — HTML Canvas:** Interactive visual display area for programmatic drawing (shapes, lines, graphs, diagrams). Includes UI action buttons (such as "Clear Canvas") that mirror exposed WebMCP tools.
-  - **Bottom Area (60% height) — Chat Area:** Scrollable dialogue log displaying `user:` messages and agent responses, with a bottom text input and send button.
+  - **Top Area (60% height) — HTML Canvas:** Interactive visual display area for programmatic drawing (shapes, lines, graphs, diagrams). Includes UI action buttons (such as "Clear Canvas") that mirror exposed WebMCP tools.
+  - **Bottom Area (40% height) — Chat Area:** Scrollable dialogue log displaying `user:` messages and agent responses, formatted with Lora longform reading typography and auto-scrolling to the latest turn, with a bottom text input and send button.
 
 ## Look and Feel
 - **Theme:** Dual-mode theme support (Light and Dark mode) switched via a toggle in the branding header.
