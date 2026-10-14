@@ -6,7 +6,11 @@ export default {
   ],
   darkMode: 'class',
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        serif: ['Lora', 'Georgia', 'serif'],
+      },
+    },
   },
   plugins: [],
 }

@@ -82,8 +82,9 @@ Top 40% pane of the main workspace. Renders the HTML5 `<canvas>` element and too
 ### 4. `ChatArea`
 Implements `prd.md > Features and Behavior > 2. Chat Conversation & History`.
 Bottom 60% pane of the main workspace:
-- Message feed displaying dialogue history. User messages rendered with bold `user:` prefix.
-- Bottom input box with text field and send button.
+- Message feed displaying dialogue history in **Lora** serif typography calibrated for longform reading (17px, line-height 1.75, max-width ~72ch measure). User messages rendered with uppercase `user:` badge and agent messages with `agent:` badge.
+- Automatic scrolling (`scrollIntoView({ behavior: 'smooth' })`) to the latest chat turn upon new message arrivals.
+- Multi-line textarea prompt input supporting Enter to submit and Shift+Enter for newlines.
 - Updates chat state and registers messages for `get_chat_history`.
 
 ### 5. `NotificationModal`
@@ -98,7 +99,7 @@ Central service registering and dispatching all WebMCP tools:
   - `search_web`: DuckDuckGo query API.
   - `search_research`: ArXiv API export query.
   - `calculate`: Evaluates decimal math strings.
-  - `search_document`: BM25 query over IndexedDB chunks.
+  - `search_document`: BM25 query over IndexedDB chunks. Removes query stop words, returns top 3 ranked pages, and provides keyword guidance to visiting LLMs.
   - `clean_document`: Purges IndexedDB tables and resets `FileUpload` UI.
   - `get_chat_history`: Returns chat logs with `user:` messages.
   - `canvas_draw`: Invokes `CanvasEngine` drawing commands.

@@ -23,7 +23,7 @@ bAssistant implements multi-standard WebMCP support to maximize compatibility wi
 | `canvas_draw` | `{ command?: object, commands?: object[] }` | Draws shapes (`rect`, `circle`, `line`, `text`, `graph`) in single or batch mode. |
 | `draw_diagram` | `{ nodes: object[], edges: object[], title?: string, clearFirst?: boolean }` | Draws a high-level connected flowchart or concept diagram with nodes and labeled edges. |
 | `canvas_clear` | `{}` | Clears all drawings from the canvas. |
-| `search_document` | `{ query: string }` | Queries IndexedDB using the client-side BM25 index. |
+| `search_document` | `{ query: string }` | Queries IndexedDB using client-side BM25. Removes stop words and returns the top 3 pages. Recommend passing targeted keywords rather than conversational questions. |
 | `clean_document` | `{}` | Purges IndexedDB tables and resets document UI. |
 | `search_web` | `{ query: string }` | Queries DuckDuckGo for web summaries. |
 | `search_research` | `{ query: string }` | Queries ArXiv for scientific preprints. |

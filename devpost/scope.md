@@ -24,7 +24,7 @@ Anyone who wants to learn, research, and explore any topic with AI in a cost-eff
 - **Mood / Feel:** Clean, utilitarian, responsive, split-screen cockpit for AI-augmented research and visual thinking.
 - **Visual Structure:**
   - Left 20%: Branding (top), File Upload (middle), blank area for future tools (bottom).
-  - Right 80%: HTML Canvas (top 40%), Textual Chat Area (bottom 60%).
+  - Right 80%: HTML Canvas (top 40%), Textual Chat Area (bottom 60%) formatted with Lora typography for optimal longform reading and auto-scrolling to the latest turn.
 
 ## Why This Matters to the Learner
 Enables a practical, genuinely beneficial tool for the community that proves WebMCP's potential in the browser: running multimodal interactions on cheap models, keeping all user data strictly local, and using free-tier tools rather than costly subscriptions.
@@ -42,12 +42,12 @@ A test run demonstrates a visiting agent calling these tools, retrieving data, u
 ## The POC Boundary
 - **In Now:**
   - React-based single-page application with responsive layout (20% sidebar with branding and file uploader strictly for Doc/PDF < 1MB; 80% main area split into 40% HTML canvas and 60% chat area).
-  - Post-upload processing: in-browser pagewise chunking using LiteParse (browser WASM) and client-side BM25 searchable index generation stored in browser datastore (IndexedDB) for accepted files (< 1MB only).
+  - Post-upload processing: in-browser natural per-page extraction using LiteParse (browser WASM / PDF decompressor stream) and client-side BM25 searchable index generation stored in browser datastore (IndexedDB) for accepted files (< 1MB only).
   - Starting WebMCP tool provider layer exposing:
     - `search_web` (using DDGS behind)
     - `search_research` (using ArXiv search)
     - `calculate` (decimal math)
-    - `search_document` (IndexedDB BM25 content search)
+    - `search_document` (IndexedDB BM25 content search with automatic query stop-word removal, keyword guidance, and top 3 page results)
     - `clean_document` (remove stored IndexedDB content)
     - Canvas drawing & chat tools for the 80% workspace
   - WebMCP Inspector testing mode for direct verification and tool execution.

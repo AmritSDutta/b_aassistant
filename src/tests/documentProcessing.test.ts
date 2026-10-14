@@ -37,4 +37,19 @@ describe('Document Processing and Validation', () => {
       expect(page.text).not.toContain('[Page');
     }
   });
+
+  it('preserves natural page breaks with form feeds rather than arbitrary character slicing', async () => {
+    const service = new LiteParseService();
+    const docWithPages = 'Page one content about AI agents.\fPage two content about client WebMCP.\fPage three content about IndexedDB.';
+    const file = new File([docWithPages], 'multi.txt', { type: 'text/plain' });
+
+    const result = await service.parseFile(file);
+    expect(result.pages.length).toBe(3);
+    expect(result.pages[0].pageNumber).toBe(1);
+    expect(result.pages[0].text).toBe('Page one content about AI agents.');
+    expect(result.pages[1].pageNumber).toBe(2);
+    expect(result.pages[1].text).toBe('Page two content about client WebMCP.');
+    expect(result.pages[2].pageNumber).toBe(3);
+    expect(result.pages[2].text).toBe('Page three content about IndexedDB.');
+  });
 });

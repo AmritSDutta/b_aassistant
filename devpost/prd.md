@@ -83,17 +83,18 @@ The application exposes standard WebMCP tools for visiting LLMs:
 ## Product Decisions
 
 - **Framework:** React SPA deployed to Cloudflare Pages for fast, zero-backend, client-side hosting.
-- **Parser Choice:** LiteParse (WASM) for local, in-browser document parsing and pagewise chunking.
-- **Search Paradigm:** BM25 lexical index in IndexedDB instead of remote vector embeddings to ensure privacy and low overhead.
+- **Parser Choice:** LiteParse (WASM / browser stream decompressor) for local, in-browser document parsing and natural 1:1 per-page chunking (without arbitrary character slicing).
+- **Search Paradigm:** BM25 lexical index in IndexedDB with query stop-word removal, keyword guidance, and top-3 page retrieval instead of remote vector embeddings to ensure privacy and low overhead.
 - **WebMCP Integration:** Standard browser-native WebMCP implementation; no custom in-page inspector UI needed as standard external inspectors and agents interact directly.
 - **Chat Protocol:** User prompts prefixed with `user:` and accessible via WebMCP tools so visiting models can understand user intent.
+- **Reading Typography:** Lora serif font tuned for longform comfort (17px, line-height 1.75, subtle tracking, 72ch measure) with automatic scrolling to the most recent turn.
 
 ## What We're Building
 - 20/80 split React single-page application with Light/Dark toggle.
-- File upload for Doc/PDF < 1MB with LiteParse WASM parsing, page chunking, and IndexedDB BM25 indexing.
+- File upload for Doc/PDF < 1MB with LiteParse WASM parsing, natural per-page chunking, and IndexedDB BM25 indexing.
 - HTML canvas with live drawing engine and Clear button.
-- Chat stream with user text input, `user:` prefixing, and agent text output.
-- Complete starting WebMCP tool suite (`search_web`, `search_research`, `calculate`, `search_document`, `clean_document`, canvas drawing/clearing, chat tools).
+- Chat stream formatted in Lora longform reading typography, multi-line prompt textarea, and auto-scroll to newest message.
+- Complete starting WebMCP tool suite (`search_web`, `search_research`, `calculate`, `search_document` [returning top 3 pages with stop-word stripping], `clean_document`, canvas drawing/clearing, chat tools).
 - Cloudflare Pages deployment configuration.
 - Project documentation:
   - Documentation site created via `docs7` skill.

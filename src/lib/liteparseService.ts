@@ -137,7 +137,6 @@ export class LiteParseService {
     const streamRegex = /stream\r?\n([\s\S]*?)\r?\nendstream/g;
     let streamMatch: RegExpExecArray | null;
     let pageNum = 1;
-    let accumulatedText = '';
 
     while ((streamMatch = streamRegex.exec(rawPdf)) !== null) {
       const streamContent = streamMatch[1];
@@ -149,24 +148,14 @@ export class LiteParseService {
       const decompressed = await this.decompressFlate(streamBytes);
       const extracted = this.extractPdfTokens(decompressed);
 
-      if (extracted.length > 0) {
-        accumulatedText += (accumulatedText ? ' ' : '') + extracted;
-        // Group every ~1200 characters into a logical page chunk
-        if (accumulatedText.length >= 1200) {
-          pages.push({
-            pageNumber: pageNum++,
-            text: accumulatedText.trim(),
-          });
-          accumulatedText = '';
-        }
+      // In PDF architecture, each content stream corresponds to a page or Form XObject.
+      // Retain each non-empty content stream directly as its own distinct page.
+      if (extracted.trim().length > 0) {
+        pages.push({
+          pageNumber: pageNum++,
+          text: extracted.trim(),
+        });
       }
-    }
-
-    if (accumulatedText.trim().length > 0) {
-      pages.push({
-        pageNumber: pageNum,
-        text: accumulatedText.trim(),
-      });
     }
 
     return pages;
@@ -198,31 +187,26 @@ export class LiteParseService {
     const raw = decoder.decode(uint8);
 
     // Filter printable text
-    const printable = raw.replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim();
+    // Check for standard form feed page breaks (\f) or explicit page markers
+    const rawParts = raw.split(/\f|\n(?=--- Page \d+ ---)|\n(?=Page \d+ of \d+)/i);
+    const validParts = rawParts
+      .map((part) => part.replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim())
+      .filter((p) => p.length > 0);
 
+    if (validParts.length > 1) {
+      return validParts.map((text, idx) => ({
+        pageNumber: idx + 1,
+        text,
+      }));
+    }
+
+    const printable = raw.replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim();
     if (printable.length === 0) {
       return [{ pageNumber: 1, text: `Document "${fileName}" was uploaded and indexed.` }];
     }
 
-    const pageSize = 1200;
-    const pages: ParsedPage[] = [];
-    let cursor = 0;
-    let pageNum = 1;
-
-    while (cursor < printable.length) {
-      const slice = printable.slice(cursor, cursor + pageSize).trim();
-      if (slice.length > 0) {
-        pages.push({
-          pageNumber: pageNum++,
-          text: slice,
-        });
-      }
-      cursor += pageSize;
-    }
-
-    return pages.length > 0
-      ? pages
-      : [{ pageNumber: 1, text: `Document "${fileName}" was uploaded and indexed.` }];
+    // Single natural page for standard unstructured text / docs
+    return [{ pageNumber: 1, text: printable }];
   }
 }
 

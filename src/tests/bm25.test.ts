@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { BM25Index, tokenize } from '../lib/bm25';
+import { BM25Index, tokenize, removeStopWords } from '../lib/bm25';
 
 describe('BM25 Lexical Indexer and Scorer', () => {
   it('tokenizes text correctly removing punctuation and short terms', () => {
@@ -56,5 +56,24 @@ describe('BM25 Lexical Indexer and Scorer', () => {
     const results = bm25.search('what is in the documents');
     expect(results.length).toBeGreaterThan(0);
     expect(results[0].chunkId).toBe('page1');
+  });
+
+  it('removes common stop words accurately', () => {
+    const cleaned = removeStopWords('what is there in the documents uploaded regarding revenue');
+    expect(cleaned).toBe('regarding revenue');
+  });
+
+  it('strictly limits search results to at most 3 items', () => {
+    const bm25 = new BM25Index();
+    bm25.buildIndex([
+      { id: 'p1', text: 'Cloudflare enterprise caching and CDN latency' },
+      { id: 'p2', text: 'Cloudflare security firewalls and bot management' },
+      { id: 'p3', text: 'Cloudflare workers serverless edge runtime' },
+      { id: 'p4', text: 'Cloudflare pages static hosting and continuous delivery' },
+      { id: 'p5', text: 'Cloudflare DNS resolution and zero trust access' },
+    ]);
+
+    const results = bm25.search('Cloudflare');
+    expect(results.length).toBe(3);
   });
 });

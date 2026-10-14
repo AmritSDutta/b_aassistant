@@ -16,11 +16,23 @@ export interface BM25IndexData {
   invertedIndex: Record<string, BM25Posting[]>;
 }
 
-const STOP_WORDS = new Set([
-  'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
-  'has', 'he', 'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the',
-  'to', 'was', 'were', 'will', 'with', 'what', 'there', 'this', 'these',
-  'those', 'document', 'documents', 'uploaded', 'file', 'files',
+export const STOP_WORDS = new Set([
+  'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and',
+  'any', 'are', 'as', 'at', 'be', 'because', 'been', 'before', 'being', 'below',
+  'between', 'both', 'but', 'by', 'can', 'did', 'do', 'does', 'doing', 'down',
+  'during', 'each', 'few', 'for', 'from', 'further', 'had', 'has', 'have',
+  'having', 'he', 'her', 'here', 'hers', 'herself', 'him', 'himself', 'his',
+  'how', 'i', 'if', 'in', 'into', 'is', 'it', 'its', 'itself', 'just', 'me',
+  'more', 'most', 'my', 'myself', 'no', 'nor', 'not', 'now', 'of', 'off', 'on',
+  'once', 'only', 'or', 'other', 'our', 'ours', 'ourselves', 'out', 'over', 'own',
+  'same', 'she', 'should', 'so', 'some', 'such', 'than', 'that', 'the', 'their',
+  'theirs', 'them', 'themselves', 'then', 'there', 'these', 'they', 'this',
+  'those', 'through', 'to', 'too', 'under', 'until', 'up', 'very', 'was', 'we',
+  'were', 'what', 'when', 'where', 'which', 'while', 'who', 'whom', 'why',
+  'will', 'with', 'you', 'your', 'yours', 'yourself', 'yourselves',
+  // Domain conversational stopwords
+  'document', 'documents', 'uploaded', 'file', 'files', 'tell', 'show', 'find',
+  'give', 'list', 'please', 'content', 'search',
 ]);
 
 export function tokenize(text: string): string[] {
@@ -29,6 +41,12 @@ export function tokenize(text: string): string[] {
     .replace(/[^\p{L}\p{N}\s]/gu, ' ')
     .split(/\s+/)
     .filter((t) => t.length > 1);
+}
+
+export function removeStopWords(query: string): string {
+  const tokens = tokenize(query);
+  const filtered = tokens.filter((t) => !STOP_WORDS.has(t));
+  return filtered.join(' ');
 }
 
 export class BM25Index {
@@ -76,7 +94,7 @@ export class BM25Index {
     this.avgDocLength = totalLength / this.docCount;
   }
 
-  public search(query: string, topK: number = 5): Array<{ chunkId: string; score: number }> {
+  public search(query: string, topK: number = 3): Array<{ chunkId: string; score: number }> {
     if (this.docCount === 0) return [];
 
     const allQueryTokens = tokenize(query);

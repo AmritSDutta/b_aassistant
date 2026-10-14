@@ -108,13 +108,13 @@ export const TOOL_DEFINITIONS: WebMCPTool[] = [
   },
   {
     name: 'search_document',
-    description: 'Searches uploaded document chunks in in-browser IndexedDB using the BM25 index.',
+    description: 'Searches uploaded document chunks in in-browser IndexedDB using a lexical BM25 index. Returns top 3 relevant pages. For best results, use targeted keywords or topic entities (e.g. "architecture", "revenue", "authentication", "pricing") rather than conversational questions.',
     inputSchema: {
       type: 'object',
       properties: {
         query: {
           type: 'string',
-          description: 'The search query keyword(s).',
+          description: 'The search keywords or topic terms to query. Provide specific keywords rather than conversational sentences.',
         },
       },
       required: ['query'],

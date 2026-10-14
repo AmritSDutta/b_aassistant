@@ -7,7 +7,7 @@ import { ChatArea, ChatMessage } from './components/ChatArea';
 import { NotificationModal } from './components/NotificationModal';
 import { WebMCPProvider } from './webmcp/provider';
 import { ToolContext } from './webmcp/tools';
-import { BM25Index } from './lib/bm25';
+import { BM25Index, removeStopWords } from './lib/bm25';
 import { globalIDBStorage, StoredDocument, StoredChunk } from './lib/idbStorage';
 import { globalLiteParseService } from './lib/liteparseService';
 import { calculateMath } from './lib/mathEvaluator';
@@ -93,12 +93,13 @@ export const App: React.FC = () => {
       return [];
     }
 
+    const sanitizedQuery = removeStopWords(query) || query;
     const chunkMap = new Map(chunksRef.current.map((c) => [c.id, c]));
-    const ranked = bm25Ref.current.search(query, 5);
+    const ranked = bm25Ref.current.search(sanitizedQuery, 3);
 
-    // If BM25 found matches, return them
+    // If BM25 found matches, return top 3
     if (ranked.length > 0) {
-      return ranked.map((r) => {
+      return ranked.slice(0, 3).map((r) => {
         const chunk = chunkMap.get(r.chunkId);
         return {
           pageNumber: chunk?.pageNumber || 1,
@@ -108,8 +109,7 @@ export const App: React.FC = () => {
       });
     }
 
-    // Fallback: If query was broad (e.g. "what is in the document") or had no keyword overlap,
-    // return the first available document chunks with a baseline preview score so the LLM has context
+    // Fallback: If query had no keyword overlap, return top 3 available chunks with baseline preview score
     return chunksRef.current.slice(0, 3).map((chunk) => ({
       pageNumber: chunk.pageNumber,
       text: chunk.text,
