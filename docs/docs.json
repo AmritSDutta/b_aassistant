@@ -15,7 +15,11 @@
       },
       {
         "group": "Capabilities",
-        "pages": ["webmcp", "canvas-and-pdf", "document-processing", "liteparse-research", "research-tools", "learnings"]
+        "pages": ["cockpit-ui", "webmcp", "canvas-and-pdf", "document-processing", "research-tools"]
+      },
+      {
+        "group": "Research & Learnings",
+        "pages": ["dwell-time-research", "liteparse-research", "learnings"]
       },
       {
         "group": "Deployment",
