@@ -12,6 +12,8 @@ import { globalIDBStorage, StoredDocument, StoredChunk } from './lib/idbStorage'
 import { globalLiteParseService } from './lib/liteparseService';
 import { calculateMath } from './lib/mathEvaluator';
 import { searchWeb, searchResearch } from './lib/searchService';
+import { globalCanvasEngine } from './lib/canvasEngine';
+import { exportSessionPdf } from './lib/pdfExportService';
 
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB strictly
 const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
@@ -128,6 +130,11 @@ export const App: React.FC = () => {
     setActiveDoc(null);
   }, []);
 
+  const handleExportPdf = useCallback(() => {
+    const dataUrl = globalCanvasEngine.getSnapshotDataUrl();
+    exportSessionPdf(dataUrl, messagesRef.current, activeDoc?.name);
+  }, [activeDoc]);
+
   // Update WebMCP Context
   const updateWebMCPContext = useCallback(() => {
     if (webmcpRef.current) {
@@ -139,9 +146,10 @@ export const App: React.FC = () => {
         searchWeb: (query: string) => searchWeb(query),
         searchResearch: (query: string) => searchResearch(query),
         calculate: (expr: string) => calculateMath(expr),
+        exportPdf: handleExportPdf,
       });
     }
-  }, [handlePostAgentMessage, handleSearchDocument, handleCleanDocument]);
+  }, [handlePostAgentMessage, handleSearchDocument, handleCleanDocument, handleExportPdf]);
 
   // Initialize WebMCP Provider
   useEffect(() => {
@@ -153,6 +161,7 @@ export const App: React.FC = () => {
       searchWeb: (query: string) => searchWeb(query),
       searchResearch: (query: string) => searchResearch(query),
       calculate: (expr: string) => calculateMath(expr),
+      exportPdf: handleExportPdf,
     };
 
     const provider = new WebMCPProvider(context);
@@ -162,7 +171,7 @@ export const App: React.FC = () => {
     return () => {
       provider.unregister();
     };
-  }, [handlePostAgentMessage, handleSearchDocument, handleCleanDocument]);
+  }, [handlePostAgentMessage, handleSearchDocument, handleCleanDocument, handleExportPdf]);
 
   useEffect(() => {
     updateWebMCPContext();
@@ -289,7 +298,11 @@ export const App: React.FC = () => {
 
       {/* Main Area (80% width) */}
       <main className="flex-1 h-full flex flex-col overflow-hidden">
-        <CanvasArea />
+        <CanvasArea
+          theme={theme}
+          onExportPdf={handleExportPdf}
+          onClear={handleCleanDocument}
+        />
         <ChatArea messages={messages} onSendMessage={handleSendMessage} />
       </main>
 

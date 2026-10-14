@@ -54,22 +54,32 @@ Source: `scope.md > The Core Loop`.
 - **Retrieval:** Visiting LLM can retrieve previous user messages and conversation context through an exposed WebMCP tool.
 - **Streaming/Posting:** Visiting agent can append structured textual explanations directly into the chat stream.
 
-### 3. Live HTML Canvas Rendering
+### 3. Live HTML Canvas Rendering & Scene Graph
 Source: `scope.md > The Unique Kernel`.
-- **Drawing Engine:** Executes drawing tool calls from visiting agents to paint diagrams, geometric shapes, flowcharts, graphs, and annotations.
-- **Manual Control:** "Clear Canvas" button on the canvas toolbar to wipe drawing; also callable as a WebMCP tool.
+- **Drawing Engine:** Executes drawing tool calls from visiting agents to render structured Canvas2D shapes (`rectangle`, `ellipse`, `diamond`, `text`, `sticker`) and dynamic perimeter-docked connectors (`arrow`, `line`).
+- **Edge-to-Edge Perimeter Docking:** Connectors anchor to shape borders and stay attached when shapes move.
+- **Color Palette:** Soft-translucent multi-tier palette (indigo client, emerald gateway, purple database, orange cache/queue, amber logic, and sticky-note stickers) with backdrop pills behind edge labels.
+- **Manual Control:** "Clear Canvas" and "Export PDF" buttons on the canvas toolbar; also callable as WebMCP tools.
 
-### 4. WebMCP Tool Suite
+### 4. Client-Side PDF Generation
+Source: `scope.md > The POC Boundary`.
+- Pure in-browser PDF generation using `jspdf`.
+- Scales and fits the canvas diagram snapshot at the top, then formats conversation turns with clean typography, timestamps, sender badges, and automatic multi-page pagination.
+
+### 5. WebMCP Tool Suite
 Source: `scope.md > The POC Boundary`.
 The application exposes standard WebMCP tools for visiting LLMs:
 - `search_web`: Executes web search queries using DuckDuckGo (DDGS).
 - `search_research`: Executes academic literature searches via ArXiv.
 - `calculate`: Evaluates decimal math expressions.
-- `search_document`: Searches ingested document chunks in IndexedDB using the BM25 index.
+- `search_document`: Searches ingested document chunks in IndexedDB using the BM25 index with stop-word filtering.
 - `clean_document`: Purges stored document chunks from IndexedDB and resets upload section.
 - `get_chat_history`: Returns chat messages including `user:` prefixed prompts.
-- `canvas_draw`: Primitives to draw lines, rectangles, circles, text, and chart elements on the HTML canvas.
-- `canvas_clear`: Clears the canvas (mirrors UI button).
+- `canvas2d_draw_shapes`: Appends structured Canvas2D shapes and perimeter-docked arrows.
+- `canvas2d_inspect_shapes`: Returns active scene shapes and an ASCII topology graph for agent self-inspection.
+- `canvas2d_modify_shape`: Surgical in-place editing of shape label, position, or colors.
+- `canvas2d_clear`: Clears the Canvas2D scene graph (mirrors UI button).
+- `export_pdf`: Generates and triggers download of the session PDF report.
 - `chat_post`: Appends or streams text into the chat stream.
 
 ## States and Boundaries
@@ -85,6 +95,8 @@ The application exposes standard WebMCP tools for visiting LLMs:
 - **Framework:** React SPA deployed to Cloudflare Pages for fast, zero-backend, client-side hosting.
 - **Parser Choice:** LiteParse (WASM / browser stream decompressor) for local, in-browser document parsing and natural 1:1 per-page chunking (without arbitrary character slicing).
 - **Search Paradigm:** BM25 lexical index in IndexedDB with query stop-word removal, keyword guidance, and top-3 page retrieval instead of remote vector embeddings to ensure privacy and low overhead.
+- **Canvas Architecture:** Persistent Canvas2D scene graph with perimeter edge-to-edge docking, soft-translucent multi-tier palette, and ASCII topology graph inspection.
+- **Reporting:** Client-side `jspdf` report generation packaging canvas diagrams and formatted dialogue.
 - **WebMCP Integration:** Standard browser-native WebMCP implementation; no custom in-page inspector UI needed as standard external inspectors and agents interact directly.
 - **Chat Protocol:** User prompts prefixed with `user:` and accessible via WebMCP tools so visiting models can understand user intent.
 - **Reading Typography:** Lora serif font tuned for longform comfort (17px, line-height 1.75, subtle tracking, 72ch measure) with automatic scrolling to the most recent turn.
@@ -92,9 +104,9 @@ The application exposes standard WebMCP tools for visiting LLMs:
 ## What We're Building
 - 20/80 split React single-page application with Light/Dark toggle.
 - File upload for Doc/PDF < 1MB with LiteParse WASM parsing, natural per-page chunking, and IndexedDB BM25 indexing.
-- HTML canvas with live drawing engine and Clear button.
+- HTML canvas with live 2D scene graph engine, Clear button, and Export PDF button.
 - Chat stream formatted in Lora longform reading typography, multi-line prompt textarea, and auto-scroll to newest message.
-- Complete starting WebMCP tool suite (`search_web`, `search_research`, `calculate`, `search_document` [returning top 3 pages with stop-word stripping], `clean_document`, canvas drawing/clearing, chat tools).
+- Complete WebMCP tool suite (`search_web`, `search_research`, `calculate`, `search_document` [returning top 3 pages with stop-word stripping], `clean_document`, `canvas2d_draw_shapes`, `canvas2d_inspect_shapes`, `canvas2d_modify_shape`, `canvas2d_clear`, `export_pdf`, chat tools).
 - Cloudflare Pages deployment configuration.
 - Project documentation:
   - Documentation site created via `docs7` skill.
@@ -104,7 +116,6 @@ The application exposes standard WebMCP tools for visiting LLMs:
 
 ## Deferred From the POC
 - Sidebar Section 3 features (kept blank for now).
-- Canvas export options (PNG/SVG downloads).
 - Multi-file collections and files ≥ 1MB.
 
 ## Non-Goals

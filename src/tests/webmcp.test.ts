@@ -28,6 +28,11 @@ describe('WebMCP Provider & Tools', () => {
 
     expect(names).toContain('canvas_draw');
     expect(names).toContain('canvas_clear');
+    expect(names).toContain('canvas2d_draw_shapes');
+    expect(names).toContain('canvas2d_inspect_shapes');
+    expect(names).toContain('canvas2d_modify_shape');
+    expect(names).toContain('canvas2d_clear');
+    expect(names).toContain('export_pdf');
     expect(names).toContain('get_chat_history');
     expect(names).toContain('chat_post');
     expect(names).toContain('search_document');
@@ -116,4 +121,57 @@ describe('WebMCP Provider & Tools', () => {
 
     expect(globalCanvasEngine.getHistory().length).toBe(3);
   });
+
+  it('executes canvas2d_draw_shapes, canvas2d_inspect_shapes, and canvas2d_modify_shape', async () => {
+    // 1. Draw shapes
+    const drawRes = (await provider.callTool('canvas2d_draw_shapes', {
+      shapes: [
+        { id: 'web', type: 'rectangle', text: 'Web App', x: 50, y: 50 },
+        { id: 'api', type: 'rectangle', text: 'API Gateway', x: 250, y: 50 },
+        { type: 'arrow', x: 0, y: 0, startId: 'web', endId: 'api', text: 'REST' },
+      ],
+    })) as { success: boolean; appendedCount: number; totalShapes: number };
+
+    expect(drawRes.success).toBe(true);
+    expect(drawRes.appendedCount).toBe(3);
+
+    // 2. Inspect shapes
+    const inspectRes = (await provider.callTool('canvas2d_inspect_shapes', {})) as {
+      summary: string;
+      nodeCount: number;
+      edgeCount: number;
+    };
+    expect(inspectRes.nodeCount).toBe(2);
+    expect(inspectRes.edgeCount).toBe(1);
+
+    // 3. Modify shape
+    const modRes = (await provider.callTool('canvas2d_modify_shape', {
+      nodeId: 'api',
+      newLabel: 'API Gateway v2',
+      fillColor: 'rgba(16,185,129,0.16)',
+    })) as { success: boolean; modifiedCount: number };
+    expect(modRes.success).toBe(true);
+    expect(modRes.modifiedCount).toBe(1);
+
+    // 4. Clear Canvas2D scene
+    const clearRes = (await provider.callTool('canvas2d_clear', {})) as { success: boolean };
+    expect(clearRes.success).toBe(true);
+    expect(globalCanvasEngine.getShapes().length).toBe(0);
+  });
+
+  it('handles export_pdf tool execution gracefully', async () => {
+    let pdfCalled = false;
+    const customContext: ToolContext = {
+      getMessages: () => [],
+      postMessage: () => {},
+      exportPdf: () => {
+        pdfCalled = true;
+      },
+    };
+    const customProvider = new WebMCPProvider(customContext);
+    const res = (await customProvider.callTool('export_pdf', {})) as { success: boolean };
+    expect(res.success).toBe(true);
+    expect(pdfCalled).toBe(true);
+  });
 });
+

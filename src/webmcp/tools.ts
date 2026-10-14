@@ -1,5 +1,6 @@
 import { WebMCPTool } from './types';
 import { globalCanvasEngine, CanvasCommand } from '../lib/canvasEngine';
+import { Canvas2dShape } from '../types/canvas2d';
 
 export interface ToolContext {
   getMessages: () => Array<{ sender: 'user' | 'agent'; text: string; timestamp: number }>;
@@ -9,6 +10,7 @@ export interface ToolContext {
   searchWeb?: (query: string) => Promise<Array<{ title: string; snippet: string; url: string }>>;
   searchResearch?: (query: string) => Promise<Array<{ title: string; summary: string; authors: string[]; id: string }>>;
   calculate?: (expression: string) => number;
+  exportPdf?: () => void;
 }
 
 export const TOOL_DEFINITIONS: WebMCPTool[] = [
@@ -24,6 +26,82 @@ export const TOOL_DEFINITIONS: WebMCPTool[] = [
         },
       },
       required: ['text'],
+    },
+  },
+  {
+    name: 'canvas2d_draw_shapes',
+    description:
+      'Appends new structured Canvas2D shapes (rectangle, ellipse, diamond, text, arrow, line, sticker) onto the HTML canvas scene graph. Arrows attach dynamically to node boundaries via startId/endId and stay attached when shapes move. Supports soft-translucent colors: client "rgba(99,102,241,0.18)" (#818cf8), gateway "rgba(16,185,129,0.16)" (#34d399), db "rgba(168,85,247,0.18)" (#c084fc), queue "rgba(251,146,60,0.18)" (#fb923c), decision "rgba(250,204,21,0.16)" (#fbbf24), or sticker (stickerColor: "yellow"|"mint"|"rose", emoji: "⚠️"|"💡").',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        shapes: {
+          type: 'array',
+          items: { type: 'object' },
+          description: 'Array of Canvas2D shape objects to append to the canvas scene graph.',
+        },
+      },
+      required: ['shapes'],
+    },
+  },
+  {
+    name: 'canvas2d_inspect_shapes',
+    description:
+      'Inspects the active Canvas2D scene graph: returns summary metrics, active node objects, and an ASCII topology graph (e.g. [Client] --[1. HTTPS]--> [Gateway]) so you can inspect existing layout before modifying it.',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+  },
+  {
+    name: 'canvas2d_modify_shape',
+    description:
+      'Performs a targeted in-place modification on an existing Canvas2D shape (renaming text label, updating fill/stroke colors, or repositioning via x/y) without clearing other shapes. Arrows stay attached automatically.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        nodeId: {
+          type: 'string',
+          description: 'The unique ID or text label of the shape to modify (e.g. "api" or "Web Client").',
+        },
+        newLabel: {
+          type: 'string',
+          description: 'Optional new label text for the shape.',
+        },
+        fillColor: {
+          type: 'string',
+          description: 'Optional new background fill color (rgba or hex).',
+        },
+        strokeColor: {
+          type: 'string',
+          description: 'Optional new stroke border color.',
+        },
+        x: {
+          type: 'number',
+          description: 'Optional new X coordinate.',
+        },
+        y: {
+          type: 'number',
+          description: 'Optional new Y coordinate.',
+        },
+      },
+      required: ['nodeId'],
+    },
+  },
+  {
+    name: 'canvas2d_clear',
+    description: 'Resets and clears all shapes from the Canvas2D scene graph and canvas viewport.',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+  },
+  {
+    name: 'export_pdf',
+    description: 'Generates and downloads a publication-quality session PDF report containing the canvas diagram snapshot fitted at the top and the complete dialogue transcript beneath.',
+    inputSchema: {
+      type: 'object',
+      properties: {},
     },
   },
   {
@@ -178,6 +256,65 @@ export async function executeToolCall(
   context: ToolContext
 ): Promise<unknown> {
   switch (name) {
+    case 'canvas2d_draw_shapes': {
+      let rawShapes: unknown[] = [];
+      if (Array.isArray(args?.shapes)) {
+        rawShapes = args.shapes;
+      } else if (typeof args?.shapes === 'string') {
+        try {
+          rawShapes = JSON.parse(args.shapes);
+        } catch (e: any) {
+          throw new Error(`Failed to parse shapes JSON: ${e.message}`);
+        }
+      }
+      if (!Array.isArray(rawShapes)) {
+        throw new Error('"shapes" argument must be an array of shape objects');
+      }
+      const appended = globalCanvasEngine.appendShapes(rawShapes as Canvas2dShape[]);
+      const total = globalCanvasEngine.getShapes().length;
+      return { success: true, appendedCount: appended, totalShapes: total };
+    }
+
+    case 'canvas2d_inspect_shapes': {
+      const summary = globalCanvasEngine.getTopologySummary();
+      const shapes = globalCanvasEngine.getShapes();
+      return {
+        summary: summary.summary,
+        topologyGraph: summary.asciiGraph,
+        nodeCount: summary.nodeCount,
+        edgeCount: summary.edgeCount,
+        shapes,
+      };
+    }
+
+    case 'canvas2d_modify_shape': {
+      const nodeId = String(args?.nodeId || '');
+      if (!nodeId) throw new Error('"nodeId" argument is required');
+
+      const patch: Partial<Canvas2dShape> = {};
+      if (args?.newLabel) patch.text = String(args.newLabel);
+      if (args?.fillColor) patch.fillColor = String(args.fillColor);
+      if (args?.strokeColor) patch.strokeColor = String(args.strokeColor);
+      if (typeof args?.x === 'number') patch.x = args.x;
+      if (typeof args?.y === 'number') patch.y = args.y;
+
+      const res = globalCanvasEngine.modifyShape(nodeId, patch);
+      return { success: res.modifiedCount > 0, ...res };
+    }
+
+    case 'canvas2d_clear': {
+      globalCanvasEngine.clear();
+      return { success: true, message: 'Canvas2D scene cleared' };
+    }
+
+    case 'export_pdf': {
+      if (context.exportPdf) {
+        context.exportPdf();
+        return { success: true, message: 'PDF report generated and download initiated.' };
+      }
+      throw new Error('PDF export capability not available');
+    }
+
     case 'canvas_draw': {
       if (Array.isArray(args?.commands)) {
         globalCanvasEngine.executeBatch(args.commands as CanvasCommand[]);

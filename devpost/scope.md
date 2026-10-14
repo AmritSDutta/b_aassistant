@@ -36,6 +36,11 @@ A user opens the single-page application and activates the WebMCP Inspector test
 - `calculate`: Decimal math calculations.
 - `search_document`: Searches uploaded doc content in IndexedDB via BM25 index.
 - `clean_document`: Removes stored content from IndexedDB.
+- `canvas2d_draw_shapes`: Appends structured Canvas2D shapes (rectangles, ellipses, diamonds, text, stickers) and perimeter-docked arrows.
+- `canvas2d_inspect_shapes`: Inspects active canvas scene graph & ASCII topology graph.
+- `canvas2d_modify_shape`: Surgical in-place editing of shape label, position, or colors.
+- `canvas2d_clear`: Clears the Canvas2D scene graph.
+- `export_pdf`: Generates downloadable publication-quality PDF combining canvas diagram and chat dialogue.
 - Canvas drawing & chat tools: Live drawing on the top 60% canvas and streaming text into the bottom 40% chat area.
 A test run demonstrates a visiting agent calling these tools, retrieving data, updating chat, and drawing on the canvas live.
 
@@ -43,12 +48,16 @@ A test run demonstrates a visiting agent calling these tools, retrieving data, u
 - **In Now:**
   - React-based single-page application with responsive layout (20% sidebar with branding and file uploader strictly for Doc/PDF < 1MB; 80% main area split into 60% HTML canvas and 40% chat area).
   - Post-upload processing: in-browser natural per-page extraction using LiteParse (browser WASM / PDF decompressor stream) and client-side BM25 searchable index generation stored in browser datastore (IndexedDB) for accepted files (< 1MB only).
+  - Advanced HTML Canvas2D scene graph with perimeter edge-to-edge docking for auto-anchoring arrows, soft-translucent color palette (indigo client, emerald gateway, purple database, orange cache/queue, amber logic, sticky-note stickers), and HiDPI resolution.
+  - Client-side PDF export (`exportSessionPdf`) merging canvas snapshot and formatted dialogue into a multi-page PDF report.
   - Starting WebMCP tool provider layer exposing:
     - `search_web` (using DDGS behind)
     - `search_research` (using ArXiv search)
     - `calculate` (decimal math)
     - `search_document` (IndexedDB BM25 content search with automatic query stop-word removal, keyword guidance, and top 3 page results)
     - `clean_document` (remove stored IndexedDB content)
+    - `canvas2d_draw_shapes`, `canvas2d_inspect_shapes`, `canvas2d_modify_shape`, `canvas2d_clear`
+    - `export_pdf`
     - Canvas drawing & chat tools for the 80% workspace
   - WebMCP Inspector testing mode for direct verification and tool execution.
   - Deployment: Deployed to Cloudflare Pages.
@@ -56,7 +65,6 @@ A test run demonstrates a visiting agent calling these tools, retrieving data, u
 ## Later
 - Additional free-tier tools as project progresses.
 - Features for the 3rd (blank) sidebar section.
-- Exporting canvas drawings and chat records.
 
 ## Explicitly Cut
 - **Files ≥ 1MB:** Strictly rejected; only doc and PDF files under 1MB are supported.

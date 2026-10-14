@@ -20,8 +20,13 @@ bAssistant implements multi-standard WebMCP support to maximize compatibility wi
 | :--- | :--- | :--- |
 | `get_chat_history` | `{}` | Returns recent dialogue history with user messages prefixed by `user:`. |
 | `chat_post` | `{ text: string }` | Posts textual responses, markdown, or status updates to the chat area for the visiting LLM. |
-| `canvas_draw` | `{ command?: object, commands?: object[] }` | Draws shapes (`rect`, `circle`, `line`, `text`, `graph`) in single or batch mode. |
-| `draw_diagram` | `{ nodes: object[], edges: object[], title?: string, clearFirst?: boolean }` | Draws a high-level connected flowchart or concept diagram with nodes and labeled edges. |
+| `canvas2d_draw_shapes` | `{ shapes: object[] }` | Appends structured Canvas2D shapes (rectangles, ellipses, diamonds, text, stickers) and perimeter-docked arrows. |
+| `canvas2d_inspect_shapes` | `{}` | Returns the active scene graph and an ASCII topology graph for visiting agent self-inspection. |
+| `canvas2d_modify_shape` | `{ nodeId: string, newLabel?: string, fillColor?: string, strokeColor?: string, x?: number, y?: number }` | In-place shape editing (label, position, colors) while keeping connected arrows attached. |
+| `canvas2d_clear` | `{}` | Clears all shapes from the Canvas2D scene graph. |
+| `export_pdf` | `{}` | Generates and downloads a publication-quality session PDF report combining canvas snapshot and dialogue. |
+| `canvas_draw` | `{ command?: object, commands?: object[] }` | Legacy: draws shapes (`rect`, `circle`, `line`, `text`, `graph`) in single or batch mode. |
+| `draw_diagram` | `{ nodes: object[], edges: object[], title?: string, clearFirst?: boolean }` | Legacy: draws a connected flowchart with nodes and labeled edges. |
 | `canvas_clear` | `{}` | Clears all drawings from the canvas. |
 | `search_document` | `{ query: string }` | Queries IndexedDB using client-side BM25. Removes stop words and returns the top 3 pages. Recommend passing targeted keywords rather than conversational questions. |
 | `clean_document` | `{}` | Purges IndexedDB tables and resets document UI. |

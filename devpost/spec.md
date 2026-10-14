@@ -74,10 +74,10 @@ Hosts:
 - `BlankSlot`: Unallocated 3rd section reserved for future tools.
 
 ### 3. `CanvasArea`
-Implements `prd.md > Features and Behavior > 3. Live HTML Canvas Rendering`.
+Implements `prd.md > Features and Behavior > 3. Live HTML Canvas Rendering & Scene Graph`.
 Top 60% pane of the main workspace. Renders the HTML5 `<canvas>` element and toolbar:
-- Toolbar with "Clear Canvas" button (mirrored by `canvas_clear` WebMCP tool).
-- `CanvasEngine`: Interprets drawing commands (`line`, `rect`, `circle`, `text`, `graph`, `clear`).
+- Toolbar with "Clear Canvas" and "Export PDF" buttons (mirrored by `canvas2d_clear` and `export_pdf` WebMCP tools).
+- `CanvasEngine`: Manages reactive scene graph (`Canvas2dShape[]`), perimeter-docked connectors, soft-translucent colors, HiDPI scaling, and snapshot capture.
 
 ### 4. `ChatArea`
 Implements `prd.md > Features and Behavior > 2. Chat Conversation & History`.
@@ -92,7 +92,7 @@ Implements `prd.md > States and Boundaries > Error State (File Rejected)`.
 Modal popup showing rejection details when a file is ≥ 1MB or unsupported.
 
 ### 6. `WebMCPProvider`
-Implements `prd.md > Features and Behavior > 4. WebMCP Tool Suite`.
+Implements `prd.md > Features and Behavior > 5. WebMCP Tool Suite`.
 Central service registering and dispatching all WebMCP tools:
 - Supports `navigator.modelContext`, `window.webmcp`, and `window.addEventListener('message')` JSON-RPC 2.0 events.
 - Tools exposed:
@@ -102,8 +102,12 @@ Central service registering and dispatching all WebMCP tools:
   - `search_document`: BM25 query over IndexedDB chunks. Removes query stop words, returns top 3 ranked pages, and provides keyword guidance to visiting LLMs.
   - `clean_document`: Purges IndexedDB tables and resets `FileUpload` UI.
   - `get_chat_history`: Returns chat logs with `user:` messages.
-  - `canvas_draw`: Invokes `CanvasEngine` drawing commands.
-  - `canvas_clear`: Invokes `CanvasEngine` reset.
+  - `canvas2d_draw_shapes`: Appends structured Canvas2D shapes and perimeter-docked arrows.
+  - `canvas2d_inspect_shapes`: Returns active scene shapes and an ASCII topology graph for agent inspection.
+  - `canvas2d_modify_shape`: In-place shape editing (label, position, colors).
+  - `canvas2d_clear`: Clears Canvas2D scene graph.
+  - `export_pdf`: Generates and triggers download of the session PDF report.
+  - `canvas_draw` / `draw_diagram` / `canvas_clear`: Backwards-compatible legacy drawing tools.
   - `chat_post`: Appends agent text into `ChatArea`.
 
 ## Data Model

@@ -2,11 +2,17 @@ import React, { useEffect, useRef } from 'react';
 import { globalCanvasEngine } from '../lib/canvasEngine';
 
 interface CanvasAreaProps {
+  theme?: 'dark' | 'light';
   onClear?: () => void;
+  onExportPdf?: () => void;
 }
 
-export const CanvasArea: React.FC<CanvasAreaProps> = ({ onClear }) => {
+export const CanvasArea: React.FC<CanvasAreaProps> = ({ theme = 'dark', onClear, onExportPdf }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    globalCanvasEngine.setTheme(theme);
+  }, [theme]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -46,6 +52,15 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({ onClear }) => {
           <span className="text-[10px] text-emerald-500 font-mono">live 2D engine</span>
         </div>
         <div className="flex items-center gap-2">
+          {onExportPdf && (
+            <button
+              type="button"
+              onClick={onExportPdf}
+              className="px-2 py-0.5 rounded border border-sky-400/80 dark:border-sky-600 bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/60 transition-colors text-xs font-mono font-medium"
+            >
+              Export PDF
+            </button>
+          )}
           <button
             type="button"
             onClick={handleClear}
