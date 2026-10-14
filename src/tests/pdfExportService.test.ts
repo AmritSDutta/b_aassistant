@@ -14,6 +14,10 @@ import { ChatMessage } from '../components/ChatArea';
 const mockSave = vi.fn();
 const mockText = vi.fn();
 const mockSetFont = vi.fn();
+const mockAddPage = vi.fn();
+const mockSetPage = vi.fn();
+const mockAddImage = vi.fn();
+const mockGetNumberOfPages = vi.fn().mockReturnValue(1);
 
 vi.mock('jspdf', () => {
   return {
@@ -28,8 +32,10 @@ vi.mock('jspdf', () => {
       rect: vi.fn(),
       roundedRect: vi.fn(),
       line: vi.fn(),
-      addImage: vi.fn(),
-      addPage: vi.fn(),
+      addImage: mockAddImage,
+      addPage: mockAddPage,
+      setPage: mockSetPage,
+      getNumberOfPages: mockGetNumberOfPages,
       splitTextToSize: vi.fn((text: string) => [text]),
       save: mockSave,
     })),
@@ -230,6 +236,75 @@ interface Config {
       const res = exportSessionPdf(null, multilingualMessages, 'Multilingual-Report.pdf', false);
       expect(res.success).toBe(true);
       expect(mockSave).toHaveBeenCalled();
+    });
+  });
+
+  describe('Multipage Pagination & Disclaimer Footer', () => {
+    it('stamps the exact AI generated disclaimer footer and page counter across all pages', () => {
+      mockGetNumberOfPages.mockReturnValue(3);
+
+      const messages: ChatMessage[] = [
+        { id: '1', sender: 'user', text: 'Hello', timestamp: 1000 },
+      ];
+
+      const res = exportSessionPdf(null, messages, undefined, false);
+      expect(res.success).toBe(true);
+
+      expect(mockSetPage).toHaveBeenCalledWith(1);
+      expect(mockSetPage).toHaveBeenCalledWith(2);
+      expect(mockSetPage).toHaveBeenCalledWith(3);
+
+      expect(mockText).toHaveBeenCalledWith(
+        'AI generated analysis, verify before applying.',
+        expect.any(Number),
+        expect.any(Number),
+        { align: 'center' }
+      );
+
+      expect(mockText).toHaveBeenCalledWith('Page 1 of 3', expect.any(Number), expect.any(Number), {
+        align: 'right',
+      });
+      expect(mockText).toHaveBeenCalledWith('Page 2 of 3', expect.any(Number), expect.any(Number), {
+        align: 'right',
+      });
+      expect(mockText).toHaveBeenCalledWith('Page 3 of 3', expect.any(Number), expect.any(Number), {
+        align: 'right',
+      });
+    });
+
+    it('triggers addPage for long multi-line message transcripts', () => {
+      mockGetNumberOfPages.mockReturnValue(2);
+
+      const longText = Array.from({ length: 150 }, (_, i) => `Paragraph line ${i + 1} detailing system architecture.`).join('\n');
+      const messages: ChatMessage[] = [
+        { id: '1', sender: 'agent', text: longText, timestamp: 1000 },
+      ];
+
+      const res = exportSessionPdf(null, messages, undefined, false);
+      expect(res.success).toBe(true);
+      expect(mockAddPage).toHaveBeenCalled();
+    });
+
+    it('renders the top-left branding logo in the header and the new title', () => {
+      const messages: ChatMessage[] = [
+        { id: '1', sender: 'user', text: 'Hello', timestamp: 1000 },
+      ];
+
+      const res = exportSessionPdf(null, messages, undefined, false);
+      expect(res.success).toBe(true);
+      expect(mockAddImage).toHaveBeenCalledWith(
+        expect.stringMatching(/^data:image\/jpeg;base64,/),
+        'JPEG',
+        16,
+        expect.any(Number),
+        10,
+        10
+      );
+      expect(mockText).toHaveBeenCalledWith(
+        'bAssistant Deliberation Session',
+        30,
+        expect.any(Number)
+      );
     });
   });
 });

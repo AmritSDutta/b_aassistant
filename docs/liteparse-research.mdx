@@ -51,12 +51,13 @@ result.pages.forEach((page) => {
 | **PDF Text & Layout** | Supported natively | Primary extraction via `LiteParse.parse(bytes)` |
 | **Multi-page Chunking** | Supported natively | Mapped to `StoredChunk` records per page |
 | **Flate Compressed Streams** | Handled in WASM | Secondary fallback via `DecompressionStream('deflate-raw')` |
-| **DOCX / DOC Word Files** | Requires LibreOffice (Cloud only) | Handled via clean UTF-8 text string parsing |
-| **OCR (Scanned PDFs)** | Requires JS OCR engine callback | Graceful empty text detection with file metadata summary |
+| **Hex PDF String Tokens** | Custom font encodings | Decoded via `decodeHexPdf` (<...> Tj / [...] TJ) |
+| **DOCX Word Files** | Requires LibreOffice (Cloud only) | In-browser zero-dependency PKZip `word/document.xml` decompression |
+| **OCR (Scanned PDFs)** | Requires JS OCR engine callback | Born-digital mode (`ocrEnabled: false`) bypasses heavy OCR |
 
 ## The Multi-Tier Extraction Architecture
 
-To guarantee zero placeholder text (`Page X Content`) under all conditions (including browsers without full WASM compilation support or sandbox-restricted workers), `LiteParseService` operates in three resilient tiers:
+To guarantee zero placeholder text (`Page X Content`) under all conditions (including browsers without full WASM compilation support or sandbox-restricted workers), `LiteParseService` operates in four resilient tiers:
 
 ```mermaid
 flowchart TD
@@ -64,8 +65,10 @@ flowchart TD
   CheckFormat -->|PDF| WASM["Tier 1: @llamaindex/liteparse-wasm"]
   WASM -->|Success| IndexedDB[("IndexedDB Chunks & BM25 Index")]
   WASM -->|WASM Unavailable / Fails| StreamParser["Tier 2: DecompressionStream('deflate-raw')"]
-  StreamParser -->|Extract /BT ... /ET Tokens| IndexedDB
-  CheckFormat -->|DOC / DOCX| TextParser["Tier 3: Printable UTF-8 Extractor"]
+  StreamParser -->|Extract literal & hex tokens| IndexedDB
+  CheckFormat -->|DOCX| ZipParser["Tier 3: PKZip word/document.xml Decompressor"]
+  ZipParser --> IndexedDB
+  CheckFormat -->|DOC / Raw Text| TextParser["Tier 4: Printable UTF-8 Extractor"]
   TextParser --> IndexedDB
 ```
 
@@ -73,10 +76,13 @@ flowchart TD
 Executes the Rust-compiled WebAssembly engine to parse PDF structures, extracting genuine text and markdown layout per page.
 
 ### Tier 2: Native Browser `DecompressionStream`
-Modern browsers (Chrome 103+, Safari 16.4+, Firefox 113+) natively implement `DecompressionStream('deflate-raw')`. PDFs compress their content streams using `/FlateDecode`. Tier 2 decompresses these streams in-memory and extracts text tokens from standard PDF operators (`(...) Tj` and `[...] TJ`) without requiring external server calls.
+Modern browsers natively implement `DecompressionStream('deflate-raw')`. PDFs compress their content streams using `/FlateDecode`. Tier 2 decompresses these streams in-memory and extracts both literal string tokens (`(...) Tj`) and hexadecimal byte streams (`<...> Tj` and `[...] TJ`) for fonts with custom character encodings.
 
-### Tier 3: Printable Text Extractor
-For plain text, Word documents, or edge-case binaries, strips non-printable byte sequences and segments authentic document content into logical pages.
+### Tier 3: In-Browser DOCX Zip XML Decompressor
+Directly reads PKZip central directory records to find `word/document.xml`, deflating via `DecompressionStream('deflate-raw')` and stripping XML markup tags without backend dependencies.
+
+### Tier 4: Printable Text Extractor
+For plain text, Word documents, or edge-case binaries, strips non-printable byte sequences and segments authentic document content into logical pages using form feeds (`\f`).
 
 ## Verification & Tool Integration
 

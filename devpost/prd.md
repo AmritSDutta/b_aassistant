@@ -24,9 +24,10 @@ Source: `scope.md > Inspiration & Identity`.
 
 A responsive, single-page cockpit filling 100% of the viewport, vertically partitioned:
 - **Left Sidebar (20% width):**
-  - **Section 1 (Top) — Branding:** App title "bAssistant", logo placeholder, and Light/Dark mode toggle.
+  - **Section 1 (Top) — Branding:** App title "bAssistant", transparent theme-aware logo (`bassistant_light.jpg` in dark mode, `bassistant_dark.jpg` in light mode), and Light/Dark mode toggle.
   - **Section 2 (Middle) — File Upload:** Dropzone and file picker for Doc/PDF files strictly under 1MB. Status display showing filename, page count, and "Indexed" badge upon processing.
-  - **Section 3 (Bottom) — Blank Slot:** Unoccupied workspace reserved for future capabilities.
+  - **Section 3 — Reference URLs:** Enboldened `REFERENCE URLS` header with count badge (up to 10 URLs). Click `+ Add` to open a reachability verification modal before caching to browser storage.
+  - **Section 4 (Bottom) — Session Highlights:** Enboldened `Session Highlights` section collecting starred dialogue messages for instant revisit.
 - **Main Workspace (80% width):**
   - **Top Area (60% height) — HTML Canvas:** Interactive visual display area for programmatic drawing (shapes, lines, graphs, diagrams). Includes UI action buttons (such as "Clear Canvas") that mirror exposed WebMCP tools.
   - **Bottom Area (40% height) — Chat Area:** Scrollable dialogue log displaying `user:` messages and agent responses, formatted with Lora longform reading typography and auto-scrolling to the latest turn, with a bottom text input and send button.
@@ -41,7 +42,7 @@ A responsive, single-page cockpit filling 100% of the viewport, vertically parti
 ### 1. Document Upload & In-Browser Indexing
 Source: `scope.md > The POC Boundary`.
 - **Capability:** Ingestion of Doc and PDF files strictly < 1MB.
-- **Processing:** Client-side parsing using LiteParse (browser WASM) into page-level chunks.
+- **Processing:** Client-side parsing using LiteParse (browser WASM) into page-level chunks, with stream decompressor fallback, hex string decoding (`<...> Tj` and `[...] TJ`), and in-browser DOCX PKZip `word/document.xml` decompression.
 - **Storage:** Chunks and BM25 search index stored directly in IndexedDB.
 - **Feedback:**
   - Valid file: Displays filename, total page count, and "Indexed" confirmation.
@@ -70,6 +71,7 @@ Source: `scope.md > The Unique Kernel`.
 ### 4. Client-Side PDF Generation
 Source: `scope.md > The POC Boundary`.
 - Pure in-browser PDF generation using `jspdf`.
+- **Header Branding Logo:** Every generated PDF stamps the branding logo (`bassistant_light.jpg`) at top-left (`margin, cursor.y - 1`) alongside document title, subtitle, and date.
 - **Blank Content Validation:** Validates that at least one of either the canvas scene graph or the dialogue stream has substantive content before export. If both are blank, the export is aborted, a validation modal alert is presented to the user, and WebMCP `export_pdf` returns a descriptive rejection error.
 - **Markdown Humanization for LLM Content:** Parses and converts raw LLM-generated Markdown in the dialogue stream:
   - Formats headings (`#`, `##`, `###`) in bold Helvetica with proportional sizing and spacing.
@@ -81,12 +83,16 @@ Source: `scope.md > The POC Boundary`.
 - **Multilingual Indic Script Support (Bengali & Hindi):**
   - Resolves standard PDF Latin-1 font limitations for Indic complex scripts by utilizing native browser text-shaping (HarfBuzz/Uniscribe via Canvas2D rasterization).
   - Accurately renders Bengali (বাংলা, যেমন যুক্তাক্ষর 'ক্ষ', 'জ্ঞ') and Hindi (हिन्दी, जैसे संयुक्त व्यंजन 'क्त', 'त्र', मात्राएं) with 100% typographic fidelity, preventing missing characters or broken ligatures.
-- Scales and fits the canvas diagram snapshot at the top, then formats conversation turns with clean typography, timestamps, sender badges, and automatic multi-page pagination.
+- **Multipage Pagination:** Automatically computes block height against a 10mm bottom margin buffer, advancing to new pages seamlessly.
+- **Mandatory AI Disclaimer Footer:** Every page stamps the exact centered disclaimer:
+  > `AI generated analysis, verify before applying.`
+  with a right-aligned page counter (`Page X of Y`).
 
 ### 5. WebMCP Tool Suite
 Source: `scope.md > The POC Boundary`.
-The application exposes 16 standard WebMCP tools for visiting LLMs:
+The application exposes 17 standard WebMCP tools for visiting LLMs:
 - `get_tool_usage_prompt`: Read-only, zero-argument tool returning the agent operating guide for using every other tool; marked `readOnlyHint: true` and meant to be called first.
+- `get_reference_url`: Read-only, zero-argument tool returning comma-separated list of up to 10 stored reference URLs cached in browser storage.
 - `search_web`: Executes web search queries using DuckDuckGo (DDGS).
 - `search_research`: Executes academic literature searches via ArXiv.
 - `calculate`: Evaluates decimal math expressions.

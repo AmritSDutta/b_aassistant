@@ -65,14 +65,18 @@ Connectors compute the dominant vector between shape centers and dock to the fac
 ## Client-Side PDF Generation
 
 Users and visiting LLMs can export a full session report:
-1. **Blank Content Validation**: Checks that the session has either active canvas drawings or chat dialogue. If both are blank, the export is prevented and a validation modal alerts the user.
-2. **Markdown Humanization**: Automatically parses LLM Markdown formatting into publication-ready typography:
+1. **Header with Top-Left Logo**: Every exported PDF features the bAssistant branding logo (`bassistant_light.jpg`) rendered at top-left (`10mm x 10mm`) alongside the document title, subtitle, and timestamp.
+2. **Blank Content Validation**: Checks that the session has either active canvas drawings or chat dialogue. If both are blank, the export is prevented and a validation modal alerts the user.
+3. **Markdown Humanization**: Automatically parses LLM Markdown formatting into publication-ready typography:
    - Headings (`#`, `##`, `###`) rendered in bold Helvetica with proportional sizing.
    - Bulleted (`• `) and numbered lists (`1. `) cleanly indented.
    - Fenced code blocks styled in Courier monospace with a light-slate background tint.
    - Blockquotes (`> `) rendered in italic with vertical boundary line accents.
    - Strips raw markdown tokens (`**`, `*`, `` ` ``, `[label](url)`) into clean text.
-3. **Multilingual Indic Script Support (Bengali & Hindi)**: Native browser font-shaping ensures Bengali (বাংলা) and Hindi (हिन्दी) complex conjuncts and matras render with 100% typographic fidelity.
-4. **Canvas Snapshot**: Fitted uniformly at the top of Page 1.
-5. **Dialogue Transcripts**: Formatted beneath with sender badges, timestamps, and multi-page overflow pagination.
-6. **100% In-Browser**: Built via `jspdf` with zero backend server dependencies.
+4. **Multilingual Indic Script Support (Bengali & Hindi)**: Native browser font-shaping ensures Bengali (বাংলা) and Hindi (हिन्दी) complex conjuncts and matras render with 100% typographic fidelity.
+5. **Canvas Snapshot**: Fitted uniformly at the top of Page 1.
+6. **Multipage Pagination & Buffer**: Markdown dialogue streams automatically calculate cursor height with a 10mm reserved buffer, triggering `doc.addPage()` seamlessly for long transcripts without clipping.
+7. **Mandatory Disclaimer Footer**: Every generated page stamps the centered disclaimer:
+   > `AI generated analysis, verify before applying.`
+   alongside a right-aligned page counter (`Page X of Y`).
+8. **100% In-Browser**: Built via `jspdf` with zero backend server dependencies.

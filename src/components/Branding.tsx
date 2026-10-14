@@ -9,13 +9,15 @@ export const Branding: React.FC<BrandingProps> = ({ theme, onToggleTheme }) => {
   return (
     <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--line)' }}>
       <div className="flex items-center space-x-2">
-        {/* Logo Placeholder */}
-        <div
-          className="w-8 h-8 rounded-lg border flex items-center justify-center font-bold text-sm"
-          style={{ background: 'var(--accent-soft)', borderColor: 'var(--accent)', color: 'var(--accent)' }}
-        >
-          bA
-        </div>
+        <img
+          src={
+            theme === 'dark'
+              ? 'https://pub-c1d80f0f7327493997a3c1285f43a9ea.r2.dev/bassistant_light.jpg'
+              : 'https://pub-c1d80f0f7327493997a3c1285f43a9ea.r2.dev/bassistant_dark.jpg'
+          }
+          alt="bAssistant Logo"
+          className="w-8 h-8 rounded-lg object-cover"
+        />
         <div>
           <h1 className="font-bold text-base tracking-tight" style={{ color: 'var(--ink)' }}>
             bAssistant

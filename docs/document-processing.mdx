@@ -16,7 +16,10 @@ bAssistant prioritizes privacy by ensuring all document ingestion and search ope
 ## Processing Pipeline
 
 1. **Upload & Validation**: Validates size (< 1MB) and extension in `FileUpload.tsx`.
-2. **LiteParse WASM / Stream Extraction**: Extracts natural 1:1 page text via WebAssembly (`@llamaindex/liteparse-wasm`) with high-performance native browser stream decompression (`DecompressionStream('deflate-raw')`) without arbitrary character slicing.
-3. **BM25 Lexical Indexing**: Tokenizes text, computes term frequencies, document frequencies, and average document lengths across natural pages.
-4. **IndexedDB Persistence**: Stores document metadata, chunks, and the inverted BM25 index in `bAssistantDB`.
-5. **Agent Retrieval**: Visiting models query `search_document`. Queries automatically have conversational stop words stripped, leverage keyword-guided descriptions, and return strictly the top 3 most relevant pages.
+2. **LiteParse WASM / Stream Extraction**: Extracts natural 1:1 page text via WebAssembly (`@llamaindex/liteparse-wasm`) with high-performance native browser stream decompression (`DecompressionStream('deflate-raw')`) without arbitrary character slicing:
+   - Supports standard literal PDF text operators (`(...) Tj`).
+   - Decodes hexadecimal encoded streams (`<...> Tj` and `[...] TJ`) for fonts with custom character encodings.
+3. **In-Browser DOCX Zip Decompression**: Zero-dependency PKZip stream reader inflating `word/document.xml` using native browser `DecompressionStream('deflate-raw')`, stripping internal markup tags to yield clean paragraphs.
+4. **BM25 Lexical Indexing**: Tokenizes text, computes term frequencies, document frequencies, and average document lengths across natural pages.
+5. **IndexedDB Persistence**: Stores document metadata, chunks, and the inverted BM25 index in `bAssistantDB`.
+6. **Agent Retrieval**: Visiting models query `search_document`. Queries automatically have conversational stop words stripped, leverage keyword-guided descriptions, and return strictly the top 3 most relevant pages.

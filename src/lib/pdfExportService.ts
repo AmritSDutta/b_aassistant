@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import { ChatMessage } from '../components/ChatArea';
+import { BASSISTANT_LIGHT_BASE64 } from './logoBase64';
 
 const PNG_IHDR_MIN_BYTES = 24;
 const PNG_WIDTH_BYTE_OFFSET = 16;
@@ -197,15 +198,20 @@ export function drawLineText(
   return fontSizePt * 0.45;
 }
 
+export interface PdfCursor {
+  y: number;
+}
+
 export function renderHumanizedMarkdown(
   doc: jsPDF,
   markdownText: string,
   margin: number,
   contentWidth: number,
-  startY: number,
+  startYOrCursor: number | PdfCursor,
   ensureSpace: (needed: number) => void
 ): number {
-  let currentY = startY;
+  const cursor: PdfCursor =
+    typeof startYOrCursor === 'number' ? { y: startYOrCursor } : startYOrCursor;
   const lines = markdownText.split('\n');
   let inCodeBlock = false;
 
@@ -215,7 +221,7 @@ export function renderHumanizedMarkdown(
     // 1. Fenced Code Block delimiter
     if (trimmed.startsWith('```')) {
       inCodeBlock = !inCodeBlock;
-      currentY += inCodeBlock ? 1 : 2;
+      cursor.y += inCodeBlock ? 1 : 2;
       continue;
     }
 
@@ -223,13 +229,13 @@ export function renderHumanizedMarkdown(
     if (inCodeBlock) {
       ensureSpace(4.5);
       doc.setFillColor(241, 245, 249); // slate-100
-      doc.rect(margin + 2, currentY - 3.2, contentWidth - 4, 4.2, 'F');
+      doc.rect(margin + 2, cursor.y - 3.2, contentWidth - 4, 4.2, 'F');
 
       doc.setFont('courier', 'normal');
       doc.setFontSize(8.5);
       doc.setTextColor(51, 65, 85); // slate-700
-      doc.text(rawLine.slice(0, 85), margin + 4, currentY);
-      currentY += 4.2;
+      doc.text(rawLine.slice(0, 85), margin + 4, cursor.y);
+      cursor.y += 4.2;
       continue;
     }
 
@@ -238,8 +244,8 @@ export function renderHumanizedMarkdown(
       ensureSpace(5);
       doc.setDrawColor(226, 232, 240); // slate-200
       doc.setLineWidth(0.3);
-      doc.line(margin + 2, currentY, margin + contentWidth - 2, currentY);
-      currentY += 4.5;
+      doc.line(margin + 2, cursor.y, margin + contentWidth - 2, cursor.y);
+      cursor.y += 4.5;
       continue;
     }
 
@@ -250,8 +256,8 @@ export function renderHumanizedMarkdown(
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(12.5);
       doc.setTextColor(15, 23, 42); // slate-900
-      drawLineText(doc, text, margin + 2, currentY, 12.5, '#0f172a', true);
-      currentY += 6;
+      drawLineText(doc, text, margin + 2, cursor.y, 12.5, '#0f172a', true);
+      cursor.y += 6;
       continue;
     }
 
@@ -261,8 +267,8 @@ export function renderHumanizedMarkdown(
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(11);
       doc.setTextColor(30, 41, 59); // slate-800
-      drawLineText(doc, text, margin + 2, currentY, 11, '#1e293b', true);
-      currentY += 5.2;
+      drawLineText(doc, text, margin + 2, cursor.y, 11, '#1e293b', true);
+      cursor.y += 5.2;
       continue;
     }
 
@@ -272,8 +278,8 @@ export function renderHumanizedMarkdown(
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
       doc.setTextColor(51, 65, 85); // slate-700
-      drawLineText(doc, text, margin + 2, currentY, 10, '#334155', true);
-      currentY += 4.8;
+      drawLineText(doc, text, margin + 2, cursor.y, 10, '#334155', true);
+      cursor.y += 4.8;
       continue;
     }
 
@@ -288,13 +294,13 @@ export function renderHumanizedMarkdown(
         ensureSpace(4.5);
         doc.setDrawColor(203, 213, 225); // slate-300
         doc.setLineWidth(0.8);
-        doc.line(margin + 3, currentY - 3, margin + 3, currentY + 1.2);
+        doc.line(margin + 3, cursor.y - 3, margin + 3, cursor.y + 1.2);
 
         doc.setFont('times', 'italic');
         doc.setFontSize(9.5);
         doc.setTextColor(71, 85, 105); // slate-600
-        drawLineText(doc, qLine, margin + 6, currentY, 9.5, '#475569', false);
-        currentY += 4.5;
+        drawLineText(doc, qLine, margin + 6, cursor.y, 9.5, '#475569', false);
+        cursor.y += 4.5;
       }
       continue;
     }
@@ -312,7 +318,7 @@ export function renderHumanizedMarkdown(
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
       doc.setTextColor(100, 116, 139); // slate-500
-      doc.text('\u2022', margin + indent - 1.5, currentY);
+      doc.text('\u2022', margin + indent - 1.5, cursor.y);
 
       doc.setFont('times', 'normal');
       doc.setFontSize(10);
@@ -320,8 +326,8 @@ export function renderHumanizedMarkdown(
 
       for (let i = 0; i < itemLines.length; i++) {
         if (i > 0) ensureSpace(4.5);
-        drawLineText(doc, itemLines[i], margin + indent + 2.5, currentY, 10, '#1e293b', false);
-        currentY += 4.5;
+        drawLineText(doc, itemLines[i], margin + indent + 2.5, cursor.y, 10, '#1e293b', false);
+        cursor.y += 4.5;
       }
       continue;
     }
@@ -339,7 +345,7 @@ export function renderHumanizedMarkdown(
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(9);
       doc.setTextColor(100, 116, 139);
-      doc.text(numBadge, margin + 3, currentY);
+      doc.text(numBadge, margin + 3, cursor.y);
 
       doc.setFont('times', 'normal');
       doc.setFontSize(10);
@@ -347,8 +353,8 @@ export function renderHumanizedMarkdown(
 
       for (let i = 0; i < itemLines.length; i++) {
         if (i > 0) ensureSpace(4.5);
-        drawLineText(doc, itemLines[i], margin + 9.5, currentY, 10, '#1e293b', false);
-        currentY += 4.5;
+        drawLineText(doc, itemLines[i], margin + 9.5, cursor.y, 10, '#1e293b', false);
+        cursor.y += 4.5;
       }
       continue;
     }
@@ -356,7 +362,7 @@ export function renderHumanizedMarkdown(
     // 7. Standard Paragraph Text
     const cleanParagraph = stripInlineMarkdown(rawLine);
     if (!cleanParagraph.trim()) {
-      currentY += 2;
+      cursor.y += 2;
       continue;
     }
 
@@ -370,12 +376,12 @@ export function renderHumanizedMarkdown(
 
     for (const pLine of paraLines) {
       ensureSpace(4.5);
-      drawLineText(doc, pLine, margin + 2, currentY, 10, '#1e293b', false);
-      currentY += 4.5;
+      drawLineText(doc, pLine, margin + 2, cursor.y, 10, '#1e293b', false);
+      cursor.y += 4.5;
     }
   }
 
-  return currentY;
+  return cursor.y;
 }
 
 export function exportSessionPdf(
@@ -404,38 +410,54 @@ export function exportSessionPdf(
   const pageHeight = 297;
   const margin = 16;
   const contentWidth = pageWidth - margin * 2;
-  let currentY = margin;
+  const cursor: PdfCursor = { y: margin };
+  const bottomLimit = pageHeight - margin - 10; // 10mm reserved for footer
 
-  // Header
+  const ensureSpace = (needed: number) => {
+    if (cursor.y + needed > bottomLimit) {
+      doc.addPage();
+      cursor.y = margin;
+    }
+  };
+
+  // Header with Top-Left Branding Logo
+  const logoSize = 10; // 10mm x 10mm
+  try {
+    doc.addImage(BASSISTANT_LIGHT_BASE64, 'JPEG', margin, cursor.y - 1, logoSize, logoSize);
+  } catch (e) {
+    console.warn('Could not add header logo image to PDF:', e);
+  }
+
+  const textX = margin + logoSize + 4;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
+  doc.setFontSize(15);
   doc.setTextColor(15, 23, 42); // slate-900
-  doc.text('bAssistant Research & Architecture Session', margin, currentY);
-  currentY += 6;
+  doc.text('bAssistant Deliberation Session', textX, cursor.y + 3);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setTextColor(100, 116, 139); // slate-500
   const dateStr = new Date().toLocaleString();
   const subTitle = docName ? `Document: ${docName} | Generated: ${dateStr}` : `Generated: ${dateStr}`;
-  doc.text(subTitle, margin, currentY);
-  currentY += 8;
+  doc.text(subTitle, textX, cursor.y + 8);
+  cursor.y += Math.max(logoSize + 4, 12);
 
   // Section 1: HTML Canvas Snapshot (if available and not empty)
   if (canvasDataUrl && hasCanvasContent) {
     const dims = readPngDimensions(canvasDataUrl) || { width: 1200, height: 600 };
     const fitted = fitContain(dims.width, dims.height, contentWidth, 85);
 
+    ensureSpace(fitted.height + 4);
     doc.setDrawColor(226, 232, 240); // slate-200
     doc.setFillColor(248, 250, 252); // slate-50
-    doc.roundedRect(margin, currentY, contentWidth, fitted.height + 4, 3, 3, 'FD');
+    doc.roundedRect(margin, cursor.y, contentWidth, fitted.height + 4, 3, 3, 'FD');
 
     try {
       doc.addImage(
         canvasDataUrl,
         'PNG',
         margin + (contentWidth - fitted.width) / 2,
-        currentY + 2,
+        cursor.y + 2,
         fitted.width,
         fitted.height
       );
@@ -443,29 +465,23 @@ export function exportSessionPdf(
       console.warn('Could not render image to PDF:', e);
     }
 
-    currentY += fitted.height + 12;
+    cursor.y += fitted.height + 12;
   }
 
   // Section 2: Dialogue Stream
+  ensureSpace(12);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(15, 23, 42);
-  doc.text('Dialogue Transcript', margin, currentY);
-  currentY += 6;
-
-  const ensureSpace = (needed: number) => {
-    if (currentY + needed > pageHeight - margin) {
-      doc.addPage();
-      currentY = margin;
-    }
-  };
+  doc.text('Dialogue Transcript', margin, cursor.y);
+  cursor.y += 6;
 
   if (!hasDialogue) {
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(10);
     doc.setTextColor(148, 163, 184);
-    doc.text('No dialogue messages recorded for this session.', margin, currentY);
-    currentY += 10;
+    doc.text('No dialogue messages recorded for this session.', margin, cursor.y);
+    cursor.y += 10;
   } else {
     for (const msg of messages) {
       if (!msg.text || !msg.text.trim()) continue;
@@ -483,13 +499,34 @@ export function exportSessionPdf(
       }
 
       ensureSpace(12);
-      doc.text(senderBadge, margin, currentY);
-      currentY += 4.5;
+      doc.text(senderBadge, margin, cursor.y);
+      cursor.y += 4.5;
 
       // Humanize LLM generated markdown with Indic script support into publication-quality structured PDF blocks
-      currentY = renderHumanizedMarkdown(doc, msg.text, margin, contentWidth, currentY, ensureSpace);
-      currentY += 3.5;
+      renderHumanizedMarkdown(doc, msg.text, margin, contentWidth, cursor, ensureSpace);
+      cursor.y += 3.5;
     }
+  }
+
+  // Stamp disclaimer footer on every page
+  const totalPages = doc.getNumberOfPages();
+  for (let page = 1; page <= totalPages; page++) {
+    doc.setPage(page);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184); // slate-400
+    doc.text(
+      'AI generated analysis, verify before applying.',
+      pageWidth / 2,
+      pageHeight - 8,
+      { align: 'center' }
+    );
+    doc.text(
+      `Page ${page} of ${totalPages}`,
+      pageWidth - margin,
+      pageHeight - 8,
+      { align: 'right' }
+    );
   }
 
   // Trigger browser download

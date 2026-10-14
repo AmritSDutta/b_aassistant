@@ -31,10 +31,10 @@ The viewport is divided horizontally into a left sidebar and a primary workspace
 
 ### 1. Left Sidebar (20% Width)
 The sidebar serves as the control and context panel:
-- **Branding & Theme Toggle**: Displays the product title and provides instant light/dark mode switching.
+- **Branding & Theme Toggle**: Features the dynamic, transparent, theme-aware bAssistant logo (`bassistant_light.jpg` in dark mode, `bassistant_dark.jpg` in light mode for optimal contrast) and provides instant light/dark mode switching. Also sets the browser tab favicon.
 - **Document Dropzone**: Ingests `.pdf`, `.docx`, or `.doc` files strictly under 1MB. Displays parsing status badges (`Parsing...`, `Indexed`, or error modal) with clear file-type validation.
-- **Reference URLs**: Manage up to 10 external documentation and resource links. Clicking `+ Add` opens a validation modal that verifies reachability via client-side probes before caching URLs into browser storage. Visiting LLMs access these links via `get_reference_url`.
-- **Session Highlights**: Starred messages from the conversation collect here automatically. Clicking any highlight smoothly scrolls the chat stream directly to that turn.
+- **Reference URLs**: Enboldened **REFERENCE URLS** header with count badge. Manage up to 10 external documentation and resource links. Clicking `+ Add` opens a validation modal that verifies reachability via client-side probes before caching URLs into browser storage. Visiting LLMs access these links via `get_reference_url`.
+- **Session Highlights**: Enboldened **Session Highlights** section. Starred messages from the conversation collect here automatically. Clicking any highlight smoothly scrolls the chat stream directly to that turn.
 - **Session Duration & Tips**: Displays live session time (`messages · highlights · minutes`) without countdown pressure, along with a link to re-open the onboarding walkthrough.
 
 ### 2. Primary Workspace (80% Width)

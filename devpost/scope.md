@@ -33,6 +33,7 @@ Enables a practical, genuinely beneficial tool for the community that proves Web
 ## What "Working" Looks Like
 A user opens the single-page application and activates the WebMCP Inspector testing mode. The inspector shows the exposed WebMCP tools registered and operational:
 - `get_tool_usage_prompt`: Read-only, zero-argument tool returning the agent operating guide for using every other tool (agents call it first).
+- `get_reference_url`: Read-only, zero-argument tool returning comma-separated reference URLs stored in browser cache (up to 10 verified URLs).
 - `search_web`: DuckDuckGo search (DDGS).
 - `search_research`: ArXiv search.
 - `calculate`: Decimal math calculations.
@@ -42,19 +43,20 @@ A user opens the single-page application and activates the WebMCP Inspector test
 - `canvas2d_inspect_shapes`: Inspects active canvas scene graph & ASCII topology graph.
 - `canvas2d_modify_shape`: Surgical in-place editing of shape label, position, or colors.
 - `canvas2d_clear`: Clears the Canvas2D scene graph.
-- `export_pdf`: Generates downloadable publication-quality PDF combining canvas diagram and chat dialogue.
+- `export_pdf`: Generates downloadable publication-quality PDF combining top-left logo, canvas diagram, multipage chat dialogue, and mandatory AI disclaimer footer.
 - `canvas_draw` / `draw_diagram` / `canvas_clear`: Legacy drawing tools for quick graphs on the top 60% canvas.
 - `chat_post` / `get_chat_history`: Stream text into the bottom 40% chat area and read dialogue context.
 A test run demonstrates a visiting agent calling these tools, retrieving data, updating chat, and drawing on the canvas live.
 
 ## The POC Boundary
 - **In Now:**
-  - React-based single-page application with responsive layout (20% sidebar with branding and file uploader strictly for Doc/PDF < 1MB; 80% main area split into 60% HTML canvas and 40% chat area).
-  - Post-upload processing: in-browser natural per-page extraction using LiteParse (browser WASM / PDF decompressor stream) and client-side BM25 searchable index generation stored in browser datastore (IndexedDB) for accepted files (< 1MB only).
+  - React-based single-page application with responsive layout (20% sidebar with dynamic transparent branding logo, file uploader for Doc/PDF < 1MB, enboldened Reference URLs manager for up to 10 probe-verified links, and enboldened Session Highlights; 80% main area split into 60% HTML canvas and 40% chat area).
+  - Post-upload processing: in-browser natural per-page extraction using LiteParse (browser WASM / PDF decompressor stream with hex token decoding `<...> Tj` / `[...] TJ` and in-browser DOCX PKZip `word/document.xml` decompression) and client-side BM25 searchable index generation stored in browser datastore (IndexedDB) for accepted files (< 1MB only).
   - Advanced HTML Canvas2D scene graph with perimeter edge-to-edge docking for auto-anchoring arrows, soft-translucent color palette (indigo client, emerald gateway, purple database, orange cache/queue, amber logic, sticky-note stickers), and HiDPI resolution.
-  - Client-side PDF export (`exportSessionPdf`) with blank session validation (blocking download and alerting when canvas and chat are empty), Markdown humanization, and multilingual Indic script rendering (supporting Bengali বাংলা and Hindi हिन्दी via native browser complex text shaping).
-  - WebMCP tool provider layer exposing 16 tools:
+  - Client-side PDF export (`exportSessionPdf`) with blank session validation (blocking download and alerting when canvas and chat are empty), top-left branding logo (`bassistant_light.jpg`), Markdown humanization, Indic script rendering (Bengali বাংলা and Hindi हिन्दी), multipage pagination buffer (10mm), and mandatory AI disclaimer footer on every page (`AI generated analysis, verify before applying.`).
+  - WebMCP tool provider layer exposing 17 tools:
     - `get_tool_usage_prompt` (read-only, zero-arg: returns the agent operating guide for all other tools)
+    - `get_reference_url` (read-only, zero-arg: returns comma-separated list of up to 10 stored reference URLs)
     - `search_web` (using DDGS behind)
     - `search_research` (using ArXiv search)
     - `calculate` (decimal math)
@@ -65,7 +67,7 @@ A test run demonstrates a visiting agent calling these tools, retrieving data, u
     - `canvas_draw`, `draw_diagram`, `canvas_clear` (legacy drawing tools)
     - `chat_post`, `get_chat_history` (chat tools for the 80% workspace)
   - WebMCP Inspector testing mode for direct verification and tool execution.
-  - Long-dwell UI enrichment (see `research.md`): warm token-based dual themes, first-load onboarding popup (how to use, re-openable), chat maximized as a full-screen reader popup, A-/A+ font steps persisted, 2px reading-progress bar, star highlights collected in Session Highlights (sidebar Section 3), "agent is thinking" pulse, per-message copy, dropzone drag-over highlight, gentle session strip, and `prefers-reduced-motion` support.
+  - Long-dwell UI enrichment (see `research.md`): warm token-based dual themes, transparent theme-aware branding logo and tab favicon, first-load onboarding popup (how to use, re-openable), chat maximized as a full-screen reader popup, A-/A+ font steps persisted, 2px reading-progress bar, star highlights collected in Session Highlights (sidebar Section 4), "agent is thinking" pulse, per-message copy, dropzone drag-over highlight, gentle session strip, and `prefers-reduced-motion` support.
   - Deployment: Deployed to Cloudflare Pages.
 
 ## Later

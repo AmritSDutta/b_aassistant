@@ -36,6 +36,12 @@
       "sourceType": "github",
       "skillPath": "skills/6-ship/SKILL.md",
       "computedHash": "8afe1905dedb55557a237d6d8083bcb562f7b8f6c815f500860abdbaafe5344b"
+    },
+    "liteparse": {
+      "source": "run-llama/llamaparse-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/liteparse/SKILL.md",
+      "computedHash": "d1c7a1cab7d44886cfeb3c22aab5c6a7a491413d7d78d34e21fa6a24428bac70"
     }
   }
 }

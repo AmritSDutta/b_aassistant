@@ -78,3 +78,26 @@ Micro-interactions measurably improve UX and alter time perception — animation
 | Highlights | `ChatArea.tsx` ☆/★, `BlankSlot.tsx` Session Highlights |
 | Progress | `ChatArea.tsx` 2px bar; `App.tsx` session strip |
 | Calm + alive | thinking pulse, entrance fades, copy, drag-over, `WelcomeModal.tsx`, reduced-motion guard |
+| High-Efficiency Parsing | `src/lib/liteparseService.ts`, `src/lib/bm25.ts` |
+
+## 7. Effective Document Parsing & Retrieval (LiteParse & LlamaIndex Research)
+
+Research into agentic document extraction and retrieval based on LlamaIndex's `run-llama/llamaparse-agent-skills` (`liteparse`):
+
+### 7.1 The "Parse Once" Golden Rule
+Agent traces frequently reveal severe resource and token exhaustion when LLMs or agents re-parse multi-megabyte PDFs on every query (in real traces, the same PDF was repeatedly parsed up to 9 times).
+- **Core Principle:** Extract the document exactly once into a structured, indexed memory store. All subsequent queries, searches, and synthesis runs query the indexed representation rather than triggering full extraction pipelines.
+- **bAssistant Implementation:** `bAssistant` uploads PDFs or DOCX files into browser IndexedDB through `LiteParseService`. Content is tokenized into distinct pages, stored locally, and queried instantaneously via the client-side `BM25Index` without repeated disk or stream parsing.
+
+### 7.2 Low-Latency Born-Digital PDFs (`--no-ocr`)
+Most enterprise documents, corporate earnings, technical RFCs, and financial whitepapers are born-digital (they possess a native vector text layer).
+- **Finding:** Running OCR on born-digital documents wastes immense compute and introduces OCR transcription noise. Passing `--no-ocr` (`ocrEnabled: false`) parses native vector text in milliseconds with 100% character precision.
+- **bAssistant Implementation:** `LiteParseService` configures `LiteParse` with `{ outputFormat: 'text' }` and no OCR overhead, utilizing native vector text extraction for instant responses.
+
+### 7.3 Multi-Tier Resilient In-Browser Extraction Architecture
+Running document extraction entirely inside the user's browser without backend infrastructure requires fallback resilience across diverse environments and document types:
+1. **Tier 1 (WASM Core):** Official `@llamaindex/liteparse-wasm` module initialized with compiled WebAssembly (`/liteparse_wasm_bg.wasm`), providing native Rust performance and layout-aware text extraction.
+2. **Tier 2 (Browser Stream PDF Decompressor):** High-throughput fallback utilizing web-standard `DecompressionStream('deflate-raw')` directly on PDF FlateDecode streams. Supports both literal string tokens (`(...) Tj`) and hexadecimal byte streams (`<...> Tj` and `[...] TJ`) for fonts with custom encoding.
+3. **Tier 3 (DOCX XML Zip Decompression):** In-browser standard PKZip stream parser for Microsoft Word `.docx` documents. Locates and inflates `word/document.xml` using `DecompressionStream`, stripping XML metadata tags to produce clean document paragraphs.
+4. **Tier 4 (Unstructured Fallback):** UTF-8 / Latin1 printable text stream preservation with form-feed (`\f`) page break detection. Never emits generic placeholder strings.
+

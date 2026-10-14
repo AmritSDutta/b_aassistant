@@ -106,9 +106,9 @@ export const ReferenceUrls: React.FC<ReferenceUrlsProps> = ({ urls, onAddUrl, on
     <div className="border-b flex flex-col" style={{ borderColor: 'var(--line)' }}>
       {/* Header bar */}
       <div className="px-4 py-2 flex items-center justify-between">
-        <div className="flex items-center gap-1.5 font-mono text-[10px] tracking-wider uppercase" style={{ color: 'var(--ink-soft)' }}>
+        <div className="flex items-center gap-1.5 font-mono text-[10px] font-bold tracking-wider uppercase" style={{ color: 'var(--ink)' }}>
           <span>REFERENCE URLS</span>
-          <span className="font-semibold text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'var(--card)', color: 'var(--ink)' }}>
+          <span className="font-bold text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'var(--card)', color: 'var(--ink)' }}>
             {urls.length}/10
           </span>
         </div>

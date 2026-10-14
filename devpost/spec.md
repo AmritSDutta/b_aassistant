@@ -9,17 +9,18 @@ A zero-backend, React-based single-page browser assistant deployed to Cloudflare
 
 ## How This Works, In Plain Language
 `bAssistant` is a client-side application built with React and Vite. When a user opens it:
-1. The page renders a 20/80 layout: a left sidebar (branding with light/dark toggle, file upload, and a blank reserved space) and an 80% main area split into a top 60% HTML canvas and a bottom 40% chat interface.
-2. If the user uploads a Doc or PDF file (< 1MB), `LiteParse` runs directly inside the browser using WebAssembly (WASM). It extracts text page-by-page. A client-side BM25 indexer tokenizes and scores the text, saving the chunks and index into the browser's IndexedDB.
+1. The page renders a 20/80 layout: a left sidebar (branding with dynamic transparent logo, light/dark toggle, file upload, Reference URLs manager for up to 10 verified links, and Session Highlights) and an 80% main area split into a top 60% HTML canvas and a bottom 40% chat interface.
+2. If the user uploads a Doc or PDF file (< 1MB), `LiteParse` runs directly inside the browser using WebAssembly (WASM). It extracts text page-by-page, with stream decompressor fallback, hex PDF string token decoding (`<...> Tj` and `[...] TJ`), and in-browser DOCX PKZip `word/document.xml` decompression. A client-side BM25 indexer tokenizes and scores the text, saving the chunks and index into the browser's IndexedDB.
 3. The user types messages into the chat box. Each message is tagged with a `user:` prefix and kept in application state.
-4. The page initializes a **Unified WebMCP Provider** that registers 16 tools onto six discovery surfaces: `document.modelContext`, `navigator.modelContext`, `window.webmcp`, hidden DOM tool forms, ready custom events, and `window.postMessage` for standard JSON-RPC 2.0 MCP commands.
+4. The page initializes a **Unified WebMCP Provider** that registers 17 tools onto six discovery surfaces: `document.modelContext`, `navigator.modelContext`, `window.webmcp`, hidden DOM tool forms, ready custom events, and `window.postMessage` for standard JSON-RPC 2.0 MCP commands.
 5. Any visiting LLM, extension, or WebMCP inspector discovers the exposed tools:
    - `get_tool_usage_prompt`: returns the read-only operating guide for using all other tools (call first).
+   - `get_reference_url`: returns comma-separated reference URLs stored in browser cache.
    - `search_document`: queries the local BM25 index in IndexedDB.
    - `clean_document`: wipes the IndexedDB chunks and resets the upload box.
    - `get_chat_history`: retrieves conversation logs including `user:` prompts.
    - `canvas2d_draw_shapes` / `canvas2d_inspect_shapes` / `canvas2d_modify_shape` / `canvas2d_clear`: structured scene-graph drawing, inspection, and in-place editing.
-   - `export_pdf`: generates the session PDF report (canvas snapshot + transcript).
+   - `export_pdf`: generates the session PDF report (top-left branding logo, canvas snapshot, multipage dialogue, and mandatory AI disclaimer footer).
    - `canvas_draw` / `draw_diagram` / `canvas_clear`: legacy drawing commands onto the HTML canvas.
    - `chat_post`: streams or posts agent explanations into the chat log.
    - `calculate`: runs exact decimal math in the browser.
@@ -30,10 +31,10 @@ A zero-backend, React-based single-page browser assistant deployed to Cloudflare
 ## The Core Journey Through the System
 Traces `prd.md > The Core Journey`:
 1. **User loads page:** Browser loads static HTML/JS bundle from Cloudflare Pages. React mounts `App`, reads local theme preference (Light/Dark), and initializes the `WebMCPBridge` service. Canvas and Chat initialize blank.
-2. **File dropped (< 1MB):** `FileUpload` component validates size (< 1MB) and extension (.pdf, .doc, .docx). If valid, passes bytes to `LiteParseService` (WASM), extracts pages, passes text to `BM25Indexer`, and stores records in `DocumentStore` (IndexedDB). UI displays file name, page count, and "Indexed" badge. If invalid, `Modal` popup displays error.
+2. **File dropped (< 1MB):** `FileUpload` component validates size (< 1MB) and extension (.pdf, .doc, .docx). If valid, passes bytes to `LiteParseService` (WASM / stream / docx zip), extracts pages, passes text to `BM25Indexer`, and stores records in `DocumentStore` (IndexedDB). UI displays file name, page count, and "Indexed" badge. If invalid, `Modal` popup displays error.
 3. **User submits prompt:** `ChatView` appends `{ sender: 'user', text: input }` to state.
 4. **Visiting Agent accesses WebMCP:** Agent invokes `get_chat_history` via `window.webmcp.callTool` or `postMessage({ method: 'tools/call' })`.
-5. **Agent executes queries & math:** Agent invokes `search_document` (queries IndexedDB BM25), `search_web` (DDGS), `search_research` (ArXiv), or `calculate`.
+5. **Agent executes queries & math:** Agent invokes `search_document` (queries IndexedDB BM25), `get_reference_url`, `search_web` (DDGS), `search_research` (ArXiv), or `calculate`.
 6. **Agent outputs visually and textually:** Agent calls `chat_post` to append response to `ChatView`, and calls `canvas_draw` to instruct `CanvasEngine` to draw diagram lines, boxes, labels, and graphs.
 7. **Reset / Cleanup:** User clicks "Clear Canvas" (calls `canvas_clear`) or triggers `clean_document` to wipe IndexedDB.
 
@@ -41,10 +42,10 @@ Traces `prd.md > The Core Journey`:
 - **Language & Framework:** TypeScript, React 18/19. Rationale: Standard component model, fast rendering, strict type hints.
 - **Build System:** Vite. Rationale: Fast HMR, direct static export to `dist/` compatible with Cloudflare Pages. [Vite Docs](https://vitejs.dev/)
 - **Styling:** Tailwind CSS over a semantic CSS token layer (`src/index.css`: `--paper/--panel/--card/--ink/--line` + coral/mint/violet accents). Rationale: utility-first speed with one warm palette that swaps per theme (light = paper & ink, dark = warm ink surfaces). [Tailwind Docs](https://tailwindcss.com/)
-- **Document Parser:** `@llamaindex/liteparse-wasm`. Rationale: Zero-backend, browser-native WebAssembly PDF and document extraction with spatial page parsing. [LiteParse Docs](https://developers.llamaindex.ai/liteparse/)
-- **Client Storage:** Native `IndexedDB` with custom lightweight wrapper. Rationale: Built into all modern browsers, handles structured chunk and BM25 index persistence without backend dependencies.
+- **Document Parser:** `@llamaindex/liteparse-wasm` with browser stream decompressor (`DecompressionStream('deflate-raw')`) and DOCX zip extraction. Rationale: Zero-backend, browser-native WebAssembly PDF and document extraction with spatial page parsing. [LiteParse Docs](https://developers.llamaindex.ai/liteparse/)
+- **Client Storage:** Native `IndexedDB` with custom lightweight wrapper. Rationale: Built into all modern browsers, handles structured chunk and BM25 index persistence without backend dependencies. Reference URLs persisted in `localStorage`.
 - **Search Engine:** Custom client-side BM25 implementation (`bm25.ts`). Rationale: Pure client-side lexical relevance scoring over document pages without server dependencies.
-- **Testing:** Vitest + React Testing Library. Rationale: Fast, strictly hermetic testing execution without external network calls.
+- **Testing:** Vitest + React Testing Library. Rationale: Fast, strictly hermetic testing execution without external network calls (12 test suites, 80 tests).
 - **Hosting:** Cloudflare Pages. Rationale: Instant static distribution with zero operational server overhead.
 
 ## Where It Runs and How Someone Tries It
@@ -56,7 +57,7 @@ Traces `prd.md > The Core Journey`:
 
 ## Look and Feel
 Carried forward from `prd.md > Look and Feel` and `scope.md > Inspiration & Identity`:
-- **Theme:** Dual-theme system (Light mode with slate/white neutrals; Dark mode with rich dark `#0f172a` cockpit aesthetic).
+- **Theme:** Dual-theme system (Light mode with warm paper/navy ink; Dark mode with rich warm dark ink aesthetic). Dynamic transparent logo and favicon.
 - **Typography:** Sans-serif for navigation and controls; clean monospace font for code blocks, chat metadata, and WebMCP logs.
 - **Layout:** Strict 20% left sidebar / 80% main workspace layout.
 - **Visual Dividers:** Subtle border dividers (`border-slate-700` in dark, `border-slate-200` in light).
@@ -71,9 +72,10 @@ Root container orchestrating layout, theme state (Light/Dark), and lifecycle ini
 ### 2. `Sidebar`
 Implements `prd.md > Screens and Layout > Left Sidebar (20% width)`.
 Hosts:
-- `Branding`: App title "bAssistant", logo placeholder, and theme toggle switch.
+- `Branding`: App title "bAssistant", transparent theme-aware logo (`bassistant_light.jpg` in dark mode, `bassistant_dark.jpg` in light mode), and theme toggle switch.
 - `FileUpload`: Dropzone and file picker for Doc/PDF files < 1MB. Displays parsing status, page count, and "Indexed" badge. Triggers `NotificationModal` on rejection. Highlights (border + tint) while a file drags over.
-- `BlankSlot` → **Session Highlights**: starred (☆/★) messages collect here with sender badges and snippets; clicking an entry scrolls the dialogue to that message. Empty state explains the star action.
+- `ReferenceUrls`: Enboldened `REFERENCE URLS` manager caching up to 10 probe-verified links.
+- `BlankSlot` → **Session Highlights**: Enboldened `Session Highlights` section collecting starred (☆/★) messages with sender badges and snippets; clicking an entry scrolls the dialogue to that message.
 - Session strip (bottom of sidebar): gentle mono counter `messages · highlights · minutes` plus a "tips" link that re-opens the `WelcomeModal`.
 
 ### 3. `CanvasArea`

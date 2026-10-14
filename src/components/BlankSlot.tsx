@@ -10,10 +10,10 @@ export const BlankSlot: React.FC<BlankSlotProps> = ({ highlights, onJumpTo }) =>
   return (
     <div className="flex-1 p-4 flex flex-col min-h-0" style={{ borderTop: '1px solid var(--line)' }}>
       <div className="flex items-center justify-between mb-2">
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.09em]" style={{ color: 'var(--note)' }}>
+        <span className="font-mono text-[10px] font-extrabold uppercase tracking-[0.09em]" style={{ color: 'var(--note)' }}>
           Session Highlights
         </span>
-        <span className="font-mono text-[10px]" style={{ color: 'var(--ink-soft)' }}>
+        <span className="font-mono text-[10px] font-bold" style={{ color: 'var(--ink)' }}>
           {highlights.length}
         </span>
       </div>
