@@ -5,6 +5,7 @@ import { BlankSlot } from './components/BlankSlot';
 import { CanvasArea } from './components/CanvasArea';
 import { ChatArea, ChatMessage } from './components/ChatArea';
 import { NotificationModal } from './components/NotificationModal';
+import { WelcomeModal } from './components/WelcomeModal';
 import { WebMCPProvider } from './webmcp/provider';
 import { ToolContext } from './webmcp/tools';
 import { BM25Index, removeStopWords } from './lib/bm25';
@@ -17,6 +18,7 @@ import { exportSessionPdf } from './lib/pdfExportService';
 
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB strictly
 const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
+const ONBOARD_KEY = 'b_onboarded';
 
 export const App: React.FC = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -33,10 +35,26 @@ export const App: React.FC = () => {
     title: '',
     message: '',
   });
+  const [showWelcome, setShowWelcome] = useState<boolean>(() => !localStorage.getItem(ONBOARD_KEY));
+  const [sessionMinutes, setSessionMinutes] = useState(0);
 
   const bm25Ref = useRef<BM25Index>(new BM25Index());
   const chunksRef = useRef<StoredChunk[]>([]);
   const webmcpRef = useRef<WebMCPProvider | null>(null);
+
+  // Gentle session clock: minutes in session (no countdown pressure)
+  useEffect(() => {
+    const start = Date.now();
+    const tick = () => setSessionMinutes(Math.floor((Date.now() - start) / 60000));
+    tick();
+    const id = window.setInterval(tick, 60000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const handleCloseWelcome = useCallback(() => {
+    setShowWelcome(false);
+    localStorage.setItem(ONBOARD_KEY, '1');
+  }, []);
 
   // Restore stored document on mount if exists
   useEffect(() => {
@@ -217,6 +235,14 @@ export const App: React.FC = () => {
     setMessages((prev) => [...prev, newMessage]);
   };
 
+  const handleToggleHighlight = useCallback((id: string) => {
+    setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, highlighted: !m.highlighted } : m)));
+  }, []);
+
+  const jumpToMessage = useCallback((id: string) => {
+    document.getElementById(`msg-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, []);
+
   const handleFileSelect = async (file: File) => {
     // 1. Check size strictly < 1MB
     if (file.size >= MAX_FILE_SIZE) {
@@ -299,17 +325,39 @@ export const App: React.FC = () => {
     }
   };
 
+  const highlights = messages.filter((m) => m.highlighted);
+
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
+    <div className="flex h-screen w-screen overflow-hidden font-sans" style={{ background: 'var(--paper)', color: 'var(--ink)' }}>
       {/* Left Sidebar (20% width) */}
-      <aside className="w-[20%] min-w-[220px] max-w-[360px] h-full flex flex-col border-r border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40">
+      <aside
+        className="w-[20%] min-w-[220px] max-w-[360px] h-full flex flex-col border-r"
+        style={{ borderColor: 'var(--line)', background: 'var(--panel)' }}
+      >
         <Branding theme={theme} onToggleTheme={toggleTheme} />
         <FileUpload
           activeDoc={activeDoc}
           onFileSelect={handleFileSelect}
           onClearDocument={handleCleanDocument}
         />
-        <BlankSlot />
+        <BlankSlot highlights={highlights} onJumpTo={jumpToMessage} />
+        {/* Gentle session strip */}
+        <div
+          className="px-4 py-2 border-t flex items-center justify-between font-mono text-[10px]"
+          style={{ borderColor: 'var(--line)', color: 'var(--ink-soft)' }}
+        >
+          <span>
+            {messages.length} messages · {highlights.length} highlights · {sessionMinutes} min
+          </span>
+          <button
+            type="button"
+            onClick={() => setShowWelcome(true)}
+            className="uppercase tracking-[0.06em] font-bold hover:underline"
+            aria-label="Show tips again"
+          >
+            tips
+          </button>
+        </div>
       </aside>
 
       {/* Main Area (80% width) */}
@@ -319,8 +367,15 @@ export const App: React.FC = () => {
           onExportPdf={handleExportPdf}
           onClear={handleCleanDocument}
         />
-        <ChatArea messages={messages} onSendMessage={handleSendMessage} />
+        <ChatArea
+          messages={messages}
+          onSendMessage={handleSendMessage}
+          onToggleHighlight={handleToggleHighlight}
+        />
       </main>
+
+      {/* First-load onboarding */}
+      <WelcomeModal isOpen={showWelcome} onClose={handleCloseWelcome} />
 
       {/* Modal Popup */}
       <NotificationModal

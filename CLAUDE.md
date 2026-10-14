@@ -19,7 +19,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Key Technical Standards & Invariants
 
 ### Layout
-- Strict 20/80 horizontal split: left 20% sidebar (Branding, FileUpload, BlankSlot); right 80% workspace split **60% CanvasArea** (HTML5 Canvas2D scene graph) over **40% ChatArea** (humanized message stream). See `src/App.tsx`.
+- Strict 20/80 horizontal split: left 20% sidebar (Branding, FileUpload, Session Highlights, session strip); right 80% workspace split **60% CanvasArea** (HTML5 Canvas2D scene graph) over **40% ChatArea** (humanized message stream). See `src/App.tsx`.
+
+### Long-Dwell UI Layer
+- Theming is a **semantic CSS token system** in `src/index.css` (`--paper/--panel/--card/--ink/--line` + `--accent` coral / `--you` mint / `--note` violet). Light = warm paper & navy ink; dark = warm ink surfaces (never cold `slate-950`). Style surfaces with `var(--token)` values, not raw slate Tailwind classes.
+- `ChatArea` includes dwell features: full-screen reader popup (⤢, Escape closes), A-/A+ font steps persisted in `localStorage['b_font_size']`, 2px reading-progress bar, star highlights (`ChatMessage.highlighted`), copy button, "agent is thinking" pulse.
+- `WelcomeModal` shows how-to-use onboarding on first load (`localStorage['b_onboarded']`); the sidebar "tips" link re-opens it.
+- All animation lives in `index.css` keyframes and must respect the `prefers-reduced-motion` kill-switch.
 
 ### State Architecture (critical for any tool/UI change)
 - `App.tsx` owns all React state. WebMCP tools never touch React state directly — they receive a `ToolContext` of closures (`src/webmcp/tools.ts`), and `updateWebMCPContext()` re-binds fresh closures to the provider whenever messages change (`src/App.tsx`). Any new tool capability must flow through `ToolContext`.
@@ -50,7 +56,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Pure IndexedDB database `bAssistantDB` with stores `documents`, `chunks`, `bm25_index`. No external servers, no vector databases.
 
 ### Testing
-- All unit tests live in `src/tests/` (9 Vitest suites) and must remain strictly hermetic and isolated — no network, no real IndexedDB dependencies leaking between tests.
+- All unit tests live in `src/tests/` (10 Vitest suites) and must remain strictly hermetic and isolated — no network, no real IndexedDB dependencies leaking between tests.
 - Vitest is configured inside `vite.config.ts` (`environment: 'jsdom'`, `globals: true`); there is no separate vitest config file.
 
 ## Documentation Reference

@@ -11,6 +11,7 @@
 - 🎨 **Persistent Canvas Scene Graph**: Visuals are structured entities (rectangles, containers, connectors with perimeter docking, step cards), not ephemeral pixel dumps.
 - 📄 **Multilingual PDF Export**: Export session artifacts into a styled dual-section PDF (HiDPI canvas snapshot + readable discussion transcript) with native font rendering for English, Bengali (বাংলা), and Hindi (हिन्दी).
 - 🧹 **Humanized Conversation**: Raw LLM markdown noise (asterisks, stray formatting markers) is cleaned automatically for high-signal reading.
+- 🛋️ **Built for long sessions**: Warm paper/ink dual themes, a first-load how-to-use popup, a full-screen chat reader mode, A-/A+ font steps, reading-progress bar, and star highlights collected in the sidebar — all motion disabled under `prefers-reduced-motion`.
 - 🌐 **WebMCP Standard**: Built on the open WebMCP standard with 16 in-browser tools enabling any compatible AI extension or runtime to read docs, draw diagrams, calculate metrics, and search public research — including a read-only `get_tool_usage_prompt` tool that hands visiting agents the full operating guide.
 
 ---

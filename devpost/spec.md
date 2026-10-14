@@ -40,7 +40,7 @@ Traces `prd.md > The Core Journey`:
 ## Stack
 - **Language & Framework:** TypeScript, React 18/19. Rationale: Standard component model, fast rendering, strict type hints.
 - **Build System:** Vite. Rationale: Fast HMR, direct static export to `dist/` compatible with Cloudflare Pages. [Vite Docs](https://vitejs.dev/)
-- **Styling:** Tailwind CSS. Rationale: Utility-first styling with built-in dark/light mode toggle. [Tailwind Docs](https://tailwindcss.com/)
+- **Styling:** Tailwind CSS over a semantic CSS token layer (`src/index.css`: `--paper/--panel/--card/--ink/--line` + coral/mint/violet accents). Rationale: utility-first speed with one warm palette that swaps per theme (light = paper & ink, dark = warm ink surfaces). [Tailwind Docs](https://tailwindcss.com/)
 - **Document Parser:** `@llamaindex/liteparse-wasm`. Rationale: Zero-backend, browser-native WebAssembly PDF and document extraction with spatial page parsing. [LiteParse Docs](https://developers.llamaindex.ai/liteparse/)
 - **Client Storage:** Native `IndexedDB` with custom lightweight wrapper. Rationale: Built into all modern browsers, handles structured chunk and BM25 index persistence without backend dependencies.
 - **Search Engine:** Custom client-side BM25 implementation (`bm25.ts`). Rationale: Pure client-side lexical relevance scoring over document pages without server dependencies.
@@ -72,8 +72,9 @@ Root container orchestrating layout, theme state (Light/Dark), and lifecycle ini
 Implements `prd.md > Screens and Layout > Left Sidebar (20% width)`.
 Hosts:
 - `Branding`: App title "bAssistant", logo placeholder, and theme toggle switch.
-- `FileUpload`: Dropzone and file picker for Doc/PDF files < 1MB. Displays parsing status, page count, and "Indexed" badge. Triggers `NotificationModal` on rejection.
-- `BlankSlot`: Unallocated 3rd section reserved for future tools.
+- `FileUpload`: Dropzone and file picker for Doc/PDF files < 1MB. Displays parsing status, page count, and "Indexed" badge. Triggers `NotificationModal` on rejection. Highlights (border + tint) while a file drags over.
+- `BlankSlot` → **Session Highlights**: starred (☆/★) messages collect here with sender badges and snippets; clicking an entry scrolls the dialogue to that message. Empty state explains the star action.
+- Session strip (bottom of sidebar): gentle mono counter `messages · highlights · minutes` plus a "tips" link that re-opens the `WelcomeModal`.
 
 ### 3. `CanvasArea`
 Implements `prd.md > Features and Behavior > 3. Live HTML Canvas Rendering & Scene Graph`.
@@ -82,10 +83,13 @@ Top 60% pane of the main workspace. Renders the HTML5 `<canvas>` element and too
 - `CanvasEngine`: Manages reactive scene graph (`Canvas2dShape[]`), perimeter-docked connectors, soft-translucent colors, HiDPI scaling, and snapshot capture.
 
 ### 4. `ChatArea`
-Implements `prd.md > Features and Behavior > 2. Chat Conversation & History`.
-Bottom 40% pane of the main workspace:
-- Message feed displaying dialogue history in **Lora** serif typography calibrated for longform reading (17px, line-height 1.75, max-width ~72ch measure). User messages rendered with uppercase `user:` badge and agent messages with `agent:` badge.
+Implements `prd.md > Features and Behavior > 2. Chat Conversation & History` and `> 6. Long-Dwell Reading Comfort`.
+Bottom 40% pane of the main workspace, plus a full-screen reader popup:
+- Message feed displaying dialogue history in **Lora** serif typography (user-adjustable 15/17/19px via A-/A+, persisted; line-height 1.75, max-width ~72ch measure). User messages rendered with uppercase `user:` badge and agent messages with `agent:` badge.
 - **Humanized Markdown Rendering:** Parses incoming messages to render structured React elements (headings, styled bullet and numbered lists, monospace code blocks with background tint, blockquotes, and inline bold/italic/code/links) without exposing raw markdown syntax.
+- **Reading-progress bar:** 2px violet bar at the top of the stream tracking scroll position.
+- **Popup maximize:** ⤢ opens the chat as a full-screen reader overlay (same stream/input/controls); Escape or ✕ closes.
+- **Per-message actions:** ☆/★ highlight toggle (violet) and copy-to-clipboard, revealed on hover; "agent is thinking" pulse while the last message is from the user; 0.18s entrance fades (disabled under `prefers-reduced-motion`).
 - Automatic scrolling (`scrollIntoView({ behavior: 'smooth' })`) to the latest chat turn upon new message arrivals.
 - Multi-line textarea prompt input supporting Enter to submit and Shift+Enter for newlines.
 - Updates chat state and registers messages for `get_chat_history`.
@@ -94,7 +98,13 @@ Bottom 40% pane of the main workspace:
 Implements `prd.md > States and Boundaries > Error State (File Rejected)`.
 Modal popup showing rejection details when a file is ≥ 1MB or unsupported.
 
-### 6. `WebMCPProvider`
+### 6. `WelcomeModal`
+Implements `prd.md > States and Boundaries > Onboarding State`.
+First-load how-to-use popup (shown while `localStorage['b_onboarded']` is unset; dismissal persists):
+- Six numbered steps over the warm paper token surface: upload a document → connect your AI agent (WebMCP) → ask questions → star key answers → read comfortably (A-/A+, expand) → export the session PDF.
+- "Get started" dismisses; backdrop click also dismisses; the sidebar "tips" link re-opens it at any time.
+
+### 7. `WebMCPProvider`
 Implements `prd.md > Features and Behavior > 5. WebMCP Tool Suite`.
 Central service registering and dispatching all 16 WebMCP tools:
 - Registers on six discovery surfaces: `document.modelContext`, `navigator.modelContext` (+ `modelContextTesting`), `window.webmcp`, hidden DOM tool forms, `webmcp:ready`/`modelcontext:ready` custom events, and `window.addEventListener('message')` JSON-RPC 2.0. Forwards `readOnlyHint` annotations for read-only tools.
@@ -114,7 +124,7 @@ Central service registering and dispatching all 16 WebMCP tools:
   - `canvas_draw` / `draw_diagram` / `canvas_clear`: Backwards-compatible legacy drawing tools.
   - `chat_post`: Appends agent text into `ChatArea`.
 
-### 7. `pdfExportService`
+### 8. `pdfExportService`
 Implements `prd.md > Features and Behavior > 4. Client-Side PDF Generation`.
 In-browser report generation engine:
 - **Blank Session Guard:** Validates session content; prevents exporting empty sessions and triggers `NotificationModal` validation alert.
@@ -167,8 +177,9 @@ C:/codebase/b_aassistant/
 │   │   ├── BlankSlot.tsx        # Reserved 3rd sidebar section
 │   │   ├── NotificationModal.tsx# Rejection / blank-session error popup
 │   │   ├── CanvasArea.tsx       # 60% HTML5 canvas view & toolbar
-│   │   ├── ChatArea.tsx         # 40% chat stream, user input & send button
-│   │   └── HumanizedMessage.tsx # Markdown-noise cleaner for chat bubbles
+│   │   ├── ChatArea.tsx         # 40% chat stream + full-screen reader popup
+│   │   ├── HumanizedMessage.tsx # Markdown-noise cleaner for chat bubbles
+│   │   └── WelcomeModal.tsx     # First-load how-to-use onboarding popup
 │   ├── lib/
 │   │   ├── canvasEngine.ts      # Canvas2D scene graph & legacy command renderer
 │   │   ├── pdfExportService.ts  # Multilingual dual-section PDF export engine
@@ -182,7 +193,7 @@ C:/codebase/b_aassistant/
 │   │   ├── tools.ts             # 16 tool declarations (schemas & dispatch)
 │   │   ├── agentGuide.ts        # Read-only get_tool_usage_prompt guide text
 │   │   └── provider.ts          # Unified bridge (6 discovery surfaces)
-│   └── tests/                   # 9 hermetic Vitest suites
+│   └── tests/                   # 10 hermetic Vitest suites
 │       ├── bm25.test.ts         # BM25 indexing & scoring
 │       ├── mathEvaluator.test.ts# Decimal calculations
 │       ├── webmcp.test.ts       # WebMCP tool dispatching
@@ -191,13 +202,15 @@ C:/codebase/b_aassistant/
 │       ├── pdfExportService.test.ts  # PDF export & markdown cleaning
 │       ├── humanizedMessage.test.tsx # Chat humanization
 │       ├── documentProcessing.test.ts# LiteParse parsing pipeline
-│       └── searchService.test.ts# Web/research fallbacks
+│       ├── searchService.test.ts# Web/research fallbacks
+│       └── chatArea.test.tsx    # Dwell enrichments: popup, fonts, highlights
 ├── docs/                        # docs7 documentation site
 ├── devpost/                     # Devpost hackathon project artifacts
 │   ├── learner-profile.md
 │   ├── scope.md / scope.html
 │   ├── prd.md / prd.html
-│   └── spec.md / spec.html
+│   ├── spec.md / spec.html
+│   └── research.md              # Dwell-time UI research with sources
 ├── README.md                    # Human-facing project overview & quickstart
 ├── CLAUDE.md                    # AI agent instructions & build rules
 └── AGENTS.md                    # Pointer referencing CLAUDE.md & README.md

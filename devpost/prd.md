@@ -101,9 +101,19 @@ The application exposes 16 standard WebMCP tools for visiting LLMs:
 - `chat_post`: Appends or streams text into the chat stream.
 - `canvas_draw` / `draw_diagram` / `canvas_clear`: Legacy canvas tools for quick single-command drawing and connected node/edge graphs.
 
+### 6. Long-Dwell Reading Comfort & Session Engagement
+Source: `research.md` (dwell-time mechanisms 1–6).
+- **Warm dual themes:** semantic CSS token layer — light mode is warm paper with navy ink; dark mode uses warm ink surfaces instead of cold blue-black, reducing eye fatigue over long sessions.
+- **First-load onboarding popup:** a WelcomeModal explains how to use bAssistant (upload → connect agent → ask → highlight → maximize → export) on first visit; dismissal persists and a sidebar "tips" link re-opens it.
+- **Chat popup maximize:** ⤢ expands the dialogue into a full-screen reader (Escape/✕ closes) with the same stream, input, and font controls — the zen reading mode.
+- **Reading comfort:** A- / A+ font steps (15/17/19px) persisted across sessions; 2px reading-progress bar atop the stream for a sense of investment.
+- **Session Highlights:** users star (☆/★) any message; starred messages collect in sidebar Section 3 and clicking one scrolls the dialogue to it — the revisit loop.
+- **Alive-but-calm feedback:** "agent is thinking" pulse while awaiting a reply, 0.18s message entrance fades, per-message copy button, dropzone drag-over highlight, and gentle session strip (messages · highlights · minutes). All motion disabled under `prefers-reduced-motion`.
+
 ## States and Boundaries
 
 - **Initial State:** Canvas is blank; chat is blank; file upload shows empty dropzone; theme defaults to selected mode.
+- **Onboarding State:** First load (per browser) shows the how-to-use WelcomeModal; dismissing persists the choice, and the sidebar "tips" link re-opens it any time.
 - **Document Loaded State:** Upload box reflects file name, page count, and green "Indexed" badge.
 - **Document Cleaned State:** Triggered by `clean_document` tool or user action; wipes IndexedDB tables and returns upload box to empty.
 - **Error State (File Rejected):** Popup alerts user to size limit (≥ 1MB) or unsupported file type; input resets without crashing.
@@ -126,6 +136,7 @@ The application exposes 16 standard WebMCP tools for visiting LLMs:
 - File upload for Doc/PDF < 1MB with LiteParse WASM parsing, natural per-page chunking, and IndexedDB BM25 indexing.
 - HTML canvas with live 2D scene graph engine, Clear button, and Export PDF button.
 - Chat stream formatted in Lora longform reading typography, multi-line prompt textarea, and auto-scroll to newest message.
+- Long-dwell UI layer: warm token dual themes, onboarding WelcomeModal, chat popup maximize, A-/A+ persisted font steps, reading-progress bar, Session Highlights in sidebar Section 3, thinking pulse, copy/star message actions, drag-over dropzone feedback, and session strip.
 - Complete WebMCP tool suite (16 tools: `get_tool_usage_prompt` [read-only agent operating guide], `search_web`, `search_research`, `calculate`, `search_document` [returning top 3 pages with stop-word stripping], `clean_document`, `canvas2d_draw_shapes`, `canvas2d_inspect_shapes`, `canvas2d_modify_shape`, `canvas2d_clear`, `export_pdf`, `canvas_draw`, `draw_diagram`, `canvas_clear`, `chat_post`, `get_chat_history`).
 - Cloudflare Pages deployment configuration.
 - Project documentation:

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 
 export interface ActiveDocumentInfo {
   name: string;
@@ -19,6 +19,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   onClearDocument,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -32,6 +33,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    setDragOver(false);
     const file = e.dataTransfer.files?.[0];
     if (file) {
       onFileSelect(file);
@@ -43,19 +45,30 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   };
 
   return (
-    <div className="p-4 border-b border-slate-200 dark:border-slate-800 space-y-3">
+    <div className="p-4 border-b space-y-3" style={{ borderColor: 'var(--line)' }}>
       <div className="flex items-center justify-between">
-        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+        <label className="text-xs font-semibold" style={{ color: 'var(--ink)' }}>
           Document Ingestion
         </label>
-        <span className="text-[10px] text-slate-400 font-mono">&lt; 1MB Doc/PDF</span>
+        <span className="text-[10px] font-mono" style={{ color: 'var(--ink-soft)' }}>
+          &lt; 1MB Doc/PDF
+        </span>
       </div>
 
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
+        onDragEnter={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={() => setDragOver(false)}
         onClick={() => fileInputRef.current?.click()}
-        className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-sky-500 rounded-lg p-3 text-center cursor-pointer transition-colors relative bg-slate-50 dark:bg-slate-900/60"
+        className="border-2 border-dashed rounded-lg p-3 text-center cursor-pointer transition-colors relative"
+        style={{
+          borderColor: dragOver ? 'var(--accent)' : 'var(--line)',
+          background: dragOver ? 'var(--accent-soft)' : 'var(--card)',
+        }}
       >
         <input
           ref={fileInputRef}
@@ -64,20 +77,29 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           onChange={handleFileChange}
           className="hidden"
         />
-        <div className="text-xs text-slate-500 dark:text-slate-400">
-          <p className="font-medium text-slate-700 dark:text-slate-300">Drop file or browse</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">PDF or Word document (&lt; 1MB)</p>
+        <div className="text-xs" style={{ color: 'var(--ink-soft)' }}>
+          <p className="font-medium" style={{ color: dragOver ? 'var(--accent)' : 'var(--ink)' }}>
+            {dragOver ? 'Release to ingest' : 'Drop file or browse'}
+          </p>
+          <p className="text-[10px] mt-0.5">PDF or Word document (&lt; 1MB)</p>
         </div>
       </div>
 
       {activeDoc && (
-        <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
+        <div
+          className="p-2.5 rounded-lg border text-xs space-y-1.5"
+          style={{ borderColor: 'var(--line)', background: 'var(--card)' }}
+        >
           <div className="flex items-center justify-between">
-            <span className="font-medium truncate max-w-[140px] text-slate-800 dark:text-slate-200" title={activeDoc.name}>
+            <span
+              className="font-medium truncate max-w-[140px]"
+              style={{ color: 'var(--ink)' }}
+              title={activeDoc.name}
+            >
               {activeDoc.name}
             </span>
             {activeDoc.status === 'indexed' && (
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold" style={{ background: 'var(--you-soft)', color: 'var(--you)' }}>
                 Indexed
               </span>
             )}
@@ -93,13 +115,16 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             )}
           </div>
 
-          <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+          <div
+            className="flex items-center justify-between text-[11px] font-mono"
+            style={{ color: 'var(--ink-soft)' }}
+          >
             <span>{activeDoc.pageCount} {activeDoc.pageCount === 1 ? 'page' : 'pages'}</span>
             <span>{(activeDoc.size / 1024).toFixed(1)} KB</span>
           </div>
 
           {onClearDocument && (
-            <div className="pt-1 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+            <div className="pt-1 border-t flex justify-end" style={{ borderColor: 'var(--line)' }}>
               <button
                 type="button"
                 onClick={(e) => {

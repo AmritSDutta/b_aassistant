@@ -23,8 +23,9 @@ Anyone who wants to learn, research, and explore any topic with AI in a cost-eff
 ## Inspiration & Identity
 - **Mood / Feel:** Clean, utilitarian, responsive, split-screen cockpit for AI-augmented research and visual thinking.
 - **Visual Structure:**
-  - Left 20%: Branding (top), File Upload (middle), blank area for future tools (bottom).
+  - Left 20%: Branding (top), File Upload (middle), Session Highlights (bottom — starred messages collect here).
   - Right 80%: HTML Canvas (top 60%), Textual Chat Area (bottom 40%) formatted with Lora typography for optimal longform reading, humanized text rendering (formatting LLM markdown headings, lists, code cards, and bold text without raw markdown symbols), and auto-scrolling to the latest turn.
+- **Warm dual themes:** light = warm paper & navy ink; dark = warm ink surfaces (never cold blue-black), driven by a semantic CSS token layer for comfortable long sessions.
 
 ## Why This Matters to the Learner
 Enables a practical, genuinely beneficial tool for the community that proves WebMCP's potential in the browser: running multimodal interactions on cheap models, keeping all user data strictly local, and using free-tier tools rather than costly subscriptions.
@@ -64,6 +65,7 @@ A test run demonstrates a visiting agent calling these tools, retrieving data, u
     - `canvas_draw`, `draw_diagram`, `canvas_clear` (legacy drawing tools)
     - `chat_post`, `get_chat_history` (chat tools for the 80% workspace)
   - WebMCP Inspector testing mode for direct verification and tool execution.
+  - Long-dwell UI enrichment (see `research.md`): warm token-based dual themes, first-load onboarding popup (how to use, re-openable), chat maximized as a full-screen reader popup, A-/A+ font steps persisted, 2px reading-progress bar, star highlights collected in Session Highlights (sidebar Section 3), "agent is thinking" pulse, per-message copy, dropzone drag-over highlight, gentle session strip, and `prefers-reduced-motion` support.
   - Deployment: Deployed to Cloudflare Pages.
 
 ## Later

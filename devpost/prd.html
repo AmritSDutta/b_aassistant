@@ -308,6 +308,41 @@
         <summary><span class="step-badge">6</span> PDF Export &amp; Blank Session Protection</summary>
         <p>When <code>export_pdf</code> is invoked (sidebar button or tool): if the session is blank (no canvas content and no chat messages), a notification popup blocks the export. Otherwise a dual-section PDF downloads with the canvas snapshot on top and the chat transcript beneath, including native Bengali and Hindi complex-script rendering.</p>
       </details>
+
+      <details>
+        <summary><span class="step-badge">7</span> Onboarding &amp; Long-Dwell Comfort</summary>
+        <p>First load shows a how-to-use WelcomeModal (dismissal persists; a sidebar "tips" link re-opens it). Warm token dual themes (paper/ink light, warm-ink dark) reduce eye fatigue; the chat maximizes into a full-screen reader popup with A-/A+ persisted font steps and a reading-progress bar; starred messages collect under Session Highlights in sidebar Section 3; an "agent is thinking" pulse, per-message copy, and drag-over dropzone feedback keep the interface alive but calm (motion disabled under <code>prefers-reduced-motion</code>).</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>Long-Dwell Reading Comfort &amp; Engagement</h2>
+      <div class="tool-grid">
+        <div class="tool-card">
+          <div class="tool-name">Warm dual themes</div>
+          <div class="tool-desc">Semantic CSS tokens: light = warm paper &amp; navy ink; dark = warm ink surfaces (never cold blue-black) for long sessions.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">WelcomeModal</div>
+          <div class="tool-desc">First-load how-to-use popup (upload → connect agent → ask → star → maximize → export); re-openable via sidebar "tips".</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">Chat popup maximize</div>
+          <div class="tool-desc">⤢ expands the dialogue into a full-screen Lora reader (Escape/✕ closes) — the zen reading mode.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">A- / A+ font steps</div>
+          <div class="tool-desc">15/17/19px reading sizes persisted in localStorage; 2px reading-progress bar tracks scroll investment.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">Session Highlights</div>
+          <div class="tool-desc">☆/★ any message; starred answers collect in sidebar Section 3 and clicking one scrolls the dialogue to it.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-name">Alive-but-calm feedback</div>
+          <div class="tool-desc">"Agent is thinking" pulse, entrance fades, copy buttons, drag-over highlight, session strip; reduced-motion respected.</div>
+        </div>
+      </div>
     </div>
 
     <div class="card">

@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---- Warm token system: light = paper & ink, dark = warm ink surfaces ---- */
+:root {
+  --paper: #fffdf7;        /* page surface (light) */
+  --panel: #ffffff;        /* raised panel (light) */
+  --card: #f7f4ec;         /* quiet card (light) */
+  --ink: #14213d;          /* primary text/border (light: navy) */
+  --ink-soft: #566278;     /* secondary text */
+  --line: #e5dfd2;         /* hairline borders (light) */
+  --accent: #f06449;       /* agent actions (coral) */
+  --you: #2f9f86;          /* user / success (mint) */
+  --note: #6456d6;         /* highlights (violet) */
+  --accent-soft: #ffe1d8;
+  --you-soft: #e1f6f0;
+  --note-soft: #efecff;
+}
+
+.dark {
+  --paper: #191714;        /* warm near-black, not blue-black */
+  --panel: #211e1a;
+  --card: #26221d;
+  --ink: #ede9e3;          /* warm off-white text */
+  --ink-soft: #a89f92;
+  --line: #38332c;
+  --accent-soft: #3a2620;
+  --you-soft: #1f2e29;
+  --note-soft: #2a2738;
+}
+
 html, body, #root {
   height: 100%;
   width: 100%;
@@ -12,4 +40,62 @@ html, body, #root {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+::selection {
+  background: rgba(100, 86, 214, 0.28);
+}
+
+/* Thin themed scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 3px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---- Calm motion ---- */
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.msg-enter {
+  animation: msg-in 0.18s ease both;
+}
+
+@keyframes think-pulse {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 1; }
+}
+.thinking-dot {
+  animation: think-pulse 1.2s ease-in-out infinite;
+}
+.thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
