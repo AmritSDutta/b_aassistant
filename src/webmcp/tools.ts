@@ -12,6 +12,7 @@ export interface ToolContext {
   searchResearch?: (query: string) => Promise<Array<{ title: string; summary: string; authors: string[]; id: string }>>;
   calculate?: (expression: string) => number;
   exportPdf?: () => { success: boolean; error?: string } | void;
+  getReferenceUrls?: () => string[];
 }
 
 export const TOOL_DEFINITIONS: WebMCPTool[] = [
@@ -19,6 +20,16 @@ export const TOOL_DEFINITIONS: WebMCPTool[] = [
     name: 'get_tool_usage_prompt',
     description:
       'Returns the official bAssistant agent operating guide: how to use every other tool correctly (document retrieval, canvas diagramming, chat, PDF export, and session conventions). Call this FIRST before using any other bAssistant tool.',
+    readOnlyHint: true,
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+  },
+  {
+    name: 'get_reference_url',
+    description:
+      'Returns a comma-separated list of reference and resource URLs stored in the browser session. Visiting LLMs use these URLs to fetch or cite external documentation and context.',
     readOnlyHint: true,
     inputSchema: {
       type: 'object',
@@ -269,6 +280,11 @@ export async function executeToolCall(
   switch (name) {
     case 'get_tool_usage_prompt': {
       return AGENT_TOOL_GUIDE;
+    }
+
+    case 'get_reference_url': {
+      const urls = context.getReferenceUrls ? context.getReferenceUrls() : [];
+      return urls.length > 0 ? urls.join(', ') : 'No reference URLs stored';
     }
 
     case 'canvas2d_draw_shapes': {

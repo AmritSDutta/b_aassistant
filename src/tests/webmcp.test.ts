@@ -27,6 +27,7 @@ describe('WebMCP Provider & Tools', () => {
     const names = tools.map((t) => t.name);
 
     expect(names).toContain('get_tool_usage_prompt');
+    expect(names).toContain('get_reference_url');
     expect(names).toContain('canvas_draw');
     expect(names).toContain('canvas_clear');
     expect(names).toContain('canvas2d_draw_shapes');
@@ -202,6 +203,23 @@ describe('WebMCP Provider & Tools', () => {
     await expect(customProvider.callTool('export_pdf', {})).rejects.toThrow(
       'Cannot export an empty session.'
     );
+  });
+
+  it('executes get_reference_url returning fallback when empty', async () => {
+    const res = await provider.callTool('get_reference_url', {});
+    expect(res).toBe('No reference URLs stored');
+  });
+
+  it('executes get_reference_url returning comma-separated URLs', async () => {
+    const urls = ['https://example.com/api', 'https://docs.vite.dev'];
+    const customContext: ToolContext = {
+      getMessages: () => [],
+      postMessage: () => {},
+      getReferenceUrls: () => urls,
+    };
+    const customProvider = new WebMCPProvider(customContext);
+    const res = await customProvider.callTool('get_reference_url', {});
+    expect(res).toBe('https://example.com/api, https://docs.vite.dev');
   });
 });
 

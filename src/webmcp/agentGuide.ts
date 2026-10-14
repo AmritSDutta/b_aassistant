@@ -13,7 +13,8 @@ This guide explains how to use every other tool correctly. Read it before acting
   NOT conversational sentences. Returns the top 3 pages with scores.
 - \`clean_document\` wipes all stored document data. Only use this when the user explicitly asks.
 
-## Research & Math
+## Research, Math & Context
+- \`get_reference_url\`: returns a comma-separated list of external reference and documentation URLs added by the user in the sidebar. Use these for external documentation and context.
 - \`search_web\` (DuckDuckGo) for general web lookups.
 - \`search_research\` (ArXiv) for scientific papers and preprints.
 - \`calculate\` for decimal-safe math (e.g. "12.5 * 4.2 + 3.1").

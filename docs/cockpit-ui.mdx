@@ -13,8 +13,9 @@ flowchart TD
     subgraph Sidebar["Sidebar (20% Width)"]
       B1["1. Branding & Theme Switcher"]
       B2["2. Document Upload Dropzone (<1MB)"]
-      B3["3. Session Highlights & Revisit Loop"]
-      B4["Session Timer & Tips Link"]
+      B3["3. Reference URLs Manager (Max 10)"]
+      B4["4. Session Highlights & Revisit Loop"]
+      B5["Session Timer & Tips Link"]
     end
     subgraph Workspace["Workspace (80% Width)"]
       W1["HTML5 Canvas 2D Engine (Top 60% Height)"]
@@ -32,6 +33,7 @@ The viewport is divided horizontally into a left sidebar and a primary workspace
 The sidebar serves as the control and context panel:
 - **Branding & Theme Toggle**: Displays the product title and provides instant light/dark mode switching.
 - **Document Dropzone**: Ingests `.pdf`, `.docx`, or `.doc` files strictly under 1MB. Displays parsing status badges (`Parsing...`, `Indexed`, or error modal) with clear file-type validation.
+- **Reference URLs**: Manage up to 10 external documentation and resource links. Clicking `+ Add` opens a validation modal that verifies reachability via client-side probes before caching URLs into browser storage. Visiting LLMs access these links via `get_reference_url`.
 - **Session Highlights**: Starred messages from the conversation collect here automatically. Clicking any highlight smoothly scrolls the chat stream directly to that turn.
 - **Session Duration & Tips**: Displays live session time (`messages · highlights · minutes`) without countdown pressure, along with a link to re-open the onboarding walkthrough.
 

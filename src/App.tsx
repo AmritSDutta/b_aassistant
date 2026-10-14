@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Branding } from './components/Branding';
 import { FileUpload, ActiveDocumentInfo } from './components/FileUpload';
+import { ReferenceUrls } from './components/ReferenceUrls';
 import { BlankSlot } from './components/BlankSlot';
 import { CanvasArea } from './components/CanvasArea';
 import { ChatArea, ChatMessage } from './components/ChatArea';
@@ -19,6 +20,7 @@ import { exportSessionPdf } from './lib/pdfExportService';
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB strictly
 const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
 const ONBOARD_KEY = 'b_onboarded';
+const URLS_STORAGE_KEY = 'b_reference_urls';
 
 export const App: React.FC = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -37,6 +39,17 @@ export const App: React.FC = () => {
   });
   const [showWelcome, setShowWelcome] = useState<boolean>(() => !localStorage.getItem(ONBOARD_KEY));
   const [sessionMinutes, setSessionMinutes] = useState(0);
+
+  const [referenceUrls, setReferenceUrls] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem(URLS_STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+  const referenceUrlsRef = useRef<string[]>(referenceUrls);
+  referenceUrlsRef.current = referenceUrls;
 
   const bm25Ref = useRef<BM25Index>(new BM25Index());
   const chunksRef = useRef<StoredChunk[]>([]);
@@ -181,6 +194,7 @@ export const App: React.FC = () => {
         searchResearch: (query: string) => searchResearch(query),
         calculate: (expr: string) => calculateMath(expr),
         exportPdf: handleExportPdf,
+        getReferenceUrls: () => referenceUrlsRef.current,
       });
     }
   }, [handlePostAgentMessage, handleSearchDocument, handleCleanDocument, handleExportPdf]);
@@ -196,6 +210,7 @@ export const App: React.FC = () => {
       searchResearch: (query: string) => searchResearch(query),
       calculate: (expr: string) => calculateMath(expr),
       exportPdf: handleExportPdf,
+      getReferenceUrls: () => referenceUrlsRef.current,
     };
 
     const provider = new WebMCPProvider(context);
@@ -242,6 +257,40 @@ export const App: React.FC = () => {
   const jumpToMessage = useCallback((id: string) => {
     document.getElementById(`msg-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, []);
+
+  const handleAddReferenceUrl = useCallback(
+    async (url: string): Promise<boolean> => {
+      if (referenceUrlsRef.current.length >= 10 || referenceUrlsRef.current.includes(url)) {
+        return false;
+      }
+      const updated = [...referenceUrlsRef.current, url];
+      setReferenceUrls(updated);
+      referenceUrlsRef.current = updated;
+      try {
+        localStorage.setItem(URLS_STORAGE_KEY, JSON.stringify(updated));
+      } catch (e) {
+        console.warn('Failed to cache reference URLs:', e);
+      }
+      updateWebMCPContext();
+      return true;
+    },
+    [updateWebMCPContext]
+  );
+
+  const handleRemoveReferenceUrl = useCallback(
+    (url: string) => {
+      const updated = referenceUrlsRef.current.filter((u) => u !== url);
+      setReferenceUrls(updated);
+      referenceUrlsRef.current = updated;
+      try {
+        localStorage.setItem(URLS_STORAGE_KEY, JSON.stringify(updated));
+      } catch (e) {
+        console.warn('Failed to update cached reference URLs:', e);
+      }
+      updateWebMCPContext();
+    },
+    [updateWebMCPContext]
+  );
 
   const handleFileSelect = async (file: File) => {
     // 1. Check size strictly < 1MB
@@ -339,6 +388,11 @@ export const App: React.FC = () => {
           activeDoc={activeDoc}
           onFileSelect={handleFileSelect}
           onClearDocument={handleCleanDocument}
+        />
+        <ReferenceUrls
+          urls={referenceUrls}
+          onAddUrl={handleAddReferenceUrl}
+          onRemoveUrl={handleRemoveReferenceUrl}
         />
         <BlankSlot highlights={highlights} onJumpTo={jumpToMessage} />
         {/* Gentle session strip */}
