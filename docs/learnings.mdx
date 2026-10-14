@@ -47,7 +47,6 @@ flowchart TD
   Provider --> Declarative["2. Declarative Hidden DOM Forms"]
   Provider --> Legacy["3. navigator.modelContext & window.webmcp"]
   Provider --> PostMessage["4. postMessage & Extension Handshake"]
-
   Imperative -->|registerTool + getTools| ChromeNative["Native Chromium AI Runtime"]
   Declarative -->|toolname / tooldescription| DomInspectors["DOM / Declarative Audits"]
   Legacy -->|listTools / callTool| DirectJS["Standard Browser Scripts"]
@@ -62,3 +61,22 @@ flowchart TD
    Dynamically synthesizes hidden `<form>` elements containing `toolname`, `tooldescription`, and `toolparamdescription` attributes matching all registered tools.
 3. **Multi-Protocol `postMessage` Listener**:
    Listens for JSON-RPC 2.0 (`tools/list`, `tools/call`) as well as extension-specific signals (`WEBMCP_GET_TOOLS`, `MODEL_CONTEXT_GET_TOOLS`).
+
+## Client-Side Multilingual Indic PDF Rendering
+
+Supporting South Asian Indic scripts—specifically Bengali (`\u0980-\u09FF`) and Devanagari/Hindi (`\u0900-\u097F`)—in client-side PDF generators presented unique rendering hurdles.
+
+### The Problem: Font Shaping & Missing Glyphs
+Standard client-side PDF libraries like `jsPDF` rely on standard 14 PostScript typefaces (such as Helvetica and Times) that lack Unicode coverage for Indic glyphs, causing characters to render as blank spaces, unprintable question marks (`?`), or raw character codes. Furthermore, simply bundling raw `.ttf` font files into `jsPDF` fails because Indic scripts require complex OpenType typographic ligature shaping and conjunct conjunct re-ordering (e.g., matras preceding consonants or combined conjuncts like ক্ষ or ज्ञ), which standard PDF font engines do not perform.
+
+### The Solution: 3x HiDPI Canvas2D Text Rasterization
+Rather than bundling multi-megabyte HarfBuzz shaping binaries into the browser bundle, `bAssistant` utilizes the browser's native HarfBuzz-grade shaping engine via an off-screen HTML5 Canvas:
+
+1. **Script Detection**:
+   Regular expression test `containsIndicScript(text)` detects if a line contains Bengali or Devanagari codepoints.
+2. **Dynamic Script Chunking & Word Wrapping**:
+   Indic lines are wrapped via `wrapIndicText()` using the browser `CanvasRenderingContext2D.measureText()` to compute precise wrapping boundaries according to printable document width.
+3. **3x Super-Sampling & Raster Placement**:
+   Lines containing Indic scripts are drawn onto a scaled off-screen canvas (3x device pixel ratio) styled with system Indic fonts (`'Noto Sans Bengali', 'Noto Sans Devanagari', 'Kalpurush', 'SolaimanLipi', 'Mangal', sans-serif`).
+4. **Seamless PDF Splicing**:
+   The rasterized canvas is exported to a lossless PNG data URL and embedded directly into the jsPDF stream via `doc.addImage(...)`, while standard Latin text continues to use lightweight vector glyphs.

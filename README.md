@@ -1,73 +1,102 @@
-# bAssistant
+# bAssistant — The Local AI Business Analyst Cockpit
 
-A zero-backend, single-page browser assistant deployed to Cloudflare Pages that equips visiting LLMs via standard browser WebMCP with live HTML canvas diagramming, local document querying via client-side LiteParse WASM + BM25 in IndexedDB, and free research tools.
+**bAssistant** is an entirely client-side, zero-backend workspace that transforms your browser into an intelligent Business Analyst workstation. It pairs with modern AI models and browser WebMCP agents to inspect requirements, ingest architecture documents, visually map systems onto a dynamic canvas, and export boardroom-ready reports — without your data ever leaving your machine.
 
-## Features
+---
 
-- **Strict 20/80 Cockpit Layout**:
-  - **Left 20% Sidebar**: Branding with Light/Dark theme toggle, File Upload (< 1MB Doc/PDF only), and blank reserved slot.
-  - **Right 80% Workspace**: Top 40% HTML5 Canvas 2D engine with Clear button; Bottom 60% scrollable Chat history (`user:` prefixed) with input box.
-- **Unified Multi-Standard WebMCP Bridge**:
-  - `navigator.modelContext`
-  - `window.webmcp`
-  - `window.postMessage` (JSON-RPC 2.0MCP)
-  - Custom events (`webmcp:ready`)
-- **100% Private In-Browser Document Indexing**:
-  - Files < 1MB (.pdf, .doc, .docx) parsed via LiteParse WASM.
-  - Client-side BM25 indexer with inverted index stored in IndexedDB (`bAssistantDB`).
-  - Strict size enforcement with error modal popup.
-- **Free Research & Math Tools**:
-  - `search_web`: DuckDuckGo query API.
-  - `search_research`: ArXiv public API query.
-  - `calculate`: Precise decimal math evaluation.
+## Why bAssistant?
 
-## Getting Started
+- 🔒 **100% Private & Local**: Uploaded documents never travel to an external server. Parsing and BM25 search happen directly in browser memory and local IndexedDB.
+- 📐 **60/40 Split Cockpit**: Designed for visual thinkers. The dominant 60% HTML5 Canvas renders architecture diagrams in real time, while the 40% Chat Area maintains a humanized conversational stream.
+- 🎨 **Persistent Canvas Scene Graph**: Visuals are structured entities (rectangles, containers, connectors with perimeter docking, step cards), not ephemeral pixel dumps.
+- 📄 **Multilingual PDF Export**: Export session artifacts into a styled dual-section PDF (HiDPI canvas snapshot + readable discussion transcript) with native font rendering for English, Bengali (বাংলা), and Hindi (हिन्दी).
+- 🧹 **Humanized Conversation**: Raw LLM markdown noise (asterisks, stray formatting markers) is cleaned automatically for high-signal reading.
+- 🌐 **WebMCP Standard**: Built on the open WebMCP standard with 14 in-browser tools enabling any compatible AI extension or runtime to read docs, draw diagrams, calculate metrics, and search public research.
+
+---
+
+## The Cockpit Experience
+
+```
++------------------------------------------------------------------------------------+
+| SIDEBAR (20%)   | WORKSPACE (80%)                                                 |
+|                 |                                                                  |
+| [bAssistant]    | +--------------------------------------------------------------+ |
+| Theme Toggle    | | CANVAS2D SCENE GRAPH (60% Height)                           | |
+|                 | |                                                              | |
+| [Drop File]     | |  [Client App] -----> [WebMCP Bridge] -----> [IndexedDB]     | |
+| (<1MB Doc/PDF)  | |                                                              | |
+|                 | +--------------------------------------------------------------+ |
+| [Export PDF]    | | CHAT STREAM (40% Height)                                     | |
+| (Multilingual)  | |                                                              | |
+|                 | | User: Outline the system architecture                        | |
+|                 | | Assistant: Here is the interactive system diagram...         | |
+|                 | +--------------------------------------------------------------+ |
++------------------------------------------------------------------------------------+
+```
+
+---
+
+## User Journey: How to Use bAssistant
+
+### 1. Ingest Your Business Documents
+Click or drag a file (`.pdf`, `.docx`, `.doc` up to 1MB) into the sidebar uploader. bAssistant leverages in-browser WebAssembly (`@llamaindex/liteparse-wasm` and browser stream decompilation) to extract text and build an in-memory BM25 index within seconds.
+
+### 2. Collaborate with Your AI Assistant
+Chat naturally in the bottom stream. When you ask questions like *"What are the data flow bottlenecks in the document?"* or *"Map out the microservices"*:
+- The assistant retrieves authentic text chunks from local storage.
+- The assistant draws structured components, containers, and connected flows directly on the top canvas.
+
+### 3. Read Clean, Humanized Responses
+No more messy raw asterisks or unformatted lists. The chat area formats bullet points, key takeaways, and numbered recommendations with executive typography.
+
+### 4. Export Executive Session Reports
+Click **Export PDF** in the sidebar (or ask the assistant to generate one). bAssistant validates the session content, captures a crisp 2x HiDPI snapshot of your canvas diagram, compiles the conversation transcript, and delivers a professional PDF. Multilingual Bengali and Hindi text are faithfully preserved with complex script font-shaping.
+
+---
+
+## Quickstart
 
 ### Prerequisites
-
 - Node.js 20+
-- npm
+- Modern Web Browser (Chrome, Edge, Firefox, Brave)
 
-### Installation & Development
-
+### Run Locally
 ```bash
-# Clone the repository and install dependencies
-npm install
+# 1. Clone repository and install dependencies
+npm.cmd install
 
-# Start local development server
-npm run dev
+# 2. Launch Vite development server
+npm.cmd run dev
 ```
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-Visit `http://localhost:5173` in your browser.
-
-### Testing
-
-Run the isolated, hermetic Vitest test suite:
-
+### Hermetic Verification
 ```bash
-npm run test
-```
+# Run all 57 isolated unit tests
+npm.cmd test -- --run
 
-### Production Build & Deployment
+# Validate documentation strict-mode syntax
+node C:\Users\amrit\.gemini\config\skills\docs7\scripts\validate_docs7.mjs docs
 
-```bash
 # Build production bundle
-npm run build
+npm.cmd run build
 ```
 
-Deploy the resulting `dist/` directory directly to **Cloudflare Pages**. Zero backend configuration or API keys required.
+---
 
 ## Documentation
 
-Comprehensive documentation built with `docs7` is located in the `docs/` folder:
-- `docs/index.mdx` - Project overview and structure
-- `docs/architecture.mdx` - Architecture diagrams and data flow
-- `docs/webmcp.mdx` - WebMCP specification and tool suite
-- `docs/document-processing.mdx` - In-browser parsing and BM25 indexing
-- `docs/research-tools.mdx` - External research and calculator APIs
-- `docs/deployment.mdx` - Cloudflare Pages deployment guide
+Full architectural and developer specifications built with `docs7` are located in `docs/`:
+- `docs/index.mdx` — Architecture overview & codebase tree
+- `docs/canvas-and-pdf.mdx` — Canvas2D scene graph engine & multilingual PDF export
+- `docs/architecture.mdx` — Browser cockpit data flow & subsystem communication
+- `docs/webmcp.mdx` — WebMCP provider specifications & 14 registered tools
+- `docs/document-processing.mdx` — Zero-backend LiteParse WASM & BM25 indexing
+- `docs/liteparse-research.mdx` — In-browser document parsing research & benchmarks
+- `docs/learnings.mdx` — Practical findings & hackathon development lessons
 
-To view docs locally with docs7:
+To preview documentation locally:
 ```bash
 npx docs7 dev docs
 ```

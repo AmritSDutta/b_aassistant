@@ -17,18 +17,15 @@ flowchart LR
     Modify["canvas2d_modify_shape"]
     Export["export_pdf"]
   end
-
   subgraph Engine["Canvas2D Engine"]
     Scene[("Scene Graph State: Canvas2dShape[]")]
     Docking["Perimeter Edge-to-Edge Docking"]
     Renderer["HiDPI 2D Canvas Renderer"]
   end
-
   subgraph ExportSub["Client PDF Service"]
     IHDR["PNG IHDR Parser"]
     JSPDF["jsPDF Dual-Section Generator"]
   end
-
   Draw --> Scene
   Inspect <-- Scene
   Modify --> Scene

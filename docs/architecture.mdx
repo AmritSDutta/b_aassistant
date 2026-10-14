@@ -16,13 +16,11 @@ flowchart TD
     IDB[("IndexedDB (bAssistantDB): BM25 Index")]
     Provider["Unified WebMCP Provider"]
   end
-
   subgraph External["External Services / LLM"]
     LLM["Visiting LLM / Browser Extension"]
     DDG["DuckDuckGo CORS API"]
     ArXiv["ArXiv Public Export API"]
   end
-
   Sidebar -->|LiteParse WASM| IDB
   LLM <-->|WebMCP Standards| Provider
   Provider -->|search_document| IDB
