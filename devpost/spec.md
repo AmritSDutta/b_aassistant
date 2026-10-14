@@ -83,6 +83,7 @@ Top 60% pane of the main workspace. Renders the HTML5 `<canvas>` element and too
 Implements `prd.md > Features and Behavior > 2. Chat Conversation & History`.
 Bottom 40% pane of the main workspace:
 - Message feed displaying dialogue history in **Lora** serif typography calibrated for longform reading (17px, line-height 1.75, max-width ~72ch measure). User messages rendered with uppercase `user:` badge and agent messages with `agent:` badge.
+- **Humanized Markdown Rendering:** Parses incoming messages to render structured React elements (headings, styled bullet and numbered lists, monospace code blocks with background tint, blockquotes, and inline bold/italic/code/links) without exposing raw markdown syntax.
 - Automatic scrolling (`scrollIntoView({ behavior: 'smooth' })`) to the latest chat turn upon new message arrivals.
 - Multi-line textarea prompt input supporting Enter to submit and Shift+Enter for newlines.
 - Updates chat state and registers messages for `get_chat_history`.
@@ -109,6 +110,13 @@ Central service registering and dispatching all WebMCP tools:
   - `export_pdf`: Generates and triggers download of the session PDF report.
   - `canvas_draw` / `draw_diagram` / `canvas_clear`: Backwards-compatible legacy drawing tools.
   - `chat_post`: Appends agent text into `ChatArea`.
+
+### 7. `pdfExportService`
+Implements `prd.md > Features and Behavior > 4. Client-Side PDF Generation`.
+In-browser report generation engine:
+- **Blank Session Guard:** Validates session content; prevents exporting empty sessions and triggers `NotificationModal` validation alert.
+- **LLM Markdown Humanizer:** Parses Markdown headers (`#`, `##`, `###`), lists (`•`, `1.`), code blocks (Courier font with background tint), blockquotes, dividers, and strips inline tokens (`**`, `*`, `` ` ``, `[label](url)`) into clean typography.
+- Fits canvas diagram snapshot and formats dialogue transcript with pagination.
 
 ## Data Model
 
@@ -188,6 +196,7 @@ C:/codebase/b_aassistant/
 
 ## Important Failure Modes
 - **File ≥ 1MB or Invalid Format:** Caught immediately by file validator in `FileUpload.tsx`. Triggers `NotificationModal` explaining the limit, clears the file selection, and leaves existing state untouched.
+- **Blank Export Attempt:** Caught immediately by `handleExportPdf` and `pdfExportService`. Triggers `NotificationModal` explaining that the session is blank and returns an error for WebMCP `export_pdf`.
 - **WASM Initialization Delay:** `LiteParseService` loads WASM asynchronously. Upload dropzone shows a subtle loading spinner until the parser is ready.
 - **External Search Network Failure:** If DuckDuckGo or ArXiv is unreachable due to connectivity, the tool returns a clean error object (`{ error: "Search service unavailable" }`) rather than failing silently.
 

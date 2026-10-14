@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { HumanizedMessage } from './HumanizedMessage';
 
 export interface ChatMessage {
   id: string;
@@ -58,8 +59,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ messages, onSendMessage }) =
               </span>
             </div>
             {/* Lora Longform Reading Measure: 17px, line-height 1.75, subtle tracking, 72ch measure */}
-            <div className="font-serif text-[17px] leading-[1.75] tracking-[-0.003em] max-w-[72ch] whitespace-pre-wrap selection:bg-sky-200 dark:selection:bg-sky-900">
-              {msg.text}
+            <div className="font-serif text-[17px] leading-[1.75] tracking-[-0.003em] max-w-[72ch] selection:bg-sky-200 dark:selection:bg-sky-900">
+              <HumanizedMessage content={msg.text} />
             </div>
           </div>
         ))}

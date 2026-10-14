@@ -131,8 +131,24 @@ export const App: React.FC = () => {
   }, []);
 
   const handleExportPdf = useCallback(() => {
-    const dataUrl = globalCanvasEngine.getSnapshotDataUrl();
-    exportSessionPdf(dataUrl, messagesRef.current, activeDoc?.name);
+    const hasCanvas = globalCanvasEngine.hasContent();
+    const hasDialogue = messagesRef.current.some((m) => m.text && m.text.trim().length > 0);
+
+    if (!hasCanvas && !hasDialogue) {
+      setErrorModal({
+        isOpen: true,
+        title: 'Cannot Export Empty Session',
+        message:
+          'The current session is blank. Please create a diagram on the canvas or send a message in the chat before exporting to PDF.',
+      });
+      return {
+        success: false,
+        error: 'Cannot export an empty session without canvas diagrams or chat messages.',
+      };
+    }
+
+    const dataUrl = hasCanvas ? globalCanvasEngine.getSnapshotDataUrl() : null;
+    return exportSessionPdf(dataUrl, messagesRef.current, activeDoc?.name, hasCanvas);
   }, [activeDoc]);
 
   // Update WebMCP Context

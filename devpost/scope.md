@@ -24,7 +24,7 @@ Anyone who wants to learn, research, and explore any topic with AI in a cost-eff
 - **Mood / Feel:** Clean, utilitarian, responsive, split-screen cockpit for AI-augmented research and visual thinking.
 - **Visual Structure:**
   - Left 20%: Branding (top), File Upload (middle), blank area for future tools (bottom).
-  - Right 80%: HTML Canvas (top 60%), Textual Chat Area (bottom 40%) formatted with Lora typography for optimal longform reading and auto-scrolling to the latest turn.
+  - Right 80%: HTML Canvas (top 60%), Textual Chat Area (bottom 40%) formatted with Lora typography for optimal longform reading, humanized text rendering (formatting LLM markdown headings, lists, code cards, and bold text without raw markdown symbols), and auto-scrolling to the latest turn.
 
 ## Why This Matters to the Learner
 Enables a practical, genuinely beneficial tool for the community that proves WebMCP's potential in the browser: running multimodal interactions on cheap models, keeping all user data strictly local, and using free-tier tools rather than costly subscriptions.
@@ -49,7 +49,7 @@ A test run demonstrates a visiting agent calling these tools, retrieving data, u
   - React-based single-page application with responsive layout (20% sidebar with branding and file uploader strictly for Doc/PDF < 1MB; 80% main area split into 60% HTML canvas and 40% chat area).
   - Post-upload processing: in-browser natural per-page extraction using LiteParse (browser WASM / PDF decompressor stream) and client-side BM25 searchable index generation stored in browser datastore (IndexedDB) for accepted files (< 1MB only).
   - Advanced HTML Canvas2D scene graph with perimeter edge-to-edge docking for auto-anchoring arrows, soft-translucent color palette (indigo client, emerald gateway, purple database, orange cache/queue, amber logic, sticky-note stickers), and HiDPI resolution.
-  - Client-side PDF export (`exportSessionPdf`) merging canvas snapshot and formatted dialogue into a multi-page PDF report.
+  - Client-side PDF export (`exportSessionPdf`) with blank session validation (blocking download and alerting when canvas and chat are empty) and Markdown humanization (converting LLM markdown headings, lists, code blocks, and quotes into clean styled typography).
   - Starting WebMCP tool provider layer exposing:
     - `search_web` (using DDGS behind)
     - `search_research` (using ArXiv search)

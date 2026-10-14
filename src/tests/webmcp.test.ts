@@ -166,12 +166,27 @@ describe('WebMCP Provider & Tools', () => {
       postMessage: () => {},
       exportPdf: () => {
         pdfCalled = true;
+        return { success: true };
       },
     };
     const customProvider = new WebMCPProvider(customContext);
     const res = (await customProvider.callTool('export_pdf', {})) as { success: boolean };
     expect(res.success).toBe(true);
     expect(pdfCalled).toBe(true);
+  });
+
+  it('rejects export_pdf tool call when session is blank', async () => {
+    const customContext: ToolContext = {
+      getMessages: () => [],
+      postMessage: () => {},
+      exportPdf: () => {
+        return { success: false, error: 'Cannot export an empty session.' };
+      },
+    };
+    const customProvider = new WebMCPProvider(customContext);
+    await expect(customProvider.callTool('export_pdf', {})).rejects.toThrow(
+      'Cannot export an empty session.'
+    );
   });
 });
 

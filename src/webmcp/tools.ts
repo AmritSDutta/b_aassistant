@@ -10,7 +10,7 @@ export interface ToolContext {
   searchWeb?: (query: string) => Promise<Array<{ title: string; snippet: string; url: string }>>;
   searchResearch?: (query: string) => Promise<Array<{ title: string; summary: string; authors: string[]; id: string }>>;
   calculate?: (expression: string) => number;
-  exportPdf?: () => void;
+  exportPdf?: () => { success: boolean; error?: string } | void;
 }
 
 export const TOOL_DEFINITIONS: WebMCPTool[] = [
@@ -309,7 +309,10 @@ export async function executeToolCall(
 
     case 'export_pdf': {
       if (context.exportPdf) {
-        context.exportPdf();
+        const res = context.exportPdf();
+        if (res && !res.success) {
+          throw new Error(res.error || 'Cannot export an empty session.');
+        }
         return { success: true, message: 'PDF report generated and download initiated.' };
       }
       throw new Error('PDF export capability not available');

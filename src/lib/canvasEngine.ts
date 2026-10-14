@@ -234,6 +234,10 @@ export class CanvasEngine {
     }
   }
 
+  public hasContent(): boolean {
+    return this.shapes.length > 0 || this.legacyCommands.length > 0;
+  }
+
   public execute(command: CanvasCommand): void {
     if (command.type === 'clear') {
       this.clear();

@@ -34,7 +34,7 @@ flowchart TD
 
 ## Core Subsystems
 
-1. **Presentation Layer**: Built with React and styled with Tailwind CSS supporting persistent dark/light cockpit themes, an expanded **60% height HTML canvas** alongside a **40% height chat area**, **Lora** serif typography optimized for longform reading (17px, line-height 1.75, max-width ~72ch measure), and reactive auto-scrolling to the latest chat turn.
+1. **Presentation Layer**: Built with React and styled with Tailwind CSS supporting persistent dark/light cockpit themes, an expanded **60% height HTML canvas** alongside a **40% height chat area**, humanized markdown rendering (formatting LLM markdown into styled headers, bullet/numbered lists, code cards, and bold text without raw syntax), **Lora** serif typography optimized for longform reading (17px, line-height 1.75, max-width ~72ch measure), and reactive auto-scrolling to the latest chat turn.
 2. **WebMCP Bridge**: Exposes 9 tools across `window.webmcp`, `navigator.modelContext`, and `window.postMessage`.
 3. **Lexical Retrieval Engine**: Client-side BM25 index stored in IndexedDB for instant, private text search with query stop-word removal.
 4. **2D Rendering Engine**: Dynamic HTML5 canvas drawing shapes, flowcharts, graphs, and annotations from structured LLM tool arguments.

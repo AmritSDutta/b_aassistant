@@ -68,6 +68,13 @@ Connectors compute the dominant vector between shape centers and dock to the fac
 ## Client-Side PDF Generation
 
 Users and visiting LLMs can export a full session report:
-1. **Canvas Snapshot**: Fitted uniformly at the top of Page 1.
-2. **Dialogue Transcripts**: Formatted beneath with sender badges, timestamps, and multi-page overflow pagination.
-3. **100% In-Browser**: Built via `jspdf` with zero backend server dependencies.
+1. **Blank Content Validation**: Checks that the session has either active canvas drawings or chat dialogue. If both are blank, the export is prevented and a validation modal alerts the user.
+2. **Markdown Humanization**: Automatically parses LLM Markdown formatting into publication-ready typography:
+   - Headings (`#`, `##`, `###`) rendered in bold Helvetica with proportional sizing.
+   - Bulleted (`• `) and numbered lists (`1. `) cleanly indented.
+   - Fenced code blocks styled in Courier monospace with a light-slate background tint.
+   - Blockquotes (`> `) rendered in italic with vertical boundary line accents.
+   - Strips raw markdown tokens (`**`, `*`, `` ` ``, `[label](url)`) into clean text.
+3. **Canvas Snapshot**: Fitted uniformly at the top of Page 1.
+4. **Dialogue Transcripts**: Formatted beneath with sender badges, timestamps, and multi-page overflow pagination.
+5. **100% In-Browser**: Built via `jspdf` with zero backend server dependencies.

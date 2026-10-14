@@ -5,6 +5,11 @@ const PNG_IHDR_MIN_BYTES = 24;
 const PNG_WIDTH_BYTE_OFFSET = 16;
 const PNG_HEIGHT_BYTE_OFFSET = 20;
 
+export interface ExportPdfResult {
+  success: boolean;
+  error?: string;
+}
+
 export function readPngDimensions(dataUrl: string): { width: number; height: number } | null {
   try {
     if (!dataUrl) return null;
@@ -52,11 +57,222 @@ export function fitContain(
   return { width: imgWidth * scale, height: imgHeight * scale };
 }
 
+export function stripInlineMarkdown(text: string): string {
+  if (!text) return '';
+  return text
+    // Replace markdown images: ![alt](url) -> [Image: alt]
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, (_m, alt) => (alt ? `[Image: ${alt}]` : '[Image]'))
+    // Replace markdown links: [label](url) -> label
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // Replace inline code: `code` -> 'code'
+    .replace(/`([^`]+)`/g, "'$1'")
+    // Strip bold & italic markers
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/__([^_]+)__/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/_([^_]+)_/g, '$1')
+    .replace(/~~([^~]+)~~/g, '$1')
+    // Replace HTML tags
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/?[^>]+(>|$)/g, '')
+    // Replace common HTML entities
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    // Remove markdown backslash escapes
+    .replace(/\\([*_#`~[\]>+-])/g, '$1');
+}
+
+export function renderHumanizedMarkdown(
+  doc: jsPDF,
+  markdownText: string,
+  margin: number,
+  contentWidth: number,
+  startY: number,
+  ensureSpace: (needed: number) => void
+): number {
+  let currentY = startY;
+  const lines = markdownText.split('\n');
+  let inCodeBlock = false;
+
+  for (const rawLine of lines) {
+    const trimmed = rawLine.trim();
+
+    // 1. Fenced Code Block delimiter
+    if (trimmed.startsWith('```')) {
+      inCodeBlock = !inCodeBlock;
+      currentY += inCodeBlock ? 1 : 2;
+      continue;
+    }
+
+    // Inside Fenced Code Block
+    if (inCodeBlock) {
+      ensureSpace(4.5);
+      doc.setFillColor(241, 245, 249); // slate-100
+      doc.rect(margin + 2, currentY - 3.2, contentWidth - 4, 4.2, 'F');
+
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(51, 65, 85); // slate-700
+      doc.text(rawLine.slice(0, 85), margin + 4, currentY);
+      currentY += 4.2;
+      continue;
+    }
+
+    // 2. Horizontal Divider
+    if (/^(---|___|\*\*\*)$/.test(trimmed)) {
+      ensureSpace(5);
+      doc.setDrawColor(226, 232, 240); // slate-200
+      doc.setLineWidth(0.3);
+      doc.line(margin + 2, currentY, margin + contentWidth - 2, currentY);
+      currentY += 4.5;
+      continue;
+    }
+
+    // 3. Headings
+    if (trimmed.startsWith('# ')) {
+      ensureSpace(8);
+      const text = stripInlineMarkdown(trimmed.slice(2));
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12.5);
+      doc.setTextColor(15, 23, 42); // slate-900
+      doc.text(text, margin + 2, currentY);
+      currentY += 6;
+      continue;
+    }
+
+    if (trimmed.startsWith('## ')) {
+      ensureSpace(7);
+      const text = stripInlineMarkdown(trimmed.slice(3));
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(30, 41, 59); // slate-800
+      doc.text(text, margin + 2, currentY);
+      currentY += 5.2;
+      continue;
+    }
+
+    if (trimmed.startsWith('### ')) {
+      ensureSpace(6);
+      const text = stripInlineMarkdown(trimmed.slice(4));
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(51, 65, 85); // slate-700
+      doc.text(text, margin + 2, currentY);
+      currentY += 4.8;
+      continue;
+    }
+
+    // 4. Blockquotes
+    if (trimmed.startsWith('> ')) {
+      const quoteText = stripInlineMarkdown(trimmed.slice(2));
+      const quoteLines = doc.splitTextToSize(quoteText, contentWidth - 12);
+      for (const qLine of quoteLines) {
+        ensureSpace(4.5);
+        doc.setDrawColor(203, 213, 225); // slate-300
+        doc.setLineWidth(0.8);
+        doc.line(margin + 3, currentY - 3, margin + 3, currentY + 1.2);
+
+        doc.setFont('times', 'italic');
+        doc.setFontSize(9.5);
+        doc.setTextColor(71, 85, 105); // slate-600
+        doc.text(qLine, margin + 6, currentY);
+        currentY += 4.5;
+      }
+      continue;
+    }
+
+    // 5. Bullet List items (- , * , + )
+    const bulletMatch = /^(\s*)[*+-]\s+(.*)$/.exec(rawLine);
+    if (bulletMatch) {
+      const indent = bulletMatch[1].length > 0 ? 8 : 4;
+      const itemText = stripInlineMarkdown(bulletMatch[2]);
+      const itemLines = doc.splitTextToSize(itemText, contentWidth - indent - 4);
+
+      ensureSpace(4.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(100, 116, 139); // slate-500
+      doc.text('\u2022', margin + indent - 1.5, currentY);
+
+      doc.setFont('times', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(30, 41, 59);
+
+      for (let i = 0; i < itemLines.length; i++) {
+        if (i > 0) ensureSpace(4.5);
+        doc.text(itemLines[i], margin + indent + 2.5, currentY);
+        currentY += 4.5;
+      }
+      continue;
+    }
+
+    // 6. Numbered List items (1. , 2. )
+    const numberedMatch = /^(\s*)(\d+\.)\s+(.*)$/.exec(rawLine);
+    if (numberedMatch) {
+      const numBadge = numberedMatch[2];
+      const itemText = stripInlineMarkdown(numberedMatch[3]);
+      const itemLines = doc.splitTextToSize(itemText, contentWidth - 12);
+
+      ensureSpace(4.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(100, 116, 139);
+      doc.text(numBadge, margin + 3, currentY);
+
+      doc.setFont('times', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(30, 41, 59);
+
+      for (let i = 0; i < itemLines.length; i++) {
+        if (i > 0) ensureSpace(4.5);
+        doc.text(itemLines[i], margin + 9.5, currentY);
+        currentY += 4.5;
+      }
+      continue;
+    }
+
+    // 7. Standard Paragraph Text
+    const cleanParagraph = stripInlineMarkdown(rawLine);
+    if (!cleanParagraph.trim()) {
+      currentY += 2;
+      continue;
+    }
+
+    doc.setFont('times', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(30, 41, 59);
+
+    const paraLines = doc.splitTextToSize(cleanParagraph, contentWidth - 4);
+    for (const pLine of paraLines) {
+      ensureSpace(4.5);
+      doc.text(pLine, margin + 2, currentY);
+      currentY += 4.5;
+    }
+  }
+
+  return currentY;
+}
+
 export function exportSessionPdf(
   canvasDataUrl: string | null,
   messages: ChatMessage[],
-  docName?: string
-): void {
+  docName?: string,
+  hasCanvasContent: boolean = false
+): ExportPdfResult {
+  const hasDialogue = Array.isArray(messages) && messages.some((m) => m.text && m.text.trim().length > 0);
+
+  // Validate blank content: if both canvas and dialogue are blank, reject export
+  if (!hasCanvasContent && !hasDialogue) {
+    return {
+      success: false,
+      error: 'Cannot export an empty session without canvas diagrams or chat messages.',
+    };
+  }
+
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -84,8 +300,8 @@ export function exportSessionPdf(
   doc.text(subTitle, margin, currentY);
   currentY += 8;
 
-  // Section 1: HTML Canvas Snapshot
-  if (canvasDataUrl) {
+  // Section 1: HTML Canvas Snapshot (if available and not empty)
+  if (canvasDataUrl && hasCanvasContent) {
     const dims = readPngDimensions(canvasDataUrl) || { width: 1200, height: 600 };
     const fitted = fitContain(dims.width, dims.height, contentWidth, 85);
 
@@ -123,7 +339,7 @@ export function exportSessionPdf(
     }
   };
 
-  if (messages.length === 0) {
+  if (!hasDialogue) {
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(10);
     doc.setTextColor(148, 163, 184);
@@ -131,6 +347,8 @@ export function exportSessionPdf(
     currentY += 10;
   } else {
     for (const msg of messages) {
+      if (!msg.text || !msg.text.trim()) continue;
+
       const isUser = msg.sender === 'user';
       const timeStr = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const senderBadge = isUser ? `USER [${timeStr}]` : `ASSISTANT [${timeStr}]`;
@@ -147,21 +365,15 @@ export function exportSessionPdf(
       doc.text(senderBadge, margin, currentY);
       currentY += 4.5;
 
-      doc.setFont('times', 'normal');
-      doc.setFontSize(10);
-      doc.setTextColor(30, 41, 59); // slate-800
-
-      const lines = doc.splitTextToSize(msg.text, contentWidth - 4);
-      for (const line of lines) {
-        ensureSpace(5);
-        doc.text(line, margin + 2, currentY);
-        currentY += 4.5;
-      }
-      currentY += 4;
+      // Humanize LLM generated markdown into publication-quality structured PDF blocks
+      currentY = renderHumanizedMarkdown(doc, msg.text, margin, contentWidth, currentY, ensureSpace);
+      currentY += 3.5;
     }
   }
 
   // Trigger browser download
   const filename = `bAssistant-Session-${Date.now()}.pdf`;
   doc.save(filename);
+
+  return { success: true };
 }

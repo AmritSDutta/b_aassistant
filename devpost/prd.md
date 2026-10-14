@@ -51,6 +51,12 @@ Source: `scope.md > The POC Boundary`.
 Source: `scope.md > The Core Loop`.
 - **Input:** Bottom text input and send button allowing the user to type messages.
 - **Formatting:** User messages are stored and rendered with a `user:` prefix.
+- **Humanized Text Rendering:** The chat area renders humanized typography without exposing raw markdown syntax:
+  - Headings (`#`, `##`, `###`) format as proportional styled headers without `#` symbols.
+  - Lists (`-`, `*`, `+`, `1.`) format as structured bullet and numbered lists with indented alignment.
+  - Fenced code blocks (```` ``` ````) format into dedicated monospace containers with subtle background contrast.
+  - Blockquotes (`>`) render as indented callouts with border accents.
+  - Inline tokens (`**bold**`, `*italic*`, `` `code` ``, `[label](url)`) format as bold, italic, inline code pills, and clean clickable links without raw markdown characters.
 - **Retrieval:** Visiting LLM can retrieve previous user messages and conversation context through an exposed WebMCP tool.
 - **Streaming/Posting:** Visiting agent can append structured textual explanations directly into the chat stream.
 
@@ -64,6 +70,14 @@ Source: `scope.md > The Unique Kernel`.
 ### 4. Client-Side PDF Generation
 Source: `scope.md > The POC Boundary`.
 - Pure in-browser PDF generation using `jspdf`.
+- **Blank Content Validation:** Validates that at least one of either the canvas scene graph or the dialogue stream has substantive content before export. If both are blank, the export is aborted, a validation modal alert is presented to the user, and WebMCP `export_pdf` returns a descriptive rejection error.
+- **Markdown Humanization for LLM Content:** Parses and converts raw LLM-generated Markdown in the dialogue stream:
+  - Formats headings (`#`, `##`, `###`) in bold Helvetica with proportional sizing and spacing.
+  - Formats bullet points (`- `, `* `, `+ `) as clean bullets (`• `) with indented margins.
+  - Formats numbered lists (`1. `, `2. `) with indented alignment.
+  - Formats blockquotes (`> `) in italic with subtle vertical border accents.
+  - Formats fenced code blocks in Courier monospace with light-slate background tinting.
+  - Cleans inline markup (`**bold**`, `*italic*`, `` `code` ``, `[label](url)`) into clean readable text.
 - Scales and fits the canvas diagram snapshot at the top, then formats conversation turns with clean typography, timestamps, sender badges, and automatic multi-page pagination.
 
 ### 5. WebMCP Tool Suite
@@ -88,6 +102,7 @@ The application exposes standard WebMCP tools for visiting LLMs:
 - **Document Loaded State:** Upload box reflects file name, page count, and green "Indexed" badge.
 - **Document Cleaned State:** Triggered by `clean_document` tool or user action; wipes IndexedDB tables and returns upload box to empty.
 - **Error State (File Rejected):** Popup alerts user to size limit (≥ 1MB) or unsupported file type; input resets without crashing.
+- **Error State (Blank Export Blocked):** Modal alerts user when attempting to export an empty session without canvas drawings or chat messages.
 - **Persistence:** Document chunks and BM25 index persist across sessions in IndexedDB until cleared.
 
 ## Product Decisions
