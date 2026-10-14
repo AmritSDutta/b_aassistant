@@ -7,16 +7,16 @@ interface WelcomeModalProps {
 
 const STEPS: Array<{ title: string; body: string }> = [
   {
-    title: 'Upload a document',
-    body: 'Drop a PDF or Word file (under 2MB) into the sidebar. It is parsed and indexed privately in your browser — nothing leaves your machine.',
+    title: 'Connect via WebMCP Inspector or direct tool calls',
+    body: 'Install the Chrome WebMCP Inspector plugin and attach your API key, or trigger direct WebMCP tool calls in DevTools. bAssistant exposes 17 pre-configured tools for your AI agent to chat, search documents, and render live canvas diagrams.',
   },
   {
-    title: 'Connect your AI agent',
-    body: 'bAssistant exposes 16 WebMCP tools. Any compatible AI extension or agent can connect, read the chat, search your document, and draw diagrams.',
-  },
-  {
-    title: 'Ask questions',
+    title: 'Ask questions & visualize',
     body: 'Type in the chat. Your agent answers in the stream (user: prefix) and maps systems live on the canvas above.',
+  },
+  {
+    title: 'Add context (Optional)',
+    body: 'Optionally drop a PDF/Word file (under 2MB) or add reference URLs in the sidebar to provide custom project context. Documents are parsed and indexed privately in your browser — nothing leaves your machine.',
   },
   {
     title: 'Star key answers',
@@ -73,6 +73,13 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
             </li>
           ))}
         </ol>
+
+        <div className="mx-6 my-2 p-2.5 rounded-lg border text-xs flex items-start gap-2" style={{ borderColor: 'var(--line)', background: 'var(--card)' }}>
+          <span className="font-bold text-[10px] uppercase tracking-wider shrink-0 mt-0.5" style={{ color: 'var(--accent)' }}>Inspector Tip</span>
+          <p className="text-[12px] leading-relaxed" style={{ color: 'var(--ink-soft)' }}>
+            Tested with Google Chrome Labs' <strong>WebMCP Inspector</strong> plugin. Open Chrome DevTools &gt; WebMCP tab to inspect and invoke registered tools.
+          </p>
+        </div>
 
         <div className="px-6 py-4 border-t flex justify-end" style={{ borderColor: 'var(--line)' }}>
           <button

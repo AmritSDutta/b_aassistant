@@ -106,16 +106,19 @@ describe('ChatArea long-dwell enrichments', () => {
 
 describe('WelcomeModal onboarding popup', () => {
   it('is hidden when closed and shows the how-to-use steps when open', () => {
-    const { queryByText, rerender, getByText } = render(
+    const { queryByText, rerender, getByText, getAllByText } = render(
       <WelcomeModal isOpen={false} onClose={() => {}} />
     );
     expect(queryByText('How to use bAssistant')).toBeNull();
 
     rerender(<WelcomeModal isOpen={true} onClose={() => {}} />);
     expect(getByText('How to use bAssistant')).toBeTruthy();
-    expect(getByText('Upload a document')).toBeTruthy();
-    expect(getByText('Connect your AI agent')).toBeTruthy();
+    expect(getByText('Connect via WebMCP Inspector or direct tool calls')).toBeTruthy();
+    expect(getByText('Ask questions & visualize')).toBeTruthy();
+    expect(getByText('Add context (Optional)')).toBeTruthy();
     expect(getByText('Export your session')).toBeTruthy();
+    expect(getByText('Inspector Tip')).toBeTruthy();
+    expect(getAllByText(/WebMCP Inspector/).length).toBeGreaterThanOrEqual(1);
   });
 
   it('dismisses via the Get started button', () => {

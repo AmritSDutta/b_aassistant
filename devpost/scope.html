@@ -223,7 +223,9 @@
       <details>
         <summary><span class="tag-cut">CUT (Explicitly Excluded)</span></summary>
         <ul>
-          <li><strong>Files &ge; 1MB:</strong> Strictly rejected; only doc and PDF files under 1MB accepted.</li>
+          <li><strong>Files &ge; 2MB:</strong> Strictly rejected; only doc and PDF files under 2MB accepted.</li>
+          <li><strong>MCP server endpoint integration:</strong> Out of scope for this iteration; operates 100% in-browser via WebMCP client protocols without external backend SSE/stdio MCP servers.</li>
+          <li><strong>Image, audio, or video data integration:</strong> Out of scope for this iteration; ingestion and processing are focused strictly on text documents and web references.</li>
           <li><strong>Backend server / database:</strong> Purely in-browser; zero cloud infrastructure needed.</li>
           <li><strong>Direct generative image/video models:</strong> Replaced by programmatic canvas graphics.</li>
           <li><strong>In-app API key billing:</strong> Connection responsibility sits with the visiting agent.</li>

@@ -14,7 +14,7 @@ Instead of paying for expensive multimodal generative models or backend infrastr
 Anyone who wants to learn, research, and explore any topic with AI in a cost-efficient, visually rich manner using their own affordable LLM, without sacrificing privacy or paying for high-tier generative image services.
 
 ## The Core Loop
-1. The user opens the single page to investigate any topic (and optionally uploads a doc or PDF < 1MB, which is pagewise-chunked in-browser using LiteParse and indexed with a client-side BM25 search index in local datastore).
+1. The user opens the single page to investigate any topic (and optionally uploads a doc or PDF < 2MB, which is pagewise-chunked in-browser using LiteParse and indexed with a client-side BM25 search index in local datastore).
 2. The user's visiting LLM connects to the page via WebMCP and discovers the page's exposed tools.
 3. The LLM calls free research tools (DuckDuckGo, ArXiv) and local document tools (querying the BM25 index) to gather information.
 4. The LLM streams its written explanation into the bottom 40% chat area and simultaneously calls canvas tools to draw live diagrams and graphs in the top 60% canvas area.
@@ -50,8 +50,8 @@ A test run demonstrates a visiting agent calling these tools, retrieving data, u
 
 ## The POC Boundary
 - **In Now:**
-  - React-based single-page application with responsive layout (20% sidebar with dynamic transparent branding logo, file uploader for Doc/PDF < 1MB, enboldened Reference URLs manager for up to 10 probe-verified links, and enboldened Session Highlights; 80% main area split into 60% HTML canvas and 40% chat area).
-  - Post-upload processing: in-browser natural per-page extraction using LiteParse (browser WASM / PDF decompressor stream with hex token decoding `<...> Tj` / `[...] TJ` and in-browser DOCX PKZip `word/document.xml` decompression) and client-side BM25 searchable index generation stored in browser datastore (IndexedDB) for accepted files (< 1MB only).
+  - React-based single-page application with responsive layout (20% sidebar with dynamic transparent branding logo, file uploader for Doc/PDF < 2MB, enboldened Reference URLs manager for up to 10 probe-verified links, and enboldened Session Highlights; 80% main area split into 60% HTML canvas and 40% chat area).
+  - Post-upload processing: in-browser natural per-page extraction using LiteParse (browser WASM / PDF decompressor stream with hex token decoding `<...> Tj` / `[...] TJ` and in-browser DOCX PKZip `word/document.xml` decompression) and client-side BM25 searchable index generation stored in browser datastore (IndexedDB) for accepted files (< 2MB only).
   - Advanced HTML Canvas2D scene graph with auto-centering `fitToContent`, interactive drag-to-pan, wheel zoom, perimeter edge-to-edge docking, 2.5D drop shadows, light-theme contrast alpha boost, soft-translucent color palette (indigo client, emerald gateway, purple database, orange cache/queue, amber logic, sticky-note stickers), and HiDPI resolution.
   - Active session persistence and multi-session history management in browser IndexedDB (`session_turns` & `session_meta`): preserves dialogue history and canvas snapshots across page reloads, with a dedicated Session History Modal to browse, restore, export, or delete past sessions, and a "New Session" restart action.
   - Client-side sequential PDF export (`exportSessionPdf`) with blank session validation (blocking download and alerting when canvas and chat are empty), top-left branding logo (`bassistant_light.jpg`), sequential turn-by-turn reporting (chronological turn badges, user questions if present, per-turn canvas snapshots, and AI responses), Markdown humanization, Indic script rendering (Bengali বাংলা and Hindi हिन्दी), multipage pagination buffer (10mm), and mandatory AI disclaimer footer on every page (`AI generated analysis, verify before applying.`).
@@ -76,7 +76,9 @@ A test run demonstrates a visiting agent calling these tools, retrieving data, u
 - Features for the 3rd (blank) sidebar section.
 
 ## Explicitly Cut
-- **Files ≥ 1MB:** Strictly rejected; only doc and PDF files under 1MB are supported.
+- **Files ≥ 2MB:** Strictly rejected; only doc and PDF files under 2MB are supported.
+- **MCP server endpoint integration:** Out of scope for this iteration; operates 100% in-browser via WebMCP client protocols (`document.modelContext`, `navigator.modelContext`, `window.webmcp`, and `postMessage`) without external backend SSE/stdio MCP servers.
+- **Image, audio, or video data integration:** Out of scope for this iteration; ingestion and processing are focused strictly on text documents (`.pdf`, `.docx`, `.doc`) and public reference URLs.
 - **Server-side database / backend servers:** Strictly browser-storage only; zero server footprint.
 - **Direct generative image/video AI APIs:** Eliminated by design in favor of fast, free programmatic HTML canvas drawing.
 - **Built-in paid LLM billing/routing:** Visiting LLM connectivity is handled by the user's environment/agent via WebMCP.
