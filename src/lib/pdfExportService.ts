@@ -10,6 +10,12 @@ export interface ExportPdfResult {
   error?: string;
 }
 
+export function containsIndicScript(text: string): boolean {
+  // \u0900-\u097F: Devanagari (Hindi, Marathi, Sanskrit)
+  // \u0980-\u09FF: Bengali / Bangla, Assamese
+  return /[\u0900-\u09FF]/.test(text);
+}
+
 export function readPngDimensions(dataUrl: string): { width: number; height: number } | null {
   try {
     if (!dataUrl) return null;
@@ -86,6 +92,111 @@ export function stripInlineMarkdown(text: string): string {
     .replace(/\\([*_#`~[\]>+-])/g, '$1');
 }
 
+export function wrapIndicText(
+  text: string,
+  fontSizePt: number,
+  maxWidthMm: number,
+  isBold: boolean = false
+): string[] {
+  if (typeof document === 'undefined') return [text];
+  try {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return [text];
+
+    const scale = 3;
+    const fontStyle = isBold ? 'bold ' : '';
+    ctx.font = `${fontStyle}${fontSizePt * scale}px "Noto Sans Bengali", "Noto Sans Devanagari", "Nirmala UI", "Vrinda", "Mangal", sans-serif`;
+
+    const maxWidthPx = (maxWidthMm / 0.352778) * scale;
+    const words = text.split(/\s+/).filter(Boolean);
+    if (words.length === 0) return [];
+
+    const lines: string[] = [];
+    let currentLine = words[0];
+
+    for (let i = 1; i < words.length; i++) {
+      const candidate = `${currentLine} ${words[i]}`;
+      if (ctx.measureText(candidate).width <= maxWidthPx) {
+        currentLine = candidate;
+      } else {
+        lines.push(currentLine);
+        currentLine = words[i];
+      }
+    }
+    lines.push(currentLine);
+    return lines;
+  } catch {
+    return [text];
+  }
+}
+
+export function renderIndicTextStrip(
+  text: string,
+  fontSizePt: number,
+  textColorHex: string,
+  isBold: boolean = false
+): { dataUrl: string; widthMm: number; heightMm: number } | null {
+  if (typeof document === 'undefined') return null;
+  try {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+  const scale = 3;
+  const fontStyle = isBold ? 'bold ' : '';
+  const fontStack = `${fontStyle}${fontSizePt * scale}px "Noto Sans Bengali", "Noto Sans Devanagari", "Nirmala UI", "Vrinda", "Mangal", sans-serif`;
+
+  ctx.font = fontStack;
+  const metrics = ctx.measureText(text);
+  const widthPx = Math.ceil(metrics.width + 8 * scale);
+  const heightPx = Math.ceil(fontSizePt * 1.5 * scale);
+
+  canvas.width = widthPx;
+  canvas.height = heightPx;
+
+  ctx.font = fontStack;
+  ctx.fillStyle = textColorHex;
+  ctx.textBaseline = 'top';
+  ctx.fillText(text, 2 * scale, 2 * scale);
+
+  const widthMm = (canvas.width / scale) * 0.352778;
+  const heightMm = (canvas.height / scale) * 0.352778;
+
+  return {
+    dataUrl: canvas.toDataURL('image/png'),
+    widthMm,
+    heightMm,
+  };
+  } catch {
+    return null;
+  }
+}
+
+export function drawLineText(
+  doc: jsPDF,
+  text: string,
+  x: number,
+  y: number,
+  fontSizePt: number,
+  textColorHex: string,
+  isBold: boolean = false
+): number {
+  if (containsIndicScript(text)) {
+    const strip = renderIndicTextStrip(text, fontSizePt, textColorHex, isBold);
+    if (strip) {
+      try {
+        doc.addImage(strip.dataUrl, 'PNG', x, y - 3.2, strip.widthMm, strip.heightMm);
+        return strip.heightMm;
+      } catch (e) {
+        console.warn('Could not add Indic image strip to PDF:', e);
+      }
+    }
+  }
+  doc.text(text, x, y);
+  return fontSizePt * 0.45;
+}
+
 export function renderHumanizedMarkdown(
   doc: jsPDF,
   markdownText: string,
@@ -139,7 +250,7 @@ export function renderHumanizedMarkdown(
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(12.5);
       doc.setTextColor(15, 23, 42); // slate-900
-      doc.text(text, margin + 2, currentY);
+      drawLineText(doc, text, margin + 2, currentY, 12.5, '#0f172a', true);
       currentY += 6;
       continue;
     }
@@ -150,7 +261,7 @@ export function renderHumanizedMarkdown(
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(11);
       doc.setTextColor(30, 41, 59); // slate-800
-      doc.text(text, margin + 2, currentY);
+      drawLineText(doc, text, margin + 2, currentY, 11, '#1e293b', true);
       currentY += 5.2;
       continue;
     }
@@ -161,7 +272,7 @@ export function renderHumanizedMarkdown(
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
       doc.setTextColor(51, 65, 85); // slate-700
-      doc.text(text, margin + 2, currentY);
+      drawLineText(doc, text, margin + 2, currentY, 10, '#334155', true);
       currentY += 4.8;
       continue;
     }
@@ -169,7 +280,10 @@ export function renderHumanizedMarkdown(
     // 4. Blockquotes
     if (trimmed.startsWith('> ')) {
       const quoteText = stripInlineMarkdown(trimmed.slice(2));
-      const quoteLines = doc.splitTextToSize(quoteText, contentWidth - 12);
+      const quoteLines = containsIndicScript(quoteText)
+        ? wrapIndicText(quoteText, 9.5, contentWidth - 12, false)
+        : doc.splitTextToSize(quoteText, contentWidth - 12);
+
       for (const qLine of quoteLines) {
         ensureSpace(4.5);
         doc.setDrawColor(203, 213, 225); // slate-300
@@ -179,7 +293,7 @@ export function renderHumanizedMarkdown(
         doc.setFont('times', 'italic');
         doc.setFontSize(9.5);
         doc.setTextColor(71, 85, 105); // slate-600
-        doc.text(qLine, margin + 6, currentY);
+        drawLineText(doc, qLine, margin + 6, currentY, 9.5, '#475569', false);
         currentY += 4.5;
       }
       continue;
@@ -190,7 +304,9 @@ export function renderHumanizedMarkdown(
     if (bulletMatch) {
       const indent = bulletMatch[1].length > 0 ? 8 : 4;
       const itemText = stripInlineMarkdown(bulletMatch[2]);
-      const itemLines = doc.splitTextToSize(itemText, contentWidth - indent - 4);
+      const itemLines = containsIndicScript(itemText)
+        ? wrapIndicText(itemText, 10, contentWidth - indent - 4, false)
+        : doc.splitTextToSize(itemText, contentWidth - indent - 4);
 
       ensureSpace(4.5);
       doc.setFont('helvetica', 'bold');
@@ -204,7 +320,7 @@ export function renderHumanizedMarkdown(
 
       for (let i = 0; i < itemLines.length; i++) {
         if (i > 0) ensureSpace(4.5);
-        doc.text(itemLines[i], margin + indent + 2.5, currentY);
+        drawLineText(doc, itemLines[i], margin + indent + 2.5, currentY, 10, '#1e293b', false);
         currentY += 4.5;
       }
       continue;
@@ -215,7 +331,9 @@ export function renderHumanizedMarkdown(
     if (numberedMatch) {
       const numBadge = numberedMatch[2];
       const itemText = stripInlineMarkdown(numberedMatch[3]);
-      const itemLines = doc.splitTextToSize(itemText, contentWidth - 12);
+      const itemLines = containsIndicScript(itemText)
+        ? wrapIndicText(itemText, 10, contentWidth - 12, false)
+        : doc.splitTextToSize(itemText, contentWidth - 12);
 
       ensureSpace(4.5);
       doc.setFont('helvetica', 'bold');
@@ -229,7 +347,7 @@ export function renderHumanizedMarkdown(
 
       for (let i = 0; i < itemLines.length; i++) {
         if (i > 0) ensureSpace(4.5);
-        doc.text(itemLines[i], margin + 9.5, currentY);
+        drawLineText(doc, itemLines[i], margin + 9.5, currentY, 10, '#1e293b', false);
         currentY += 4.5;
       }
       continue;
@@ -246,10 +364,13 @@ export function renderHumanizedMarkdown(
     doc.setFontSize(10);
     doc.setTextColor(30, 41, 59);
 
-    const paraLines = doc.splitTextToSize(cleanParagraph, contentWidth - 4);
+    const paraLines = containsIndicScript(cleanParagraph)
+      ? wrapIndicText(cleanParagraph, 10, contentWidth - 4, false)
+      : doc.splitTextToSize(cleanParagraph, contentWidth - 4);
+
     for (const pLine of paraLines) {
       ensureSpace(4.5);
-      doc.text(pLine, margin + 2, currentY);
+      drawLineText(doc, pLine, margin + 2, currentY, 10, '#1e293b', false);
       currentY += 4.5;
     }
   }
@@ -365,7 +486,7 @@ export function exportSessionPdf(
       doc.text(senderBadge, margin, currentY);
       currentY += 4.5;
 
-      // Humanize LLM generated markdown into publication-quality structured PDF blocks
+      // Humanize LLM generated markdown with Indic script support into publication-quality structured PDF blocks
       currentY = renderHumanizedMarkdown(doc, msg.text, margin, contentWidth, currentY, ensureSpace);
       currentY += 3.5;
     }

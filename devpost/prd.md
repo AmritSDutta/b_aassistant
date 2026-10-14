@@ -78,6 +78,9 @@ Source: `scope.md > The POC Boundary`.
   - Formats blockquotes (`> `) in italic with subtle vertical border accents.
   - Formats fenced code blocks in Courier monospace with light-slate background tinting.
   - Cleans inline markup (`**bold**`, `*italic*`, `` `code` ``, `[label](url)`) into clean readable text.
+- **Multilingual Indic Script Support (Bengali & Hindi):**
+  - Resolves standard PDF Latin-1 font limitations for Indic complex scripts by utilizing native browser text-shaping (HarfBuzz/Uniscribe via Canvas2D rasterization).
+  - Accurately renders Bengali (বাংলা, যেমন যুক্তাক্ষর 'ক্ষ', 'জ্ঞ') and Hindi (हिन्दी, जैसे संयुक्त व्यंजन 'क्त', 'त्र', मात्राएं) with 100% typographic fidelity, preventing missing characters or broken ligatures.
 - Scales and fits the canvas diagram snapshot at the top, then formats conversation turns with clean typography, timestamps, sender badges, and automatic multi-page pagination.
 
 ### 5. WebMCP Tool Suite

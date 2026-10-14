@@ -49,7 +49,7 @@ A test run demonstrates a visiting agent calling these tools, retrieving data, u
   - React-based single-page application with responsive layout (20% sidebar with branding and file uploader strictly for Doc/PDF < 1MB; 80% main area split into 60% HTML canvas and 40% chat area).
   - Post-upload processing: in-browser natural per-page extraction using LiteParse (browser WASM / PDF decompressor stream) and client-side BM25 searchable index generation stored in browser datastore (IndexedDB) for accepted files (< 1MB only).
   - Advanced HTML Canvas2D scene graph with perimeter edge-to-edge docking for auto-anchoring arrows, soft-translucent color palette (indigo client, emerald gateway, purple database, orange cache/queue, amber logic, sticky-note stickers), and HiDPI resolution.
-  - Client-side PDF export (`exportSessionPdf`) with blank session validation (blocking download and alerting when canvas and chat are empty) and Markdown humanization (converting LLM markdown headings, lists, code blocks, and quotes into clean styled typography).
+  - Client-side PDF export (`exportSessionPdf`) with blank session validation (blocking download and alerting when canvas and chat are empty), Markdown humanization, and multilingual Indic script rendering (supporting Bengali বাংলা and Hindi हिन्दी via native browser complex text shaping).
   - Starting WebMCP tool provider layer exposing:
     - `search_web` (using DDGS behind)
     - `search_research` (using ArXiv search)

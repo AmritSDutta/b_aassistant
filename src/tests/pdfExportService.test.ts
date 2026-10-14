@@ -5,6 +5,9 @@ import {
   readPngDimensions,
   fitContain,
   renderHumanizedMarkdown,
+  containsIndicScript,
+  wrapIndicText,
+  renderIndicTextStrip,
 } from '../lib/pdfExportService';
 import { ChatMessage } from '../components/ChatArea';
 
@@ -36,6 +39,18 @@ vi.mock('jspdf', () => {
 describe('PDF Export Service & Markdown Humanizer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    if (typeof HTMLCanvasElement !== 'undefined') {
+      HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
+        measureText: vi.fn((text: string) => ({ width: text.length * 7 })),
+        fillText: vi.fn(),
+        font: '',
+        fillStyle: '',
+        textBaseline: '',
+      }) as any;
+      HTMLCanvasElement.prototype.toDataURL = vi
+        .fn()
+        .mockReturnValue('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+    }
   });
 
   describe('Blank Session Validation', () => {
@@ -161,6 +176,60 @@ interface Config {
     it('readPngDimensions returns null for invalid data URLs gracefully', () => {
       expect(readPngDimensions('')).toBeNull();
       expect(readPngDimensions('data:text/plain;base64,invalid')).toBeNull();
+    });
+  });
+
+  describe('Multilingual Indic Script (Bengali & Hindi) Support', () => {
+    it('detects Bengali and Hindi text correctly via containsIndicScript', () => {
+      // Bengali
+      expect(containsIndicScript('বাংলা ভাষা')).toBe(true);
+      expect(containsIndicScript('স্বাগতম')).toBe(true);
+      expect(containsIndicScript('নমস্কার')).toBe(true);
+
+      // Hindi / Devanagari
+      expect(containsIndicScript('नमस्ते')).toBe(true);
+      expect(containsIndicScript('हिन्दी')).toBe(true);
+      expect(containsIndicScript('सिस्टम आर्किटेक्चर')).toBe(true);
+
+      // Latin / English only
+      expect(containsIndicScript('Hello World')).toBe(false);
+      expect(containsIndicScript('Microservices Architecture 123')).toBe(false);
+    });
+
+    it('wraps Indic sentences into words accurately', () => {
+      const bengaliText = 'এটি একটি পরীক্ষামূলক বাক্য যা সঠিকভাবে মোড়ানো হচ্ছে';
+      const lines = wrapIndicText(bengaliText, 10, 50);
+      expect(lines.length).toBeGreaterThan(0);
+      expect(lines.join(' ')).toBe(bengaliText);
+    });
+
+    it('renders Indic text strip to dataUrl with valid dimensions', () => {
+      const strip = renderIndicTextStrip('বাংলা', 12, '#0f172a', true);
+      expect(strip).not.toBeNull();
+      expect(strip?.dataUrl).toContain('data:image/png');
+      expect(strip?.widthMm).toBeGreaterThan(0);
+      expect(strip?.heightMm).toBeGreaterThan(0);
+    });
+
+    it('renders and exports sessions containing mixed Bengali and Hindi messages without error', () => {
+      const multilingualMessages: ChatMessage[] = [
+        {
+          id: 'b1',
+          sender: 'user',
+          text: '# বাংলা সারসংক্ষেপ\nএটি একটি **গুরুত্বপূর্ণ** নথি।\n- প্রথম ধাপ: যাচাইকরণ\n- দ্বিতীয় ধাপ: প্রক্রিয়াকরণ',
+          timestamp: 1000,
+        },
+        {
+          id: 'h1',
+          sender: 'agent',
+          text: '## हिन्दी सारांश\nनमस्ते! यह **सिस्टम आर्किटेक्चर** है।\n1. डेटाबेस कनेक्ट करें\n2. रिस्पॉन्स भेजें',
+          timestamp: 2000,
+        },
+      ];
+
+      const res = exportSessionPdf(null, multilingualMessages, 'Multilingual-Report.pdf', false);
+      expect(res.success).toBe(true);
+      expect(mockSave).toHaveBeenCalled();
     });
   });
 });

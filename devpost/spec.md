@@ -116,6 +116,7 @@ Implements `prd.md > Features and Behavior > 4. Client-Side PDF Generation`.
 In-browser report generation engine:
 - **Blank Session Guard:** Validates session content; prevents exporting empty sessions and triggers `NotificationModal` validation alert.
 - **LLM Markdown Humanizer:** Parses Markdown headers (`#`, `##`, `###`), lists (`•`, `1.`), code blocks (Courier font with background tint), blockquotes, dividers, and strips inline tokens (`**`, `*`, `` ` ``, `[label](url)`) into clean typography.
+- **Multilingual Indic Script Support (Bengali & Hindi):** Detects Indic Unicode characters (`[\u0900-\u09FF]`) and renders them using browser Canvas2D text shaping (HarfBuzz/Uniscribe engine) embedded into jsPDF as high-resolution vectors/images, ensuring perfect ligature and matra rendering for Bengali (বাংলা) and Hindi (हिन्दी).
 - Fits canvas diagram snapshot and formats dialogue transcript with pagination.
 
 ## Data Model
