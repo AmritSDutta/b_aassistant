@@ -1,0 +1,110 @@
+---
+title: Introduction
+description: Project story, architectural philosophy, challenges, and future roadmap for bAssistant.
+---
+
+# Introduction to bAssistant
+
+> *"Enough is as good as a feast."*
+> — Traditional Proverb
+
+## Inspiration
+
+> *"Enough is as good as a feast."*
+
+In modern AI engineering, the dominant instinct is excess: multi-gigabyte containers, heavy server infrastructures, proprietary SaaS subscriptions, and massive generative image/video models summoned just to sketch a simple block diagram. 
+
+Yet for a parent exploring science with their child, a student studying for tomorrow's exam, a teacher diagramming concepts for a class, a software architect sketching systems, or an enthusiastic science geek unpacking research papers, what is truly needed is not an expensive feast of cloud complexity. What is needed is **enough**:
+- A generic, low-infrastructure personal AI analyst that starts immediately in any local browser.
+- An environment that anyone can easily install, inspect, extend, and personalize.
+- A private space where churned knowledge remains under the user's control rather than locked inside third-party servers.
+- A foundational **visual-textual learning platform** where complex ideas can be understood both through conversational dialogue and clean, structured 2D diagrams.
+
+That conviction inspired **bAssistant**—an LLM-agnostic, serverless assistant cockpit built upon the open WebMCP (Web Model Context Protocol) standard.
+
+---
+
+## What it does
+
+> *"Enough is as good as a feast."* A lean, intentional cockpit gives learners and analysts exactly the tools they need without the bloat.
+
+bAssistant provides an ergonomic 20/80 cockpit layout engineered for focused, multimodal discovery:
+
+- **20% Control Sidebar**: Transparent theme-aware branding, local file uploader for documents under 2MB (PDF/DOCX), a Reference URLs manager (caching up to 10 verified URLs), and a Session Highlights star repository.
+- **80% Main Studio**: Split into a **60% interactive HTML5 Canvas2D studio** on top and a **40% readable chat area** on the bottom.
+- **LLM-Agnostic Context Enrichment (17 Zero-Install WebMCP Tools)**: Visiting AI models—regardless of which provider or local harness you bring—discover browser-native tools via `document.modelContext`, `navigator.modelContext`, `window.webmcp`, and `postMessage` JSON-RPC 2.0. The visiting LLM can programmatically inspect and draw diagrams, search uploaded documents, evaluate math expressions, search ArXiv and DuckDuckGo, and trigger publication-ready PDF exports.
+- **Multi-Source Knowledge Churning in Local Browser**: Ingests arbitrary sources—PDFs, DOCX files, web links, or academic research—and parses them client-side using LiteParse WASM and regex decompressors into an IndexedDB datastore with keyword-ranked BM25 search. Not a single byte of your documents leaves your machine.
+- **Interactive Canvas2D Scene Graph**: Renders structured shapes, containers, and perimeter-docked arrows with drop shadows, pan-and-zoom controls, Fit-to-Content auto-centering, and universal `#d97706` bold top labels for crystal clarity in both light and dark themes.
+- **Session History & Multi-Session Vault**: Automatically saves turn-by-turn dialogue and canvas snapshots to browser IndexedDB, allowing users to switch between past sessions, resume work, or export turn-by-turn reports.
+- **Sequential Multi-Page PDF Export**: Generates publication-ready PDF summaries combining branding logo, high-res canvas snapshot, turn-by-turn transcripts, native Indic text rendering (Bengali and Hindi), and mandatory AI disclaimer footers.
+
+---
+
+## How we built it
+
+> *"Enough is as good as a feast."* Rather than provisioning a sprawling backend, we leveraged the rich, modern capabilities already present inside the web browser.
+
+- **Frontend & UI**: React 18, TypeScript (strict type checking across all modules), Tailwind CSS with custom semantic tokens (`paper`, `ink`, `accent`) supporting light and dark modes, and Lora typography for long-dwell readability.
+- **Canvas2D Graphics Engine**: Custom-built scene graph (`canvasEngine.ts`) with mathematical perimeter-docking intersection algorithms for rectangles, ellipses, and diamonds; HiDPI canvas backing store; and interactive wheel zoom and pan drag.
+- **In-Browser Document Parsing**: Client-side WASM parsing via `@llamaindex/liteparse-wasm` paired with a zero-dependency fallback PDF decompressor stream capable of decoding hex-encoded tokens (`<...> Tj` and `[...] TJ`) and unzipping DOCX packages using native browser streams.
+- **Client-Side Search**: Pure TypeScript BM25 search implementation (`bm25.ts`) with stop-word filtering and TF-IDF term scoring backed by an asynchronous IndexedDB database (`idbStorage.ts`).
+- **WebMCP Interoperability**: Multi-standard WebMCP bridge (`webmcp/provider.ts`) compliant with emerging web agent standards and JSON-RPC 2.0, accompanied by a comprehensive read-only agent operating prompt (`get_tool_usage_prompt`).
+- **PDF Report Generation**: Client-side document assembly using `jspdf` and `html2canvas` with custom text-wrapping, canvas aspect-ratio containment (`fitContain`), and multi-page layout buffers.
+- **Deployment**: Static compilation via Vite and deployment on Cloudflare Pages.
+
+---
+
+## Challenges we ran into
+
+> *"Enough is as good as a feast."* Keeping the footprint lean often demands deeper ingenuity than relying on heavyweight cloud APIs.
+
+1. **PDF Bytecode & Hex Garbage Extraction**:
+   Real-world PDF files often store text compressed in raw stream bytecode or hex-encoded string tokens (`<00480065006C...>` / `<...> Tj`). Standard browser text decoders produced unreadable binary garbage. Without bringing in heavy server-side parsers, we implemented a lean in-browser hex decoder and natural stream decompressor that extracts genuine text while stripping PDF stream markers.
+2. **Dual-Theme Canvas Label Readability**:
+   Canvas elements with soft backgrounds rendered labels that became invisible or had poor contrast when switching between light and dark themes. We engineered an amber accent pill system (`#d97706` / Amber 600 bold text) anchored at the top-center of each shape, guaranteeing crisp contrast against all container fills and canvas backdrops.
+3. **SPA Routing vs. Crawler Standards**:
+   Because bAssistant is a client-side Single Page Application, search engines and audit tools requesting `/robots.txt` were originally served the default `index.html` fallback, producing 21 syntax error flags. We solved this by generating a static plain-text `robots.txt`, a canonical `sitemap.xml`, Open Graph and Twitter Card tags, and a semantic `<noscript>` outline.
+4. **Indic Script Rendering in Client-Side PDFs**:
+   Default canvas-to-PDF text routines broke complex Indic conjuncts (such as Bengali and Hindi scripts). We implemented an offscreen canvas rendering strip with browser-native text shaping before blitting glyph runs into the PDF stream.
+
+---
+
+## Accomplishments that we're proud of
+
+> *"Enough is as good as a feast."* Proving that a zero-server, privacy-preserving browser app can match or exceed the utility of complex cloud suites.
+
+- **Zero Server Footprint**: 100% of the computation—document parsing, BM25 indexing, canvas rendering, session storage, and PDF report creation—runs locally inside the client browser.
+- **Seamless WebMCP Agent Integration**: External AI agents (or the built-in WebMCP Inspector) can discover, inspect, and invoke all 17 tools out of the box with zero setup.
+- **Robust Multi-Turn Persistence**: Users can reload or close the tab without losing their conversation turns, document index, or canvas diagram scene graph.
+- **Comprehensive Test Suite**: 16 hermetic test suites with 112 passing unit and integration tests covering BM25 indexing, Canvas2D math, LiteParse fallbacks, symbol humanization, and SEO crawler directives.
+
+---
+
+## What we learned
+
+> *"Enough is as good as a feast."* When we constrain the architecture to what is truly essential, the design becomes more elegant, robust, and accessible.
+
+- **Client-Side WASM is Production Ready**: Running WASM-based parsers like LiteParse entirely within the browser sandbox is fast and eliminates privacy concerns regarding document uploads.
+- **Flipped Interaction Elevates Software Design**: Planning first through structured requirements (PRD, Spec, and Scope) prevented architectural drift and kept the codebase focused on a rock-solid proof of concept.
+- **Agents Need Strict Tool Contracts**: Designing clear JSON-RPC tool schemas with detailed parameter descriptions and usage guides drastically improves agent tool-calling precision.
+
+---
+
+## What's next for bAssistant
+
+> *"Enough is as good as a feast."* Expanding capabilities thoughtfully while vigilantly guarding our low-infrastructure, local-first ethos.
+
+- **Interactive Canvas Direct Manipulation**: Adding mouse click-and-drag shape positioning so users can manually rearrange agent-drawn diagram nodes.
+- **Extended Vector Embeddings via WebAssembly**: Complementing BM25 with small client-side ONNX/WASM embedding models for hybrid semantic search over uploaded documents.
+- **Additional Free-Tier WebMCP Tools**: Introducing Wikipedia summary lookups, tabular CSV charts, and live code preview sandboxes into the WebMCP tool suite.
+- **Peer-to-Peer Agent Collaboration**: Exploring WebRTC data channels for real-time multiplayer diagramming and multi-agent chat sessions.
+- **Tool routing**: as the tool increases we need to enble effective tool routing for LLM to use tools without context rot
+
+---
+
+## License
+
+bAssistant is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0-or-later)**:
+
+> *Strong copyleft software. If you use, modify, or build on any part of this codebase, the AGPL requires your derivative work to be released as open source under the same license.*
+

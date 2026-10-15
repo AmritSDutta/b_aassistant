@@ -109,3 +109,14 @@ To preview documentation locally:
 ```bash
 npx docs7 dev docs
 ```
+
+---
+
+## License
+
+**AGPL-3.0-or-later**
+
+> *Strong copyleft software. If you use, modify, or build on any part of this codebase, the AGPL requires your derivative work to be released as open source under the same license.*
+
+See the [LICENSE](LICENSE) file for complete terms and conditions.
+

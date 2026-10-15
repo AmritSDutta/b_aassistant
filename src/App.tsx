@@ -17,6 +17,7 @@ import { calculateMath } from './lib/mathEvaluator';
 import { searchWeb, searchResearch } from './lib/searchService';
 import { globalCanvasEngine } from './lib/canvasEngine';
 import { exportSessionPdf } from './lib/pdfExportService';
+import { initSourceProtection } from './lib/sourceProtection';
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB strictly
 const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
@@ -76,6 +77,15 @@ export const App: React.FC = () => {
   const bm25Ref = useRef<BM25Index>(new BM25Index());
   const chunksRef = useRef<StoredChunk[]>([]);
   const webmcpRef = useRef<WebMCPProvider | null>(null);
+
+  // Attach source protection against right click, F12, and DevTools/View Source shortcuts
+  useEffect(() => {
+    const cleanup = initSourceProtection({
+      disableContextMenu: true,
+      disableDevToolsShortcuts: true,
+    });
+    return cleanup;
+  }, []);
 
   // Gentle session clock: minutes in session (no countdown pressure)
   useEffect(() => {
@@ -661,7 +671,7 @@ export const App: React.FC = () => {
         className="w-[20%] min-w-[220px] max-w-[360px] h-full flex flex-col border-r"
         style={{ borderColor: 'var(--line)', background: 'var(--panel)' }}
       >
-        <Branding theme={theme} onToggleTheme={toggleTheme} />
+        <Branding theme={theme} onToggleTheme={toggleTheme} onOpenTips={() => setShowWelcome(true)} />
         <FileUpload
           activeDoc={activeDoc}
           onFileSelect={handleFileSelect}
@@ -690,15 +700,6 @@ export const App: React.FC = () => {
               title="Open archived deliberation sessions"
             >
               sessions
-            </button>
-            <span>·</span>
-            <button
-              type="button"
-              onClick={() => setShowWelcome(true)}
-              className="uppercase tracking-[0.06em] font-bold hover:underline"
-              aria-label="Show tips again"
-            >
-              tips
             </button>
           </div>
         </div>
