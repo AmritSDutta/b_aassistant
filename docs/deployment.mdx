@@ -23,10 +23,33 @@ npm run test
 npm run build
 ```
 
-## Cloudflare Pages Configuration
+## Continuous Integration
+
+The repository ships a GitHub Actions workflow at `.github/workflows/ci.yml`:
+
+- **Triggers**: `push` and `pull_request` targeting `main` / `master`, plus manual `workflow_dispatch`.
+- **Matrix**: Node.js `20.x` and `22.x` on `ubuntu-latest`.
+- **Steps**: `actions/checkout` → `actions/setup-node` (npm cache) → `npm ci` → `npm test`
+  (`vitest run`) → `npm run build` (`tsc && vite build`).
+
+The workflow is a **test-and-build gate only** — it does not validate the docs site and does not deploy.
+Anything that breaks `tsc`, the test suite, or the production build will fail CI.
+
+## Deploying to Cloudflare Pages
+
+bAssistant is a pure static SPA with no server runtime. Deployment is manual: build locally and upload
+the `dist/` output (dashboard drag-and-drop or Wrangler).
 
 - **Framework Preset**: None (or Vite)
 - **Build Command**: `npm run build`
 - **Build Output Directory**: `dist`
 - **Root Directory**: `/`
 - **Environment Variables**: None required
+
+> **WASM path requirement:** the LiteParse engine loads its binary from the site root at
+> `/liteparse_wasm_bg.wasm`. Because that file lives in `public/`, Vite copies it verbatim to the root
+> of `dist/`, so it is served independently of the fingerprinted `dist/assets/` bundle. Any hosting
+> setup must preserve this root path.
+
+No `wrangler.toml`, `_redirects`, or `_headers` files are committed; the SPA fallback and any routing
+behavior are handled by the Cloudflare Pages defaults.

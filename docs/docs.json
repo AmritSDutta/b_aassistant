@@ -15,7 +15,7 @@
       },
       {
         "group": "Capabilities",
-        "pages": ["cockpit-ui", "webmcp", "canvas-and-pdf", "document-processing", "research-tools"]
+        "pages": ["cockpit-ui", "webmcp", "canvas-and-pdf", "document-processing", "research-tools", "sessions-vault"]
       },
       {
         "group": "Research & Learnings",

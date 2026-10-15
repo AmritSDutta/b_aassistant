@@ -64,7 +64,7 @@ Click **Export PDF** in the sidebar (or ask the assistant to generate one). bAss
 
 ### Prerequisites
 - Node.js 20+
-- Modern Web Browser (Chrome, Edge, Firefox, Brave)
+- Modern Web Browser — developed and tested on Chrome as of now
 
 ### Run Locally
 ```bash
@@ -78,28 +78,32 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ### Hermetic Verification
 ```bash
-# Run all 93 isolated unit tests
+# Run all 93 isolated unit tests (14 Vitest suites, no watch mode)
 npm.cmd test -- --run
 
-# Validate documentation strict-mode syntax
-node C:\Users\amrit\.gemini\config\skills\docs7\scripts\validate_docs7.mjs docs
-
-# Build production bundle
+# Build production bundle (tsc && vite build)
 npm.cmd run build
 ```
+
+To validate the docs site, see the "Documentation" section below.
 
 ---
 
 ## Documentation
 
 Full architectural and developer specifications built with `docs7` are located in `docs/`:
-- `docs/index.mdx` — Architecture overview & codebase tree
+- `docs/index.mdx` — Overview, key features & codebase tree
+- `docs/architecture.mdx` — Zero-backend cockpit data flow & core subsystems
+- `docs/cockpit-ui.mdx` — 20/80 analyst cockpit, warm themes, Zen reader & long-dwell ergonomics
+- `docs/webmcp.mdx` — WebMCP provider surfaces & the 17 registered tools
 - `docs/canvas-and-pdf.mdx` — Canvas2D scene graph engine & multilingual PDF export
-- `docs/architecture.mdx` — Browser cockpit data flow & subsystem communication
-- `docs/webmcp.mdx` — WebMCP provider specifications & 17 registered tools
 - `docs/document-processing.mdx` — Zero-backend LiteParse WASM & BM25 indexing
+- `docs/research-tools.mdx` — DuckDuckGo, ArXiv, and decimal calculator tools
+- `docs/sessions-vault.mdx` — Session vault, IndexedDB persistence & restore-on-mount
+- `docs/dwell-time-research.mdx` — Evidence-backed long-dwell UI design mechanisms
 - `docs/liteparse-research.mdx` — In-browser document parsing research & benchmarks
-- `docs/learnings.mdx` — Practical findings & hackathon development lessons
+- `docs/learnings.mdx` — Engineering learnings: WebMCP discovery, Indic PDF, WASM isolation
+- `docs/deployment.mdx` — CI workflow & Cloudflare Pages hosting
 
 To preview documentation locally:
 ```bash

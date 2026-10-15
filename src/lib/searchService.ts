@@ -14,7 +14,9 @@ export interface ResearchSearchResult {
 export async function searchWeb(query: string): Promise<WebSearchResult[]> {
   if (!query || query.trim().length === 0) return [];
 
-  const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query.trim())}&format=json&no_html=1&skip_disambig=1`;
+  const currentDate = new Date().toISOString().slice(0, 10);
+  const scopedQuery = `as of ${currentDate} ${query.trim()}`;
+  const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(scopedQuery)}&format=json&no_html=1&skip_disambig=1`;
 
   try {
     const response = await fetch(url);

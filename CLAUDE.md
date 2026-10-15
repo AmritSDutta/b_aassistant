@@ -12,8 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm.cmd test`: Run the full Vitest suite once (`"test": "vitest run"` — no watch mode, no extra flags needed).
 - `npm.cmd test -- src/tests/bm25.test.ts`: Run a single test file. Add `-t "name"` to filter by test name.
 - `npm.cmd run build`: Type-check (`tsc`) and build the production bundle into `dist/`. This is the only lint/type gate — no ESLint is configured.
-- `node C:\Users\amrit\.gemini\config\skills\docs7\scripts\validate_docs7.mjs docs`: Validate docs7 strict syntax.
-- `npx docs7 dev docs`: Preview the `docs7` documentation site.
+- `npx docs7 dev docs`: Preview the `docs7` documentation site at http://localhost:3333. Validate diagrams with the `docs7-playbook` skill scripts: `validate-mermaid.mjs` (strict-mode Mermaid parse) and, against the running server, `check-pages.mjs` (every nav page serves 200, no orphaned `.mdx`) and `render-check.mjs` (real browser render + legibility scale).
 - Always use `npm.cmd` on Windows rather than `npm` to avoid PowerShell execution policy blocks.
 
 ## Key Technical Standards & Invariants
@@ -32,6 +31,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### State Architecture (critical for any tool/UI change)
 - `App.tsx` owns all React state. WebMCP tools never touch React state directly — they receive a `ToolContext` of closures (`src/webmcp/tools.ts`), and `updateWebMCPContext()` re-binds fresh closures to the provider whenever messages or reference URLs change (`src/App.tsx`). Any new tool capability must flow through `ToolContext`.
 - Module-level singletons bridge the React UI and the WebMCP tool layer: `globalCanvasEngine` (`src/lib/canvasEngine.ts`), `globalIDBStorage` (`src/lib/idbStorage.ts`), `globalLiteParseService` (`src/lib/liteparseService.ts`).
+- **Session vault**: `App.tsx` records every deliberation turn to IndexedDB via `globalIDBStorage.saveSessionTurn()` (stores `session_turns` + `session_meta` in `bAssistantDB` version 2) and restores the active session (messages + latest canvas `canvasShapes`) on mount. `HistoryModal.tsx`, opened from the sidebar `sessions` button, lists sessions via `getAllSessionsSummary()` with Restore / PDF / Delete actions handled in `App.tsx`.
 
 ### WebMCP Bridge
 - `src/webmcp/provider.ts` exposes **17 tools** on every discovery surface simultaneously: `document.modelContext`, `navigator.modelContext` + `navigator.modelContextTesting`, `window.webmcp` / `window.modelContext`, hidden DOM `<form toolname=...>` elements, `window.addEventListener('message')` (JSON-RPC 2.0), and `webmcp:ready` / `modelcontext:ready` custom events.
@@ -41,6 +41,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Shapes are typed in `src/types/canvas2d.ts`: `rectangle`, `ellipse`, `diamond`, `text`, `arrow`, `line`, `freedraw`, `sticker`. State persists as `Canvas2dShape[]` in the engine, not as pixels.
 - Arrows/lines bind to nodes via `startId`/`endId` and stay attached when shapes move. Redraw is two-pass: nodes/containers first, then connectors with edge-to-edge perimeter docking and pill labels (`canvasEngine.redraw()`).
 - `canvas2d_draw_shapes` descriptions embed the approved translucent color palette (client/gateway/db/queue/decision rgba values) — keep tool descriptions in sync with renderer capabilities.
+- Interactive viewport controls live in `src/components/CanvasArea.tsx`: drag-to-pan, cursor-anchored wheel-zoom (`zoomAtPoint`, scale clamp `[0.2, 4]`), `Fit View` (`fitToContent`, clamp `[0.2, 1.5]`), `Reset` (`resetView`), plus `New Session` / `Export PDF` / `Clear`. `canvasEngine.getSnapshotDataUrl()` returns a tight-cropped PNG (40px padding) used for PDF and session snapshots.
 
 ### Document Ingestion & Retrieval
 - Files must be strictly `< 2MB` and `.pdf`, `.doc`, or `.docx`; violations trigger the `NotificationModal` popup (`src/App.tsx`).
@@ -62,7 +63,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - All user messages rendered in chat history must be prefixed with `user:` (agents get `agent:`) — see `src/components/ChatArea.tsx`.
 
 ### Storage
-- Pure IndexedDB database `bAssistantDB` with stores:
+- Pure IndexedDB database `bAssistantDB` (version 2) with stores:
   - `documents`: uploaded document metadata (< 2MB)
   - `chunks`: natural per-page text chunks
   - `bm25_index`: serialized BM25 inverted index
@@ -71,9 +72,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Reference URLs cached in `localStorage['b_reference_urls']`. No external servers, no vector databases.
 
 ### Testing
-- All unit tests live in `src/tests/` (12 Vitest suites, 80 tests) and must remain strictly hermetic and isolated — no network, no real IndexedDB dependencies leaking between tests.
+- All unit tests live in `src/tests/` (14 Vitest suites, 93 tests) and must remain strictly hermetic and isolated — no network, no real IndexedDB dependencies leaking between tests.
 - Vitest is configured inside `vite.config.ts` (`environment: 'jsdom'`, `globals: true`); there is no separate vitest config file.
 
 ## Documentation Reference
 - [README.md](file:///C:/codebase/b_aassistant/README.md) — human-facing quickstart.
-- [docs/docs.json](file:///C:/codebase/b_aassistant/docs/docs.json) — full docs7 component and architecture documentation (`architecture.mdx`, `cockpit-ui.mdx`, `webmcp.mdx`, `canvas-and-pdf.mdx`, `document-processing.mdx`, `liteparse-research.mdx`, `learnings.mdx`, `deployment.mdx`).
+- [docs/docs.json](file:///C:/codebase/b_aassistant/docs/docs.json) — full docs7 component and architecture documentation (`index.mdx`, `architecture.mdx`, `cockpit-ui.mdx`, `webmcp.mdx`, `canvas-and-pdf.mdx`, `document-processing.mdx`, `research-tools.mdx`, `sessions-vault.mdx`, `dwell-time-research.mdx`, `liteparse-research.mdx`, `learnings.mdx`, `deployment.mdx`).

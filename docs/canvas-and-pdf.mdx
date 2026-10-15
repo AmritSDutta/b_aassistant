@@ -44,6 +44,7 @@ Instead of fire-and-forget pixel drawing commands, the canvas maintains a persis
 4. **`text`**: Standalone typographic annotation.
 5. **`sticker`**: Callout note with `stickerColor` (`yellow`, `mint`, `rose`) and optional emoji icon.
 6. **`arrow` / `line`**: Connectors that bind to node boundaries (`startId`, `endId`) and stay dynamically attached when nodes move.
+7. **`freedraw`**: Freehand stroke stored as a point array (`points`), rendered as a polyline rather than pixels.
 
 ## Perimeter Edge-to-Edge Docking
 
@@ -55,9 +56,10 @@ Connectors compute the dominant vector between shape centers and dock to the fac
 ## Viewport Matrix & Visual Enhancements
 
 The Canvas2D engine features interactive viewport management and depth rendering:
-- **`fitToContent` Auto-Centering:** Evaluates the bounding box of all shapes and centers/scales the view transform (`scale`, `offsetX`, `offsetY`) so off-viewport coordinates never clip.
-- **Interactive Pan & Smooth Wheel Zoom:** Allows users to drag-to-pan across the canvas plane and zoom with mouse wheel (`zoomAtPoint`), keeping cursor focus pinned.
-- **2.5D Drop Shadows:** Nodes render with ambient elevation shadows (`shadowOffsetY: 4`, `shadowBlur: 14`), cleared before stroking borders for crisp lines.
+- **`fitToContent` Auto-Centering:** Evaluates the bounding box of all shapes and centers/scales the view transform (`scale`, `offsetX`, `offsetY`) so off-viewport coordinates never clip; the scale is clamped to `[0.2, 1.5]`.
+- **Interactive Pan & Smooth Wheel Zoom:** Allows users to drag-to-pan across the canvas plane and zoom with mouse wheel (`zoomAtPoint`, factor 1.1 in / 0.9 out, scale clamped `[0.2, 4]`), keeping the cursor focus pinned. The `Fit View` and `Reset` toolbar buttons map to `fitToContent()` and `resetView()`.
+- **Tight-Crop Snapshot Export:** `getSnapshotDataUrl()` computes the content bounds of all shapes, renders them to an offscreen canvas with a 40px padding (nodes first, then docked connectors), and returns a cropped PNG data URL — used for canvas snapshots in PDF reports and persisted session turns.
+- **2.5D Drop Shadows:** Nodes render with ambient elevation shadows (`shadowOffsetY: 4`, `shadowBlur: 12`), cleared before stroking borders for crisp lines.
 - **Light Theme Contrast Boost:** Scaled fill alpha (`applyThemeAlpha`) prevents soft translucent colors from appearing washed out on light paper backgrounds.
 
 ## Soft-Translucent Color Palette
@@ -73,9 +75,9 @@ The Canvas2D engine features interactive viewport management and depth rendering
 ## Client-Side PDF Generation & Active Session Persistence
 
 Users and visiting LLMs can export a full session report:
-1. **Active Session Persistence**: Active deliberation turns are persisted to IndexedDB (`session_turns` and `session_meta`). On page reloads, dialogue history and canvas scene graphs are automatically restored.
+1. **Active Session Persistence**: Active deliberation turns are persisted to IndexedDB (`session_turns` and `session_meta`). On page reloads, dialogue history and canvas scene graphs are automatically restored. See [Session Vault & Local Persistence](/sessions-vault).
 2. **Sequential Turn-by-Turn Reporting**: Compiles turns chronologically with turn badges (`TURN X [HH:MM]`), optional user inquiries, per-turn canvas snapshots, and AI responses.
-3. **Header with Top-Left Logo**: Every exported PDF features the bAssistant branding logo (`bassistant_light.jpg`) rendered at top-left (`10mm x 10mm`) alongside title `"bAssistant Deliberation Session"`, session ID, and timestamp.
+3. **Header with Top-Left Logo**: Every exported PDF features the bAssistant branding logo rendered at top-left (`10mm x 10mm`) alongside title `"bAssistant Deliberation Session"`, session ID, and timestamp. The image is inlined as `BASSISTANT_LIGHT_BASE64` from `src/lib/logoBase64.ts`, so no network fetch is needed at export time.
 4. **Blank Content Validation**: Checks that the session has either active canvas drawings or chat dialogue. If both are blank, the export is prevented and a validation modal alerts the user.
 5. **Markdown Humanization**: Automatically parses LLM Markdown formatting into publication-ready typography:
    - Headings (`#`, `##`, `###`) rendered in bold Helvetica with proportional sizing.

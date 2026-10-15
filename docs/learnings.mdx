@@ -1,11 +1,15 @@
 ---
-title: WebMCP Tool Discovery Learnings
-description: Analysis of Chrome WebMCP Inspector discovery protocols, namespace migrations, and declarative integration.
+title: Engineering Learnings
+description: Hard-won findings from the build — WebMCP tool discovery, client-side Indic PDF rendering, and in-browser WASM PDF parsing.
 ---
 
-# WebMCP Tool Discovery Learnings
+# Engineering Learnings
 
-This document captures key architectural findings and resolution details regarding WebMCP tool discoverability with the official Chrome DevTools and Google Chrome Labs WebMCP Inspector extensions (`GoogleChromeLabs/webmcp-tools` and `beaufortfrancois/model-context-tool-inspector`).
+This document captures key architectural findings and resolution details from building bAssistant,
+covering WebMCP tool discoverability with the official Chrome DevTools and Google Chrome Labs WebMCP
+Inspector extensions (`GoogleChromeLabs/webmcp-tools` and
+`beaufortfrancois/model-context-tool-inspector`), client-side Indic-script PDF rendering, and
+in-browser PDF parsing with strict bytecode isolation.
 
 ## The Root Cause: Discovery Mismatch
 
@@ -39,7 +43,7 @@ Returning a bare scalar or unformatted JSON object caused inspector client scrip
 
 ## Multi-Standard Resolution Strategy
 
-In [`src/webmcp/provider.ts`](file:///C:/codebase/b_aassistant/src/webmcp/provider.ts), `bAssistant` adopted a resilient multi-layer exposure pattern:
+In `src/webmcp/provider.ts`, bAssistant adopted a resilient multi-layer exposure pattern:
 
 ```mermaid
 flowchart TD

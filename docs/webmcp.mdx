@@ -9,10 +9,31 @@ bAssistant implements multi-standard WebMCP support to maximize compatibility wi
 
 ## Registered Standards
 
-1. **`navigator.modelContext`**: Emerging browser standard for AI context injection.
-2. **`window.webmcp`**: Direct JavaScript bridge object offering `listTools()` and `callTool(name, args)`.
-3. **`postMessage` (JSON-RPC 2.0)**: Standard cross-window event interface (`tools/list` and `tools/call`).
-4. **CustomEvents**: Emits `webmcp:ready` upon initialization.
+On `register()`, `WebMCPProvider` publishes the same **17 tools** across six discovery surfaces at
+once, so any inspector, extension, or script finds them regardless of which protocol it probes:
+
+1. **`document.modelContext`**: The primary Chromium imperative surface. When the native flag
+   (`chrome://flags/#enable-webmcp-testing`) exposes `registerTool`, every tool is registered natively
+   with an `AbortController` signal; otherwise a polyfill (`getTools`, `listTools`, `registerTool`,
+   `executeTool`) is installed.
+2. **`navigator.modelContext`**: Draft-era imperative interface, defined with the same tool object.
+3. **`navigator.modelContextTesting`**: Flag-gated testing interface used by inspector extensions.
+4. **`window.webmcp` and `window.modelContext`**: Direct JavaScript bridge objects offering
+   `listTools()`, `getTools()`, `callTool(name, args)`, and `executeTool(name, args)`.
+5. **Declarative hidden DOM forms**: A display-hidden, `aria-hidden` container
+   (`#webmcp-declarative-container`) synthesizes one `<form toolname="…" tooldescription="…">` per
+   tool, each with an `<input toolparamdescription="…">` for every top-level parameter, for DOM-based
+   audits.
+6. **`postMessage` (JSON-RPC 2.0)**: A `window` `message` listener answering `tools/list` and
+   `tools/call` (with aliases `listTools`, `getTools`, `callTool`, `executeTool`, and the
+   `WEBMCP_*` / `MODEL_CONTEXT_*` message types). Replies use the standard
+   `{ content: [{ type: 'text', text }] }` payload and error code `-32603`.
+
+**Ready events:** on registration it dispatches both `webmcp:ready` and `modelcontext:ready` custom
+events on `window`, each carrying `detail: { tools }`.
+
+> Only `get_tool_usage_prompt` and `get_reference_url` set `readOnlyHint: true`. All other tools leave
+> the hint unset (they are not flagged read-only).
 
 ## Tool Suite Overview
 
@@ -22,7 +43,7 @@ bAssistant implements multi-standard WebMCP support to maximize compatibility wi
 | `get_reference_url` | `{}` | Read-only: returns a comma-separated list of external reference/documentation URLs cached in the browser session. |
 | `get_chat_history` | `{}` | Returns recent dialogue history with user messages prefixed by `user:`. |
 | `chat_post` | `{ text: string }` | Posts textual responses, markdown, or status updates to the chat area for the visiting LLM. |
-| `canvas2d_draw_shapes` | `{ shapes: object[] }` | Appends structured Canvas2D shapes (rectangles, ellipses, diamonds, text, stickers) and perimeter-docked arrows. |
+| `canvas2d_draw_shapes` | `{ shapes: object[] \| string }` | Appends structured Canvas2D shapes (rectangles, ellipses, diamonds, text, stickers, freehand `freedraw`) and perimeter-docked arrows/lines bound via `startId`/`endId`. Accepts an array or a JSON string. |
 | `canvas2d_inspect_shapes` | `{}` | Returns the active scene graph and an ASCII topology graph for visiting agent self-inspection. |
 | `canvas2d_modify_shape` | `{ nodeId: string, newLabel?: string, fillColor?: string, strokeColor?: string, x?: number, y?: number }` | In-place shape editing (label, position, colors) while keeping connected arrows attached. |
 | `canvas2d_clear` | `{}` | Clears all shapes from the Canvas2D scene graph. |
