@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { CanvasEngine, perimeterEdgeToEdge, sanitizeCanvas2dShapes, applyThemeAlpha } from '../lib/canvasEngine';
+import { CanvasEngine } from '../lib/canvasEngine';
+import { perimeterEdgeToEdge, sanitizeCanvas2dShapes, applyThemeAlpha } from '../lib/canvasHelper';
 import { Canvas2dShape } from '../types/canvas2d';
 
 describe('Canvas2D Advanced Engine & Scene Graph', () => {

@@ -67,7 +67,7 @@ describe('CanvasEngine', () => {
   });
 
   it('correctly identifies light and dark colors', async () => {
-    const { isLightColor, isDarkColor } = await import('../lib/canvasEngine');
+    const { isLightColor, isDarkColor } = await import('../lib/canvasHelper');
     expect(isLightColor('white')).toBe(true);
     expect(isLightColor('#ffffff')).toBe(true);
     expect(isLightColor('#e5e7eb')).toBe(true);
@@ -81,7 +81,7 @@ describe('CanvasEngine', () => {
   });
 
   it('resolves universal medium dark yellow for element labels across both light and dark modes', async () => {
-    const { resolveThemeTextColor, MEDIUM_DARK_YELLOW } = await import('../lib/canvasEngine');
+    const { resolveThemeTextColor, MEDIUM_DARK_YELLOW } = await import('../lib/canvasHelper');
 
     expect(MEDIUM_DARK_YELLOW).toBe('#d97706');
 
@@ -113,7 +113,7 @@ describe('CanvasEngine', () => {
   });
 
   it('resolves theme-conducive stroke colors for connector lines', async () => {
-    const { resolveThemeStrokeColor } = await import('../lib/canvasEngine');
+    const { resolveThemeStrokeColor } = await import('../lib/canvasHelper');
 
     // In light mode: default or light strokes become Slate 700 (#334155)
     expect(resolveThemeStrokeColor(undefined, 'light')).toBe('#334155');
