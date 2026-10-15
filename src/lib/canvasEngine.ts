@@ -73,7 +73,8 @@ export type CanvasCommand =
 const DEFAULT_WIDTH = 160;
 const DEFAULT_HEIGHT = 80;
 const DEFAULT_STROKE_WIDTH = 1.5;
-const DEFAULT_TEXT_COLOR = '#e5e7eb';
+export const MEDIUM_DARK_YELLOW = '#d97706';
+export const DEFAULT_TEXT_COLOR = MEDIUM_DARK_YELLOW;
 const DEFAULT_FONT_SIZE = 15;
 const CANVAS_FONT_STACK = `"Lora", "Georgia", serif`;
 
@@ -179,6 +180,87 @@ export function clearShadow(ctx: CanvasRenderingContext2D): void {
   ctx.shadowOffsetY = 0;
 }
 
+export function parseColorLuminance(color: string): { luminance: number; alpha: number } | null {
+  const c = color.trim().toLowerCase();
+  if (c === 'transparent') return { luminance: 255, alpha: 0 };
+  if (c === 'white' || c === '#fff' || c === '#ffffff') return { luminance: 255, alpha: 1 };
+  if (c === 'black' || c === '#000' || c === '#000000') return { luminance: 0, alpha: 1 };
+
+  if (/^#([0-9a-f]{6})$/i.test(c)) {
+    const r = parseInt(c.slice(1, 3), 16);
+    const g = parseInt(c.slice(3, 5), 16);
+    const b = parseInt(c.slice(5, 7), 16);
+    return { luminance: 0.299 * r + 0.587 * g + 0.114 * b, alpha: 1 };
+  }
+  if (/^#([0-9a-f]{3})$/i.test(c)) {
+    const r = parseInt(c[1] + c[1], 16);
+    const g = parseInt(c[2] + c[2], 16);
+    const b = parseInt(c[3] + c[3], 16);
+    return { luminance: 0.299 * r + 0.587 * g + 0.114 * b, alpha: 1 };
+  }
+  const rgbMatch = c.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:,\s*([\d.]+))?\)/i);
+  if (rgbMatch) {
+    const r = parseInt(rgbMatch[1], 10);
+    const g = parseInt(rgbMatch[2], 10);
+    const b = parseInt(rgbMatch[3], 10);
+    const a = rgbMatch[4] !== undefined ? parseFloat(rgbMatch[4]) : 1;
+    return { luminance: 0.299 * r + 0.587 * g + 0.114 * b, alpha: a };
+  }
+
+  return null;
+}
+
+export function isLightColor(color: string): boolean {
+  const parsed = parseColorLuminance(color);
+  if (!parsed) {
+    const c = color.trim().toLowerCase();
+    return ['#e5e7eb', '#f1f5f9', '#f8fafc', '#e2e8f0', '#cbd5e1', '#94a3b8', 'lightgray', 'lightgrey', 'white'].includes(c);
+  }
+  return parsed.luminance > 120;
+}
+
+export function isDarkColor(color: string): boolean {
+  const parsed = parseColorLuminance(color);
+  if (!parsed) {
+    const c = color.trim().toLowerCase();
+    return ['black', '#000', '#000000', '#0f172a', '#1e293b', '#09090b', 'darkgray', 'darkgrey'].includes(c);
+  }
+  if (parsed.alpha < 0.6) return false;
+  return parsed.luminance < 100;
+}
+
+export function resolveThemeTextColor(
+  color: string | undefined,
+  _theme: 'dark' | 'light' = 'dark',
+  _isConnectorPill: boolean = false,
+  _fillColor?: string
+): string {
+  // Medium dark yellow (#d97706) provides high-contrast clarity across both light and dark modes
+  if (!color) return MEDIUM_DARK_YELLOW;
+
+  // Generic white, off-white, black, or washed-out slate adapt to medium dark yellow
+  if (isLightColor(color) || isDarkColor(color)) {
+    return MEDIUM_DARK_YELLOW;
+  }
+
+  return color;
+}
+
+export function resolveThemeStrokeColor(
+  color: string | undefined,
+  theme: 'dark' | 'light'
+): string {
+  if (theme === 'light') {
+    if (!color) return '#334155';
+    if (isLightColor(color)) return '#334155';
+    return color;
+  } else {
+    if (!color) return '#94a3b8';
+    if (isDarkColor(color)) return '#94a3b8';
+    return color;
+  }
+}
+
 export class CanvasEngine {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
@@ -186,6 +268,31 @@ export class CanvasEngine {
   private shapes: Canvas2dShape[] = [];
   private legacyCommands: CanvasCommand[] = [];
   private view: Canvas2dView = { scale: 1, offsetX: 0, offsetY: 0 };
+  private themeObserver: MutationObserver | null = null;
+
+  constructor() {
+    this.syncThemeFromDom();
+    if (typeof window !== 'undefined' && typeof MutationObserver !== 'undefined' && typeof document !== 'undefined' && document.documentElement) {
+      this.themeObserver = new MutationObserver(() => {
+        this.syncThemeFromDom();
+        this.redraw();
+      });
+      this.themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class'],
+      });
+    }
+  }
+
+  private syncThemeFromDom(): void {
+    if (typeof document !== 'undefined' && document.documentElement) {
+      this.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    }
+  }
+
+  public getTheme(): 'dark' | 'light' {
+    return this.theme;
+  }
 
   public attach(canvas: HTMLCanvasElement): void {
     this.canvas = canvas;
@@ -451,7 +558,7 @@ export class CanvasEngine {
       const offCtx = offCanvas.getContext('2d');
       if (!offCtx) return this.canvas.toDataURL('image/png');
 
-      offCtx.fillStyle = this.theme === 'light' ? '#ffffff' : '#09090b';
+      offCtx.fillStyle = this.getTheme() === 'light' ? '#ffffff' : '#09090b';
       offCtx.fillRect(0, 0, offCanvas.width, offCanvas.height);
 
       offCtx.save();
@@ -516,11 +623,12 @@ export class CanvasEngine {
     ctx: CanvasRenderingContext2D,
     shape: Canvas2dShape
   ): void {
+    const currentTheme = this.getTheme();
     ctx.save();
-    ctx.strokeStyle = shape.strokeColor || (this.theme === 'light' ? '#475569' : '#94a3b8');
+    ctx.strokeStyle = resolveThemeStrokeColor(shape.strokeColor, currentTheme);
     ctx.lineWidth = typeof shape.strokeWidth === 'number' ? shape.strokeWidth : DEFAULT_STROKE_WIDTH;
 
-    const effectiveFill = applyThemeAlpha(shape.fillColor, this.theme);
+    const effectiveFill = applyThemeAlpha(shape.fillColor, currentTheme);
 
     switch (shape.type) {
       case 'rectangle': {
@@ -528,14 +636,14 @@ export class CanvasEngine {
         const h = shape.height ?? DEFAULT_HEIGHT;
         roundedRectPath(ctx, shape.x, shape.y, w, h, 10);
         if (effectiveFill && effectiveFill !== 'transparent') {
-          applyShadow(ctx, this.theme);
+          applyShadow(ctx, currentTheme);
           ctx.fillStyle = effectiveFill;
           ctx.fill();
           clearShadow(ctx);
         }
         ctx.stroke();
         if (shape.text) {
-          this.drawLabel(ctx, shape.text, shape.x + w / 2, shape.y + h / 2, w - 16, shape, 'center');
+          this.drawLabel(ctx, shape.text, shape.x + w / 2, shape.y + 12, w - 16, shape, 'topCenter');
         }
         break;
       }
@@ -545,14 +653,14 @@ export class CanvasEngine {
         ctx.beginPath();
         ctx.ellipse(shape.x + w / 2, shape.y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
         if (effectiveFill && effectiveFill !== 'transparent') {
-          applyShadow(ctx, this.theme);
+          applyShadow(ctx, currentTheme);
           ctx.fillStyle = effectiveFill;
           ctx.fill();
           clearShadow(ctx);
         }
         ctx.stroke();
         if (shape.text) {
-          this.drawLabel(ctx, shape.text, shape.x + w / 2, shape.y + h / 2, w - 24, shape, 'center');
+          this.drawLabel(ctx, shape.text, shape.x + w / 2, shape.y + 14, w - 24, shape, 'topCenter');
         }
         break;
       }
@@ -568,14 +676,14 @@ export class CanvasEngine {
         ctx.lineTo(shape.x, cy);
         ctx.closePath();
         if (effectiveFill && effectiveFill !== 'transparent') {
-          applyShadow(ctx, this.theme);
+          applyShadow(ctx, currentTheme);
           ctx.fillStyle = effectiveFill;
           ctx.fill();
           clearShadow(ctx);
         }
         ctx.stroke();
         if (shape.text) {
-          this.drawLabel(ctx, shape.text, cx, cy, w * 0.7, shape, 'center');
+          this.drawLabel(ctx, shape.text, cx, shape.y + 16, w * 0.7, shape, 'topCenter');
         }
         break;
       }
@@ -588,7 +696,7 @@ export class CanvasEngine {
           mint: 'rgba(167, 243, 208, 0.95)',
           rose: 'rgba(254, 205, 211, 0.95)',
         };
-        applyShadow(ctx, this.theme);
+        applyShadow(ctx, currentTheme);
         ctx.fillStyle = fills[color] || fills.yellow;
         ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
         roundedRectPath(ctx, shape.x, shape.y, w, h, 6);
@@ -638,7 +746,7 @@ export class CanvasEngine {
       }
     }
 
-    ctx.strokeStyle = shape.strokeColor || (this.theme === 'light' ? '#64748b' : '#94a3b8');
+    ctx.strokeStyle = resolveThemeStrokeColor(shape.strokeColor, this.getTheme());
     ctx.lineWidth = typeof shape.strokeWidth === 'number' ? shape.strokeWidth : 1.5;
 
     // Line
@@ -677,11 +785,11 @@ export class CanvasEngine {
     cy: number,
     maxWidth: number,
     shape: Canvas2dShape,
-    anchor: 'center' | 'topLeft',
+    anchor: 'center' | 'topCenter' | 'topLeft',
     withPill: boolean = false
   ): void {
     const fontSize = typeof shape.fontSize === 'number' && shape.fontSize > 0 ? shape.fontSize : DEFAULT_FONT_SIZE;
-    ctx.font = `${fontSize}px ${CANVAS_FONT_STACK}`;
+    ctx.font = `bold ${fontSize}px ${CANVAS_FONT_STACK}`;
 
     const lines = this.wrapText(ctx, text, maxWidth);
     const lineHeight = fontSize * 1.35;
@@ -696,27 +804,30 @@ export class CanvasEngine {
       const padY = 3;
       const badgeW = maxLineWidth + padX * 2;
       const badgeH = lines.length * lineHeight + padY * 2;
-      const badgeX = anchor === 'center' ? cx - badgeW / 2 : cx - padX;
+      const badgeX = anchor === 'center' || anchor === 'topCenter' ? cx - badgeW / 2 : cx - padX;
       const badgeY = anchor === 'center' ? cy - badgeH / 2 : cy - padY;
 
       ctx.save();
       roundedRectPath(ctx, badgeX, badgeY, badgeW, badgeH, 6);
-      ctx.fillStyle = this.theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(24, 24, 27, 0.95)';
+      ctx.fillStyle = this.getTheme() === 'light' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(15, 23, 42, 0.95)';
       ctx.fill();
-      ctx.strokeStyle = this.theme === 'light' ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.16)';
+      ctx.strokeStyle = this.getTheme() === 'light' ? '#cbd5e1' : 'rgba(255, 255, 255, 0.16)';
       ctx.lineWidth = 1;
       ctx.stroke();
       ctx.restore();
     }
 
-    ctx.fillStyle =
-      shape.textColor || (this.theme === 'light' ? '#0f172a' : DEFAULT_TEXT_COLOR);
+    ctx.fillStyle = resolveThemeTextColor(shape.textColor, this.getTheme(), withPill, shape.fillColor);
 
     if (anchor === 'center') {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       const startY = cy - ((lines.length - 1) * lineHeight) / 2;
       lines.forEach((line, i) => ctx.fillText(line, cx, startY + i * lineHeight));
+    } else if (anchor === 'topCenter') {
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      lines.forEach((line, i) => ctx.fillText(line, cx, cy + i * lineHeight));
     } else {
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
@@ -771,7 +882,7 @@ export class CanvasEngine {
         break;
       }
       case 'line': {
-        ctx.strokeStyle = cmd.color || '#94a3b8';
+        ctx.strokeStyle = resolveThemeStrokeColor(cmd.color, this.getTheme());
         ctx.lineWidth = cmd.lineWidth || 2;
         ctx.beginPath();
         ctx.moveTo(cmd.x1, cmd.y1);
@@ -780,17 +891,18 @@ export class CanvasEngine {
         break;
       }
       case 'text': {
-        ctx.fillStyle = cmd.color || '#f8fafc';
-        ctx.font = `${cmd.fontSize || 14}px ${CANVAS_FONT_STACK}`;
+        ctx.fillStyle = resolveThemeTextColor(cmd.color, this.getTheme());
+        ctx.font = `bold ${cmd.fontSize || 14}px ${CANVAS_FONT_STACK}`;
         ctx.fillText(cmd.text, cmd.x, cmd.y);
         break;
       }
       case 'graph': {
+        const theme = this.getTheme();
         for (const edge of cmd.edges) {
           const fromNode = cmd.nodes.find((n) => n.id === edge.from);
           const toNode = cmd.nodes.find((n) => n.id === edge.to);
           if (fromNode && toNode) {
-            ctx.strokeStyle = '#64748b';
+            ctx.strokeStyle = resolveThemeStrokeColor(undefined, theme);
             ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.moveTo(fromNode.x, fromNode.y);
@@ -800,8 +912,8 @@ export class CanvasEngine {
             if (edge.label) {
               const midX = (fromNode.x + toNode.x) / 2;
               const midY = (fromNode.y + toNode.y) / 2;
-              ctx.fillStyle = '#94a3b8';
-              ctx.font = `11px ${CANVAS_FONT_STACK}`;
+              ctx.fillStyle = MEDIUM_DARK_YELLOW;
+              ctx.font = `bold 11px ${CANVAS_FONT_STACK}`;
               ctx.fillText(edge.label, midX + 5, midY - 5);
             }
           }
@@ -812,11 +924,11 @@ export class CanvasEngine {
           ctx.arc(node.x, node.y, 20, 0, Math.PI * 2);
           ctx.fill();
 
-          ctx.fillStyle = '#ffffff';
-          ctx.font = `12px ${CANVAS_FONT_STACK}`;
+          ctx.fillStyle = MEDIUM_DARK_YELLOW;
+          ctx.font = `bold 12px ${CANVAS_FONT_STACK}`;
           ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(node.label, node.x, node.y);
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(node.label, node.x, node.y - 24);
         }
         break;
       }

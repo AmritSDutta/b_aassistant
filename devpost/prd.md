@@ -53,11 +53,16 @@ Source: `scope.md > The Core Loop`.
 - **Input:** Bottom text input and send button allowing the user to type messages.
 - **Formatting:** User messages are stored and rendered with a `user:` prefix.
 - **Humanized Text Rendering:** The chat area renders humanized typography without exposing raw markdown syntax:
-  - Headings (`#`, `##`, `###`) format as proportional styled headers without `#` symbols.
+  - Headings (`#`, `##`, `###`, `####`, `#####`, `######`) format as proportional styled headers without `#` symbols (H1–H3 as primary section titles, H4–H6 as compact high-contrast sub-headings).
   - Lists (`-`, `*`, `+`, `1.`) format as structured bullet and numbered lists with indented alignment.
   - Fenced code blocks (```` ``` ````) format into dedicated monospace containers with subtle background contrast.
   - Blockquotes (`>`) render as indented callouts with border accents.
   - Inline tokens (`**bold**`, `*italic*`, `` `code` ``, `[label](url)`) format as bold, italic, inline code pills, and clean clickable links without raw markdown characters.
+- **Symbol Humanization & Sequence Formatting (`symbolHumanizer.ts`):**
+  - Directional and logic arrows (`$\rightarrow$`, `\rightarrow`, `$\to$`, `$\Rightarrow$`, `$\Leftarrow$`, `$\leftrightarrow$`, `$\uparrow$`, `$\downarrow$`) format as elegant Unicode symbols (`→`, `⇒`, `⇐`, `↔`, `↑`, `↓`).
+  - Relational and mathematical operators (`$\leq$`, `$\geq$`, `$\neq$`, `$\approx$`, `$\times$`, `$\pm$`, `$\cdot$`, `$\dots$`, `$\in$`, `$\notin$`, `$\infty$`) format as clean Unicode characters (`≤`, `≥`, `≠`, `≈`, `×`, `±`, `·`, `…`, `∈`, `∉`, `∞`).
+  - Currency protection: Values like `$100`, `$50M`, and `$12.50` are strictly preserved without stripping.
+  - Multi-line sequence layout preservation: Preserves line breaks in multi-step system architecture flows (e.g. `Client → Gateway → Service → DB`) so steps render on separate lines instead of collapsing into a run-on paragraph.
 - **Retrieval:** Visiting LLM can retrieve previous user messages and conversation context through an exposed WebMCP tool.
 - **Streaming/Posting:** Visiting agent can append structured textual explanations directly into the chat stream.
 
@@ -68,7 +73,11 @@ Source: `scope.md > The Unique Kernel`.
 - **Viewport Auto-Centering (`fitToContent`):** Measures total bounding box of all shapes and computes uniform scaling and offsets so diagrams never clip or land outside the visible canvas viewport.
 - **Interactive Pan & Smooth Wheel Zoom:** Allows users to drag-to-pan across the infinite canvas and zoom with mouse wheel (`zoomAtPoint`), keeping cursor focus stationary.
 - **Visual Elevation (2.5D Drop Shadows):** Ambient drop shadows on containers (`shadowOffsetY: 4`, `shadowBlur: 14`) for sharp contrast above the grid, cleared before stroking borders.
-- **Theme-Aware Alpha Boost:** Dynamically adjusts soft rgba fills in light mode (`alpha * 1.8`) to ensure crisp contrast on warm paper backgrounds.
+- **Universal Medium Dark Yellow Bold Labels at Top of Elements:** To ensure crisp, unambiguous contrast across both light mode (on light/translucent fills and warm paper) and dark mode (on dark fills and ink surfaces), element labels on shapes use **medium dark yellow** (`#d97706` / Amber 600) in **bold typography**, anchored at the **top of the element** (`topCenter` with top padding). Connector pills similarly use bold medium dark yellow text on protective backdrops.
+- **Theme-Conducive Contrast Colors for Shapes & Connectors:** Dynamically resolves shape strokes and connector lines based on active theme mode to guarantee crisp readability in both light and dark modes:
+  - Live DOM Theme Synchronization & MutationObserver: The canvas engine automatically queries `document.documentElement` class state and listens via a `MutationObserver` on `<html>` to guarantee immediate live canvas repaint on theme toggle without state lag.
+  - In Light Mode: Translucent and light shape fills scale with boosted alpha (`alpha * 1.8`); connector lines adapt to deep slate (`#334155`); connector label pills use warm translucent white backdrop with `#cbd5e1` borders.
+  - In Dark Mode: Connector lines use crisp slate (`#94a3b8`); connector label pills use dark backdrop (`#0f172a`) with `#334155` borders.
 - **Color Palette:** Soft-translucent multi-tier palette (indigo client, emerald gateway, purple database, orange cache/queue, amber logic, and sticky-note stickers) with backdrop pills behind edge labels.
 - **Manual Control:** "New Session", "Fit View", "Reset View", "Clear Canvas", and "Export PDF" buttons on the canvas toolbar; also callable as WebMCP tools.
 
@@ -91,12 +100,13 @@ Source: `scope.md > The POC Boundary`.
     - Renders `AI DELIBERATION` block with rich markdown parsing.
 - **Blank Content Validation:** Validates that at least one of either the canvas scene graph or the dialogue stream has substantive content before export. If both are blank, the export is aborted, a validation modal alert is presented to the user, and WebMCP `export_pdf` returns a descriptive rejection error.
 - **Markdown Humanization for LLM Content:** Parses and converts raw LLM-generated Markdown in the dialogue stream:
-  - Formats headings (`#`, `##`, `###`) in bold Helvetica with proportional sizing and spacing.
+  - Formats headings (`#`, `##`, `###`, `####`, `#####`, `######`) in bold Helvetica with proportional sizing (H1: 12.5pt, H2: 11pt, H3: 10pt, H4–H6: 9.5pt) and clean vertical spacing.
   - Formats bullet points (`- `, `* `, `+ `) as clean bullets (`• `) with indented margins.
   - Formats numbered lists (`1. `, `2. `) with indented alignment.
   - Formats blockquotes (`> `) in italic with subtle vertical border accents.
   - Formats fenced code blocks in Courier monospace with light-slate background tinting.
   - Cleans inline markup (`**bold**`, `*italic*`, `` `code` ``, `[label](url)`) into clean readable text.
+  - Normalizes LaTeX and Unicode arrow/math symbols to clean ASCII equivalents (`->`, `<-`, `=>`, `<=`, `>=`, `!=`, `~=`) for standard jsPDF core fonts, preventing encoding corruption or broken glyphs.
 - **Multilingual Indic Script Support (Bengali & Hindi):**
   - Resolves standard PDF Latin-1 font limitations for Indic complex scripts by utilizing native browser text-shaping (HarfBuzz/Uniscribe via Canvas2D rasterization).
   - Accurately renders Bengali (বাংলা, যেমন যুক্তাক্ষর 'ক্ষ', 'জ্ঞ') and Hindi (हिन्दी, जैसे संयुक्त व्यंजन 'क्त', 'त्र', मात्राएं) with 100% typographic fidelity, preventing missing characters or broken ligatures.
@@ -132,6 +142,13 @@ Source: `research.md` (dwell-time mechanisms 1–6).
 - **Reading comfort:** A- / A+ font steps (15/17/19px) persisted across sessions; 2px reading-progress bar atop the stream for a sense of investment.
 - **Session Highlights:** users star (☆/★) any message; starred messages collect in sidebar Section 3 and clicking one scrolls the dialogue to it — the revisit loop.
 - **Alive-but-calm feedback:** "agent is thinking" pulse while awaiting a reply, 0.18s message entrance fades, per-message copy button, dropzone drag-over highlight, and gentle session strip (messages · highlights · minutes). All motion disabled under `prefers-reduced-motion`.
+
+### 7. SEO, Crawler Discoverability & Indexing Standards
+- **Meta Description & Content Summary:** Comprehensive `<meta name="description">` defining bAssistant as a 100% private, client-side AI Business Analyst workstation with interactive HTML5 canvas diagramming, local document retrieval, and WebMCP agent tools.
+- **Crawler Discoverability & Semantic HTML:** Structured metadata including Open Graph (`og:title`, `og:description`, `og:type`, `og:url`, `og:image`), Twitter cards (`twitter:card`, `twitter:title`, `twitter:description`, `twitter:image`), theme color meta tags, and schema.org JSON-LD structured data (`WebApplication`).
+- **Crawler Fallback Content:** Semantic `<noscript>` block inside `<body>` outlining the workstation's core capabilities, architecture, and WebMCP tools so search engine crawlers that do not execute JavaScript can index and understand the application's structure.
+- **Valid robots.txt Directives:** Standalone plain-text `public/robots.txt` providing valid search engine crawling instructions and pointing to `sitemap.xml`, preventing SPA catch-all HTML fallback from producing crawler syntax errors.
+- **Sitemap Indexing:** Standard `public/sitemap.xml` listing primary public routes for canonical search indexing.
 
 ## States and Boundaries
 

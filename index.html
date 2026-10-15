@@ -3,13 +3,63 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>bAssistant</title>
+    <title>bAssistant — In-Browser AI Workspace &amp; Diagram Studio</title>
+    <meta name="description" content="Client-side AI assistant cockpit with 20/80 layout, interactive Canvas2D diagramming, in-browser LiteParse document search, and 17 zero-install WebMCP tools." />
+    <meta name="theme-color" content="#fffdf7" />
+    <link rel="canonical" href="https://bassistant.pages.dev/" />
     <link rel="icon" type="image/jpeg" href="https://pub-c1d80f0f7327493997a3c1285f43a9ea.r2.dev/bassistant_light.jpg" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://bassistant.pages.dev/" />
+    <meta property="og:title" content="bAssistant — In-Browser AI Workspace &amp; Diagram Studio" />
+    <meta property="og:description" content="Client-side AI assistant cockpit with 20/80 layout, interactive Canvas2D diagramming, in-browser LiteParse document search, and 17 zero-install WebMCP tools." />
+    <meta property="og:image" content="https://pub-c1d80f0f7327493997a3c1285f43a9ea.r2.dev/bassistant_light.jpg" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:url" content="https://bassistant.pages.dev/" />
+    <meta name="twitter:title" content="bAssistant — In-Browser AI Workspace &amp; Diagram Studio" />
+    <meta name="twitter:description" content="Client-side AI assistant cockpit with 20/80 layout, interactive Canvas2D diagramming, in-browser LiteParse document search, and 17 zero-install WebMCP tools." />
+    <meta name="twitter:image" content="https://pub-c1d80f0f7327493997a3c1285f43a9ea.r2.dev/bassistant_light.jpg" />
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "bAssistant",
+      "url": "https://bassistant.pages.dev/",
+      "description": "Client-side AI assistant cockpit with 20/80 layout, interactive Canvas2D diagramming, in-browser LiteParse document search, and 17 zero-install WebMCP tools.",
+      "applicationCategory": "ProductivityApplication",
+      "operatingSystem": "All modern browsers",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet" />
   </head>
   <body class="antialiased overflow-hidden m-0 p-0 h-screen w-screen">
+    <noscript>
+      <div style="padding: 24px; font-family: sans-serif; max-width: 800px; margin: 0 auto; line-height: 1.6;">
+        <h1>bAssistant — In-Browser AI Workspace &amp; Diagram Studio</h1>
+        <p>bAssistant is a zero-server, 100% client-side web application pairing an interactive Canvas2D diagram studio with a conversational AI workspace.</p>
+        <h2>Key Architecture &amp; Capabilities</h2>
+        <ul>
+          <li><strong>20/80 Cockpit Layout:</strong> 20% control sidebar for document ingestion (&lt; 2MB PDF/DOCX) and reference links, 80% primary workspace split into 60% Canvas2D and 40% dialogue reader.</li>
+          <li><strong>Interactive Canvas2D:</strong> Auto-centering scene graph with pan, zoom, perimeter docking, and high-visibility labels in both light and dark themes.</li>
+          <li><strong>17 Zero-Install WebMCP Tools:</strong> Exposes browser-native model context protocol tools for diagram drawing, document BM25 search, math, ArXiv research, and publication PDF export.</li>
+          <li><strong>Client-Side Privacy:</strong> Zero server footprint. All indexing, parsing, and session persistence remain inside browser IndexedDB.</li>
+        </ul>
+        <p>JavaScript is required to run the interactive canvas and conversational tools in this application.</p>
+      </div>
+    </noscript>
     <div id="root" class="h-full w-full"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

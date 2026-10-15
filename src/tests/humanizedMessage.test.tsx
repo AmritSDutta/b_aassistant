@@ -135,5 +135,46 @@ npm test
       const { container } = render(<HumanizedMessage content="" />);
       expect(container.firstChild).toBeNull();
     });
+
+    it('humanizes math arrows in messages and preserves line breaks', () => {
+      const flow = [
+        'Web/Mobile Client $\\rightarrow$ API Gateway (HTTPS Request)',
+        'API Gateway $\\rightarrow$ Payment Service (API Route & Validation)',
+        'Payment Service $\\rightarrow$ Payment Processor (Authorize Charge / Bank Network)',
+        'Payment Service $\\rightarrow$ Database & Ledger (Record Transaction)',
+      ].join('\n');
+
+      const { container } = render(<HumanizedMessage content={flow} />);
+      const p = container.querySelector('p');
+      expect(p).not.toBeNull();
+      expect(p?.className).toContain('whitespace-pre-line');
+      expect(p?.textContent).toContain('Web/Mobile Client → API Gateway (HTTPS Request)');
+      expect(p?.textContent).toContain('API Gateway → Payment Service (API Route & Validation)');
+      expect(p?.textContent).not.toContain('$\\rightarrow$');
+    });
+
+    it('transforms ####, #####, and ###### headings into clean h6 elements without raw hash tokens', () => {
+      const text = [
+        '#### Fourth Level Section',
+        '##### Fifth Level Section',
+        '###### Sixth Level Section',
+      ].join('\n');
+
+      const blocks = parseMessageBlocks(text);
+      expect(blocks.length).toBe(3);
+      expect(blocks[0].type).toBe('h4');
+      expect(blocks[1].type).toBe('h4');
+      expect(blocks[2].type).toBe('h4');
+
+      const { container } = render(<HumanizedMessage content={text} />);
+      const h6Elements = container.querySelectorAll('h6');
+      expect(h6Elements.length).toBe(3);
+      expect(h6Elements[0].textContent).toBe('Fourth Level Section');
+      expect(h6Elements[1].textContent).toBe('Fifth Level Section');
+      expect(h6Elements[2].textContent).toBe('Sixth Level Section');
+      expect(container.textContent).not.toContain('####');
+      expect(container.textContent).not.toContain('#####');
+      expect(container.textContent).not.toContain('######');
+    });
   });
 });

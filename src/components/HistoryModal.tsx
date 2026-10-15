@@ -1,5 +1,6 @@
 import React from 'react';
 import { SessionSummary } from '../lib/idbStorage';
+import { humanizeSymbols } from '../lib/symbolHumanizer';
 
 export interface HistoryModalProps {
   isOpen: boolean;
@@ -89,8 +90,8 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                 >
                   <div className="flex-1 min-w-0 pr-2">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold truncate" title={s.firstPrompt}>
-                        {s.firstPrompt}
+                      <p className="text-sm font-semibold truncate" title={humanizeSymbols(s.firstPrompt)}>
+                        {humanizeSymbols(s.firstPrompt)}
                       </p>
                       {isActive && (
                         <span

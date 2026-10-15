@@ -1,4 +1,5 @@
 import React from 'react';
+import { humanizeSymbols } from '../lib/symbolHumanizer';
 
 export interface HumanizedMessageProps {
   content: string;
@@ -7,8 +8,9 @@ export interface HumanizedMessageProps {
 export function parseInlineMarkdown(text: string): React.ReactNode[] {
   if (!text) return [];
 
+  const humanized = humanizeSymbols(text);
   const tokenRegex = /(\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*|__[^_]+__|`[^`]+`|\*[^*]+\*|_[^_]+_)/g;
-  const parts = text.split(tokenRegex);
+  const parts = humanized.split(tokenRegex);
 
   return parts.filter(Boolean).map((part, index) => {
     // 1. Link: [label](url)
@@ -73,6 +75,7 @@ export type MessageBlock =
   | { type: 'h1'; text: string }
   | { type: 'h2'; text: string }
   | { type: 'h3'; text: string }
+  | { type: 'h4'; text: string }
   | { type: 'bullet_list'; items: string[] }
   | { type: 'numbered_list'; items: { num: string; text: string }[] }
   | { type: 'quote'; lines: string[] }
@@ -116,17 +119,15 @@ export function parseMessageBlocks(content: string): MessageBlock[] {
       continue;
     }
 
-    // 3. Headings
-    if (trimmed.startsWith('# ')) {
-      blocks.push({ type: 'h1', text: trimmed.slice(2).trim() });
-      continue;
-    }
-    if (trimmed.startsWith('## ')) {
-      blocks.push({ type: 'h2', text: trimmed.slice(3).trim() });
-      continue;
-    }
-    if (trimmed.startsWith('### ')) {
-      blocks.push({ type: 'h3', text: trimmed.slice(4).trim() });
+    // 3. Headings (H1 to H6)
+    const headingMatch = /^(#{1,6})\s+(.*)$/.exec(trimmed);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const text = headingMatch[2].trim();
+      if (level === 1) blocks.push({ type: 'h1', text });
+      else if (level === 2) blocks.push({ type: 'h2', text });
+      else if (level === 3) blocks.push({ type: 'h3', text });
+      else blocks.push({ type: 'h4', text });
       continue;
     }
 
@@ -247,6 +248,17 @@ export const HumanizedMessage: React.FC<HumanizedMessageProps> = ({ content }) =
               </h5>
             );
 
+          case 'h4':
+            return (
+              <h6
+                key={bIdx}
+                className="font-sans font-semibold text-[13px] text-slate-700 dark:text-slate-300 mt-2 mb-0.5"
+              >
+                {parseInlineMarkdown(block.text)}
+              </h6>
+            );
+
+
           case 'bullet_list':
             return (
               <ul key={bIdx} className="my-2 space-y-1 pl-1">
@@ -290,7 +302,7 @@ export const HumanizedMessage: React.FC<HumanizedMessageProps> = ({ content }) =
 
           case 'paragraph':
             return (
-              <p key={bIdx} className="my-1.5 leading-[1.75]">
+              <p key={bIdx} className="my-1.5 leading-[1.75] whitespace-pre-line">
                 {parseInlineMarkdown(block.text)}
               </p>
             );

@@ -40,6 +40,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Canvas2D Scene Graph
 - Shapes are typed in `src/types/canvas2d.ts`: `rectangle`, `ellipse`, `diamond`, `text`, `arrow`, `line`, `freedraw`, `sticker`. State persists as `Canvas2dShape[]` in the engine, not as pixels.
 - Arrows/lines bind to nodes via `startId`/`endId` and stay attached when shapes move. Redraw is two-pass: nodes/containers first, then connectors with edge-to-edge perimeter docking and pill labels (`canvasEngine.redraw()`).
+- Live DOM theme synchronization: `CanvasEngine` constructor mounts a `MutationObserver` on `document.documentElement` (`class` attribute) and exposes `getTheme(): 'dark' | 'light'`, instantly re-rendering canvas scenes upon theme toggles.
+- Fill-aware contrast: `resolveThemeTextColor(color, theme, isConnectorPill, fillColor)` evaluates background fill luminance and opacity (`parseColorLuminance`); translucent shape fills (`alpha < 0.6`) automatically resolve to dark slate `#0f172a` in light mode for readability.
 - `canvas2d_draw_shapes` descriptions embed the approved translucent color palette (client/gateway/db/queue/decision rgba values) — keep tool descriptions in sync with renderer capabilities.
 - Interactive viewport controls live in `src/components/CanvasArea.tsx`: drag-to-pan, cursor-anchored wheel-zoom (`zoomAtPoint`, scale clamp `[0.2, 4]`), `Fit View` (`fitToContent`, clamp `[0.2, 1.5]`), `Reset` (`resetView`), plus `New Session` / `Export PDF` / `Clear`. `canvasEngine.getSnapshotDataUrl()` returns a tight-cropped PNG (40px padding) used for PDF and session snapshots.
 
@@ -54,12 +56,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - Sequential turn-by-turn deliberation reporting (`TURN X [HH:MM]`): renders user prompt (when present), per-turn canvas diagram snapshot (when present, fitted without distortion), and AI response with structured Markdown blocks.
   - Backward-compatible single snapshot + dialogue transcript fallback.
   - Chat dialogue rendered with shared `PdfCursor` across blocks, reserving a 10mm bottom buffer for automatic multipage pagination.
+  - Full H1–H6 heading parsing hierarchy (`#` to `######`) rendered with scaled bold typography.
   - Every page stamps the exact centered disclaimer: `AI generated analysis, verify before applying.` with right-aligned page counter (`Page X of Y`).
   - Rasterizes complex scripts (Bengali বাংলা, Hindi हिन्दी) via 3x HiDPI Canvas2D text strips because jsPDF can't shape Indic scripts natively.
   - Enforces blank-session protection (no canvas content AND no messages → modal error).
 
-### Chat Rules
-- `src/components/HumanizedMessage.tsx` cleans raw markdown asterisk syntax (`**bold**` → clean bold, `*item` → clean bullet) for executive readability.
+### Chat Rules & Humanization
+- `src/lib/symbolHumanizer.ts` humanizes LaTeX math arrows (`$\rightarrow$`, `\rightarrow`) and ASCII flow arrows (`-->`, `==>`) into clean Unicode characters (`→`), preserving line breaks.
+- `src/components/HumanizedMessage.tsx` cleans raw markdown noise and formats H1–H6 headings (`#` to `######`) into clean semantic typography (`h1`–`h4` / `<h6>`) without raw hash tokens.
 - All user messages rendered in chat history must be prefixed with `user:` (agents get `agent:`) — see `src/components/ChatArea.tsx`.
 
 ### Storage
@@ -72,7 +76,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Reference URLs cached in `localStorage['b_reference_urls']`. No external servers, no vector databases.
 
 ### Testing
-- All unit tests live in `src/tests/` (14 Vitest suites, 93 tests) and must remain strictly hermetic and isolated — no network, no real IndexedDB dependencies leaking between tests.
+- All unit tests live in `src/tests/` (15 Vitest suites, 106 tests) and must remain strictly hermetic and isolated — no network, no real IndexedDB dependencies leaking between tests.
 - Vitest is configured inside `vite.config.ts` (`environment: 'jsdom'`, `globals: true`); there is no separate vitest config file.
 
 ## Documentation Reference

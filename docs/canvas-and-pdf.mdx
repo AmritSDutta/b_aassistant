@@ -60,7 +60,8 @@ The Canvas2D engine features interactive viewport management and depth rendering
 - **Interactive Pan & Smooth Wheel Zoom:** Allows users to drag-to-pan across the canvas plane and zoom with mouse wheel (`zoomAtPoint`, factor 1.1 in / 0.9 out, scale clamped `[0.2, 4]`), keeping the cursor focus pinned. The `Fit View` and `Reset` toolbar buttons map to `fitToContent()` and `resetView()`.
 - **Tight-Crop Snapshot Export:** `getSnapshotDataUrl()` computes the content bounds of all shapes, renders them to an offscreen canvas with a 40px padding (nodes first, then docked connectors), and returns a cropped PNG data URL — used for canvas snapshots in PDF reports and persisted session turns.
 - **2.5D Drop Shadows:** Nodes render with ambient elevation shadows (`shadowOffsetY: 4`, `shadowBlur: 12`), cleared before stroking borders for crisp lines.
-- **Light Theme Contrast Boost:** Scaled fill alpha (`applyThemeAlpha`) prevents soft translucent colors from appearing washed out on light paper backgrounds.
+- **Light Theme Contrast Boost & Fill Awareness:** Scaled fill alpha (`applyThemeAlpha`) prevents soft translucent colors from appearing washed out on light paper backgrounds. `resolveThemeTextColor` analyzes background fill luminance and opacity (`parseColorLuminance`), enforcing high-contrast dark slate (`#0f172a`) text across translucent and pale shapes in light mode.
+- **Live DOM Theme Synchronization:** A `MutationObserver` on `document.documentElement` dynamically tracks theme class toggles in real time via `getTheme()`, triggering automatic redraws without delay or state mismatch.
 
 ## Soft-Translucent Color Palette
 
@@ -80,7 +81,7 @@ Users and visiting LLMs can export a full session report:
 3. **Header with Top-Left Logo**: Every exported PDF features the bAssistant branding logo rendered at top-left (`10mm x 10mm`) alongside title `"bAssistant Deliberation Session"`, session ID, and timestamp. The image is inlined as `BASSISTANT_LIGHT_BASE64` from `src/lib/logoBase64.ts`, so no network fetch is needed at export time.
 4. **Blank Content Validation**: Checks that the session has either active canvas drawings or chat dialogue. If both are blank, the export is prevented and a validation modal alerts the user.
 5. **Markdown Humanization**: Automatically parses LLM Markdown formatting into publication-ready typography:
-   - Headings (`#`, `##`, `###`) rendered in bold Helvetica with proportional sizing.
+   - Headings (H1 to H6: `#` to `######`) rendered in bold Helvetica with proportional sizing (H1: 12.5pt, H2: 11pt, H3: 10pt, H4–H6: 9.5pt).
    - Bulleted (`• `) and numbered lists (`1. `) cleanly indented.
    - Fenced code blocks styled in Courier monospace with a light-slate background tint.
    - Blockquotes (`> `) rendered in italic with vertical boundary line accents.

@@ -2,6 +2,7 @@ import { jsPDF } from 'jspdf';
 import { ChatMessage } from '../components/ChatArea';
 import { BASSISTANT_LIGHT_BASE64 } from './logoBase64';
 import { SessionTurnRecord } from './idbStorage';
+import { humanizeSymbolsForPdf } from './symbolHumanizer';
 
 const PNG_IHDR_MIN_BYTES = 24;
 const PNG_WIDTH_BYTE_OFFSET = 16;
@@ -76,7 +77,7 @@ export function fitContain(
 
 export function stripInlineMarkdown(text: string): string {
   if (!text) return '';
-  return text
+  return humanizeSymbolsForPdf(text)
     // Replace markdown images: ![alt](url) -> [Image: alt]
     .replace(/!\[([^\]]*)\]\([^)]+\)/g, (_m, alt) => (alt ? `[Image: ${alt}]` : '[Image]'))
     // Replace markdown links: [label](url) -> label
@@ -259,37 +260,37 @@ export function renderHumanizedMarkdown(
       continue;
     }
 
-    // 3. Headings
-    if (trimmed.startsWith('# ')) {
-      ensureSpace(8);
-      const text = stripInlineMarkdown(trimmed.slice(2));
+    // 3. Headings (H1 to H6)
+    const headingMatch = /^(#{1,6})\s+(.*)$/.exec(trimmed);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const text = stripInlineMarkdown(headingMatch[2].trim());
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12.5);
-      doc.setTextColor(15, 23, 42); // slate-900
-      drawLineText(doc, text, margin + 2, cursor.y, 12.5, '#0f172a', true);
-      cursor.y += 6;
-      continue;
-    }
-
-    if (trimmed.startsWith('## ')) {
-      ensureSpace(7);
-      const text = stripInlineMarkdown(trimmed.slice(3));
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
-      doc.setTextColor(30, 41, 59); // slate-800
-      drawLineText(doc, text, margin + 2, cursor.y, 11, '#1e293b', true);
-      cursor.y += 5.2;
-      continue;
-    }
-
-    if (trimmed.startsWith('### ')) {
-      ensureSpace(6);
-      const text = stripInlineMarkdown(trimmed.slice(4));
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.setTextColor(51, 65, 85); // slate-700
-      drawLineText(doc, text, margin + 2, cursor.y, 10, '#334155', true);
-      cursor.y += 4.8;
+      if (level === 1) {
+        ensureSpace(8);
+        doc.setFontSize(12.5);
+        doc.setTextColor(15, 23, 42); // slate-900
+        drawLineText(doc, text, margin + 2, cursor.y, 12.5, '#0f172a', true);
+        cursor.y += 6;
+      } else if (level === 2) {
+        ensureSpace(7);
+        doc.setFontSize(11);
+        doc.setTextColor(30, 41, 59); // slate-800
+        drawLineText(doc, text, margin + 2, cursor.y, 11, '#1e293b', true);
+        cursor.y += 5.2;
+      } else if (level === 3) {
+        ensureSpace(6);
+        doc.setFontSize(10);
+        doc.setTextColor(51, 65, 85); // slate-700
+        drawLineText(doc, text, margin + 2, cursor.y, 10, '#334155', true);
+        cursor.y += 4.8;
+      } else {
+        ensureSpace(5.5);
+        doc.setFontSize(9.5);
+        doc.setTextColor(71, 85, 105); // slate-600
+        drawLineText(doc, text, margin + 2, cursor.y, 9.5, '#475569', true);
+        cursor.y += 4.5;
+      }
       continue;
     }
 

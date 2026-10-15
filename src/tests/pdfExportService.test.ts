@@ -166,6 +166,40 @@ interface Config {
       expect(endY).toBeGreaterThan(20);
       expect(mockText).toHaveBeenCalled();
     });
+
+    it('renders ####, #####, and ###### headings with 9.5pt font without raw hash characters', () => {
+      const markdown = `
+#### Service Detail A
+##### Service Sub-detail B
+###### Micro-metric C
+`.trim();
+
+      const ensureSpace = vi.fn();
+      const textCalls: string[] = [];
+      const mockDoc: any = {
+        setFont: vi.fn(),
+        setFontSize: vi.fn(),
+        setTextColor: vi.fn(),
+        setDrawColor: vi.fn(),
+        setFillColor: vi.fn(),
+        setLineWidth: vi.fn(),
+        text: vi.fn((txt: string) => textCalls.push(txt)),
+        rect: vi.fn(),
+        line: vi.fn(),
+        splitTextToSize: vi.fn((text: string) => [text]),
+      };
+
+      renderHumanizedMarkdown(mockDoc, markdown, 16, 178, 20, ensureSpace);
+
+      expect(textCalls).toContain('Service Detail A');
+      expect(textCalls).toContain('Service Sub-detail B');
+      expect(textCalls).toContain('Micro-metric C');
+      for (const t of textCalls) {
+        expect(t).not.toContain('####');
+        expect(t).not.toContain('#####');
+        expect(t).not.toContain('######');
+      }
+    });
   });
 
   describe('Dimensions & Scaling Utilities', () => {

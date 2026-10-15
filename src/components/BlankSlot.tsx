@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChatMessage } from './ChatArea';
+import { humanizeSymbols } from '../lib/symbolHumanizer';
 
 interface BlankSlotProps {
   highlights: ChatMessage[];
@@ -24,29 +25,32 @@ export const BlankSlot: React.FC<BlankSlotProps> = ({ highlights, onJumpTo }) =>
             Hover a message in the dialogue and click ☆ to keep its key takeaways here for the rest of your session.
           </p>
         )}
-        {highlights.map((msg) => (
-          <button
-            key={msg.id}
-            type="button"
-            onClick={() => onJumpTo?.(msg.id)}
-            className="w-full text-left p-2 rounded-md border transition-colors hover:border-[var(--note)]"
-            style={{ borderColor: 'var(--line)', background: 'var(--card)' }}
-          >
-            <span
-              className="font-sans font-semibold text-[10px] tracking-wider uppercase"
-              style={{ color: msg.sender === 'user' ? 'var(--you)' : 'var(--accent)' }}
+        {highlights.map((msg) => {
+          const humanized = humanizeSymbols(msg.text);
+          return (
+            <button
+              key={msg.id}
+              type="button"
+              onClick={() => onJumpTo?.(msg.id)}
+              className="w-full text-left p-2 rounded-md border transition-colors hover:border-[var(--note)]"
+              style={{ borderColor: 'var(--line)', background: 'var(--card)' }}
             >
-              {msg.sender === 'user' ? 'user:' : 'agent:'}
-            </span>
-            <span
-              className="block text-[12px] leading-snug mt-0.5 line-clamp-2"
-              style={{ color: 'var(--ink)' }}
-            >
-              {msg.text.slice(0, 90)}
-              {msg.text.length > 90 ? '…' : ''}
-            </span>
-          </button>
-        ))}
+              <span
+                className="font-sans font-semibold text-[10px] tracking-wider uppercase"
+                style={{ color: msg.sender === 'user' ? 'var(--you)' : 'var(--accent)' }}
+              >
+                {msg.sender === 'user' ? 'user:' : 'agent:'}
+              </span>
+              <span
+                className="block text-[12px] leading-snug mt-0.5 line-clamp-2"
+                style={{ color: 'var(--ink)' }}
+              >
+                {humanized.slice(0, 90)}
+                {humanized.length > 90 ? '…' : ''}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

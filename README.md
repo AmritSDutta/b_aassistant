@@ -13,9 +13,9 @@
 - 🔒 **100% Private & Local**: Uploaded documents never travel to an external server. Parsing and BM25 search happen directly in browser memory and local IndexedDB.
 - 📐 **60/40 Split Cockpit**: Designed for visual thinkers. The dominant 60% HTML5 Canvas renders architecture diagrams in real time, while the 40% Chat Area maintains a humanized conversational stream.
 - 🎨 **Persistent Canvas Scene Graph**: Visuals are structured entities (rectangles, containers, connectors with perimeter docking, step cards), not ephemeral pixel dumps.
-- 📄 **Multilingual PDF Export**: Export session artifacts into a styled dual-section PDF (HiDPI canvas snapshot + readable discussion transcript) with native font rendering for English, Bengali (বাংলা), and Hindi (हिन्दी).
-- 🧹 **Humanized Conversation**: Raw LLM markdown noise (asterisks, stray formatting markers) is cleaned automatically for high-signal reading.
-- 🛋️ **Built for long sessions**: Warm paper/ink dual themes, a first-load how-to-use popup, a full-screen chat reader mode, A-/A+ font steps, reading-progress bar, and star highlights collected in the sidebar — all motion disabled under `prefers-reduced-motion`.
+- 📄 **Multilingual PDF Export**: Export session artifacts into a styled dual-section PDF (HiDPI canvas snapshot + readable discussion transcript) with native font rendering for English, Bengali (বাংলা), and Hindi (हिन्दी) with complete H1–H6 heading hierarchy formatting.
+- 🧹 **Humanized Conversation**: Raw LLM markdown noise (asterisks, stray formatting markers, LaTeX math arrows like `$\rightarrow$`, and `####` to `######` headings) is parsed and formatted automatically into executive typography and clean subheadings.
+- 🛋️ **Built for long sessions**: Warm paper/ink dual themes with real-time DOM contrast synchronization via `MutationObserver`, a first-load how-to-use popup, a full-screen chat reader mode, A-/A+ font steps, reading-progress bar, and star highlights collected in the sidebar — all motion disabled under `prefers-reduced-motion`.
 - 🌐 **WebMCP Standard**: Built on the open WebMCP standard with 17 in-browser tools enabling any compatible AI extension or runtime to read docs, draw diagrams, calculate metrics, and search public research — including a read-only `get_tool_usage_prompt` tool that hands visiting agents the full operating guide.
 
 ---
@@ -78,7 +78,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ### Hermetic Verification
 ```bash
-# Run all 93 isolated unit tests (14 Vitest suites, no watch mode)
+# Run all 106 isolated unit tests (15 Vitest suites, no watch mode)
 npm.cmd test -- --run
 
 # Build production bundle (tsc && vite build)

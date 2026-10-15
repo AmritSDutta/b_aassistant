@@ -73,7 +73,7 @@ Root container orchestrating layout, theme state (Light/Dark), and lifecycle ini
 Implements `prd.md > Screens and Layout > Left Sidebar (20% width)`.
 Hosts:
 - `Branding`: App title "bAssistant", transparent theme-aware logo (`bassistant_light.jpg` in dark mode, `bassistant_dark.jpg` in light mode), and theme toggle switch.
-- `FileUpload`: Dropzone and file picker for Doc/PDF files < 1MB. Displays parsing status, page count, and "Indexed" badge. Triggers `NotificationModal` on rejection. Highlights (border + tint) while a file drags over.
+- `FileUpload`: Dropzone and file picker for Doc/PDF files < 2MB. Displays parsing status, page count, and "Indexed" badge. Triggers `NotificationModal` on rejection. Highlights (border + tint) while a file drags over.
 - `ReferenceUrls`: Enboldened `REFERENCE URLS` manager caching up to 10 probe-verified links.
 - `BlankSlot` → **Session Highlights**: Enboldened `Session Highlights` section collecting starred (☆/★) messages with sender badges and snippets; clicking an entry scrolls the dialogue to that message.
 - Session strip (bottom of sidebar): gentle mono counter `messages · highlights · minutes` plus a "tips" link that re-opens the `WelcomeModal`.
@@ -82,13 +82,14 @@ Hosts:
 Implements `prd.md > Features and Behavior > 3. Live HTML Canvas Rendering & Scene Graph`.
 Top 60% pane of the main workspace. Renders the HTML5 `<canvas>` element and toolbar:
 - Toolbar with "New Session", "Fit View", "Reset View", "Export PDF", and "Clear Canvas" buttons.
-- `CanvasEngine`: Manages reactive scene graph (`Canvas2dShape[]`), auto-centering viewport matrix (`fitToContent`), interactive drag-to-pan, cursor-pinned wheel zoom (`zoomAtPoint`), perimeter-docked connectors with pill badges, 2.5D drop shadows, light-mode alpha scaling, HiDPI scaling, and snapshot capture.
+- `CanvasEngine`: Manages reactive scene graph (`Canvas2dShape[]`), auto-centering viewport matrix (`fitToContent`), interactive drag-to-pan, cursor-pinned wheel zoom (`zoomAtPoint`), perimeter-docked connectors with pill badges, 2.5D drop shadows, live DOM theme synchronization (`getTheme` + `MutationObserver` on `<html>` for instant theme repaint), universal **medium dark yellow** (`#d97706` / Amber 600) **bold labels** anchored at the **top of elements** (`topCenter` with top padding) and on connector pills to guarantee sharp, readable contrast across both light mode and dark mode, adaptive theme strokes (`resolveThemeStrokeColor`), light-mode alpha scaling, HiDPI scaling, and snapshot capture.
 
 ### 4. `ChatArea`
 Implements `prd.md > Features and Behavior > 2. Chat Conversation & History` and `> 6. Long-Dwell Reading Comfort`.
 Bottom 40% pane of the main workspace, plus a full-screen reader popup:
 - Message feed displaying dialogue history in **Lora** serif typography (user-adjustable 15/17/19px via A-/A+, persisted; line-height 1.75, max-width ~72ch measure). User messages rendered with uppercase `user:` badge and agent messages with `agent:` badge.
-- **Humanized Markdown Rendering:** Parses incoming messages to render structured React elements (headings, styled bullet and numbered lists, monospace code blocks with background tint, blockquotes, and inline bold/italic/code/links) without exposing raw markdown syntax.
+- **Humanized Markdown Rendering:** Parses incoming messages to render structured React elements (headings H1–H6 without raw hash symbols, styled bullet and numbered lists, monospace code blocks with background tint, blockquotes, and inline bold/italic/code/links) without exposing raw markdown syntax.
+- **Symbol Humanization & Sequence Formatting (`symbolHumanizer.ts`):** Transforms LaTeX math notations, arrows (`$\rightarrow$`, `\rightarrow`, `$\to$`, `$\Rightarrow$`, `$\Leftarrow$`, `$\leftrightarrow$`), and comparison/math operators into clean Unicode symbols (`→`, `⇒`, `≤`, `≠`, `×`). Applies `whitespace-pre-line` to preserve multi-line sequence flows (e.g. `Client → Gateway → Service → DB`) on distinct lines rather than collapsing into run-on paragraphs. Protects currency values like `$100` and `$50M`.
 - **Reading-progress bar:** 2px violet bar at the top of the stream tracking scroll position.
 - **Popup maximize:** ⤢ opens the chat as a full-screen reader overlay (same stream/input/controls); Escape or ✕ closes.
 - **Per-message actions:** ☆/★ highlight toggle (violet) and copy-to-clipboard, revealed on hover; "agent is thinking" pulse while the last message is from the user; 0.18s entrance fades (disabled under `prefers-reduced-motion`).
@@ -136,9 +137,15 @@ Central service registering and dispatching all 16 WebMCP tools:
 Implements `prd.md > Features and Behavior > 4. Client-Side PDF Generation`.
 In-browser report generation engine:
 - **Blank Session Guard:** Validates session content; prevents exporting empty sessions and triggers `NotificationModal` validation alert.
-- **LLM Markdown Humanizer:** Parses Markdown headers (`#`, `##`, `###`), lists (`•`, `1.`), code blocks (Courier font with background tint), blockquotes, dividers, and strips inline tokens (`**`, `*`, `` ` ``, `[label](url)`) into clean typography.
+- **LLM Markdown Humanizer:** Parses Markdown headers (`#` to `######`, H1–H6 with proportional sizing: H1 12.5pt, H2 11pt, H3 10pt, H4–H6 9.5pt), lists (`•`, `1.`), code blocks (Courier font with background tint), blockquotes, dividers, and strips inline tokens (`**`, `*`, `` ` ``, `[label](url)`) into clean typography.
 - **Multilingual Indic Script Support (Bengali & Hindi):** Detects Indic Unicode characters (`[\u0900-\u09FF]`) and renders them using browser Canvas2D text shaping (HarfBuzz/Uniscribe engine) embedded into jsPDF as high-resolution vectors/images, ensuring perfect ligature and matra rendering for Bengali (বাংলা) and Hindi (हिन्दी).
 - Fits canvas diagram snapshots and formats dialogue transcript with sequential turn-by-turn pagination.
+
+### 9. `symbolHumanizer`
+Implements `prd.md > Features and Behavior > 2. Chat Conversation & History > Symbol Humanization`.
+Dedicated standalone string normalization utility module (`src/lib/symbolHumanizer.ts`):
+- `humanizeSymbols(text: string): string`: Normalizes LaTeX directional arrows (`$\rightarrow$`, `$\to$`, `\rightarrow`, etc.), relations (`$\leq$`, `$\neq$`, etc.), arithmetic (`$\times$`, `$\pm$`, etc.), and Greek characters to clean Unicode for UI display. Preserves currency quantities (`$100`, `$50M`).
+- `humanizeSymbolsForPdf(text: string): string`: Translates LaTeX and Unicode symbols to clean, non-crashing ASCII strings (`->`, `<-`, `=>`, `<=`, `>=`, `!=`, `~=`) for standard jsPDF Latin-1 typefaces.
 
 ## Data Model
 
@@ -209,15 +216,17 @@ C:/codebase/b_aassistant/
 │   │   ├── idbStorage.ts        # IndexedDB connection and document store
 │   │   ├── bm25.ts              # Client-side BM25 indexer and query scorer
 │   │   ├── searchService.ts     # DDGS search & ArXiv API fetch handlers
+│   │   ├── symbolHumanizer.ts   # LaTeX symbol & arrow normalizer (UI & PDF)
 │   │   └── mathEvaluator.ts     # Decimal math calculator
 │   ├── webmcp/
 │   │   ├── types.ts             # WebMCP tool interfaces & JSON-RPC schema
-│   │   ├── tools.ts             # 16 tool declarations (schemas & dispatch)
+│   │   ├── tools.ts             # 17 tool declarations (schemas & dispatch)
 │   │   ├── agentGuide.ts        # Read-only get_tool_usage_prompt guide text
 │   │   └── provider.ts          # Unified bridge (6 discovery surfaces)
-│   └── tests/                   # 10 hermetic Vitest suites
+│   └── tests/                   # Hermetic Vitest suites
 │       ├── bm25.test.ts         # BM25 indexing & scoring
 │       ├── mathEvaluator.test.ts# Decimal calculations
+│       ├── symbolHumanizer.test.ts # Symbol normalization for UI and PDF
 │       ├── webmcp.test.ts       # WebMCP tool dispatching
 │       ├── canvasEngine.test.ts # Canvas command engine
 │       ├── canvas2dAdvanced.test.ts  # Scene graph shapes & arrows
@@ -225,7 +234,14 @@ C:/codebase/b_aassistant/
 │       ├── humanizedMessage.test.tsx # Chat humanization
 │       ├── documentProcessing.test.ts# LiteParse parsing pipeline
 │       ├── searchService.test.ts# Web/research fallbacks
+│       ├── seoAndRobots.test.ts # robots.txt, sitemap, meta tags & JSON-LD schema
 │       └── chatArea.test.tsx    # Dwell enrichments: popup, fonts, highlights
+├── public/                      # Static assets & crawler standards
+│   ├── robots.txt               # Search engine crawler directives & sitemap reference
+│   ├── sitemap.xml              # Canonical URL sitemap for indexing
+│   ├── bassistant_light.jpg     # Light-mode branding logo
+│   ├── bassistant_dark.jpg      # Dark-mode branding logo
+│   └── liteparse_wasm_bg.wasm   # LiteParse WASM binary
 ├── docs/                        # docs7 documentation site
 ├── devpost/                     # Devpost hackathon project artifacts
 │   ├── learner-profile.md
