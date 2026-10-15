@@ -112,6 +112,14 @@ npx docs7 dev docs
 
 ---
 
+## User Manual
+
+For an end-to-end operational guide covering cockpit navigation, document uploads, WebMCP agent connection, canvas controls, session management, and PDF exports, see:
+
+📖 **[UserManual.md](UserManual.md)**
+
+---
+
 ## License
 
 **AGPL-3.0-or-later**
