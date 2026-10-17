@@ -62,11 +62,11 @@ function makeRecordingContext(): RecordedContext {
 describe('Dark-mode canvas calibration', () => {
   describe('normalizeRgba', () => {
     it('forces the requested alpha on hex, rgb, rgba, and named colors', () => {
-      expect(normalizeRgba('#3b82f6', DARK_FILL_ALPHA)).toBe('rgba(59, 130, 246, 0.4)');
-      expect(normalizeRgba('#fff', DARK_FILL_ALPHA)).toBe('rgba(255, 255, 255, 0.4)');
-      expect(normalizeRgba('rgb(10, 20, 30)', DARK_FILL_ALPHA)).toBe('rgba(10, 20, 30, 0.4)');
-      expect(normalizeRgba('rgba(99, 102, 241, 0.22)', DARK_FILL_ALPHA)).toBe('rgba(99, 102, 241, 0.4)');
-      expect(normalizeRgba('blue', DARK_FILL_ALPHA)).toBe('rgba(0, 0, 255, 0.4)');
+      expect(normalizeRgba('#3b82f6', DARK_FILL_ALPHA)).toBe(`rgba(59, 130, 246, ${DARK_FILL_ALPHA})`);
+      expect(normalizeRgba('#fff', DARK_FILL_ALPHA)).toBe(`rgba(255, 255, 255, ${DARK_FILL_ALPHA})`);
+      expect(normalizeRgba('rgb(10, 20, 30)', DARK_FILL_ALPHA)).toBe(`rgba(10, 20, 30, ${DARK_FILL_ALPHA})`);
+      expect(normalizeRgba('rgba(99, 102, 241, 0.22)', DARK_FILL_ALPHA)).toBe(`rgba(99, 102, 241, ${DARK_FILL_ALPHA})`);
+      expect(normalizeRgba('blue', DARK_FILL_ALPHA)).toBe(`rgba(0, 0, 255, ${DARK_FILL_ALPHA})`);
     });
   });
 
@@ -103,16 +103,21 @@ describe('Dark-mode canvas calibration', () => {
       expect(Math.max(...coordinates)).toBeLessThan(1000);
     });
 
-    it('forces a hex fill to 40% alpha in dark mode (Rough draws hachure via strokeStyle)', () => {
-      const { ctx, strokeStyles } = makeRecordingContext();
+    it('forces the fill to 80% transparency (alpha 0.2) in BOTH themes', () => {
+      const dark = makeRecordingContext();
+      const light = makeRecordingContext();
       const shape = sanitizeCanvas2dShapes([
         { type: 'rectangle', x: 10, y: 10, width: 120, height: 60, fillColor: '#3b82f6' },
       ])[0];
 
-      renderShape(ctx, shape, 'dark');
+      renderShape(dark.ctx, shape, 'dark');
+      renderShape(light.ctx, shape, 'light');
 
-      expect(strokeStyles).toContain('rgba(59, 130, 246, 0.4)');
-      expect(strokeStyles).not.toContain('rgba(59, 130, 246, 1)');
+      const expected = `rgba(59, 130, 246, ${DARK_FILL_ALPHA})`;
+      expect(dark.strokeStyles).toContain(expected);
+      expect(light.strokeStyles).toContain(expected);
+      expect(dark.strokeStyles).not.toContain('rgba(59, 130, 246, 1)');
+      expect(light.strokeStyles).not.toContain('#3b82f6');
     });
 
     it('renders unknown shape types as a rectangle instead of silently dropping them', () => {

@@ -87,6 +87,13 @@ npm.cmd run build
 
 To validate the docs site, see the "Documentation" section below.
 
+### Connecting a Visiting AI Agent (First Prompt)
+Start every new agent session with this one instruction:
+
+> Call `get_tool_usage_prompt` first and follow it exactly — do not answer or draw until you have.
+
+The guide it returns is the full operating prompt — the tool index, the shape `type` contract, the connector `startId`/`endId` rules, and the verify-with-`canvas2d_inspect_shapes` step — so those rules live in the prompt itself, not your opening message.
+
 ---
 
 ## Documentation

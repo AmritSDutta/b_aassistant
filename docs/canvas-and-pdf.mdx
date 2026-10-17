@@ -1,6 +1,6 @@
 ---
 title: Canvas2D Scene Graph & PDF Export
-description: Persistent 2D scene graph with Rough.js hand-drawn rendering, dark-mode calibration, perimeter docking, and in-browser PDF generation.
+description: Persistent 2D scene graph with Rough.js hand-drawn rendering, 80%-transparent hatch fills in both themes, perimeter docking, and in-browser PDF generation.
 ---
 
 # Canvas2D Scene Graph & PDF Export
@@ -71,14 +71,14 @@ Two invariants keep agent-authored shapes from silently disappearing:
    `renderShape` switch enumerates every type and ends in a `default` that renders unknown types as a
    rectangle with a `console.warn`, so a shape is never dropped without a trace.
 
-## Dark-Mode Calibration
+## Fill Transparency & Theme Calibration
 
-Dark mode is not a color inversion — it needs a controlled alpha and denser hatching to read against the
-`#0d1117` backdrop:
+Hatch/fill transparency is now uniform across themes, and the artwork stays legible against each backdrop:
 
-- **Forced fill alpha.** `renderShape` rewrites any fill to `rgba(r, g, b, 0.4)` (`DARK_FILL_ALPHA`) in
-  dark mode via `normalizeRgba()`, which parses hex, `rgb()`/`rgba()`, and named colors. Previously only
-  integer `rgba()` strings were rescaled, so hex fills rendered fully opaque.
+- **Forced fill alpha (80% transparent).** `renderShape` rewrites every fill to `rgba(r, g, b, 0.2)`
+  (`DARK_FILL_ALPHA = 0.2`) via `normalizeRgba()` — in **both** light and dark mode — so the angled
+  hachure strips are always see-through. `normalizeRgba()` parses hex, `rgb()`/`rgba()`, and named
+  colors; previously only integer `rgba()` strings were rescaled, so hex fills rendered fully opaque.
 - **Elevated substrate pills.** Connector labels use a slate card (`rgba(15,23,42,0.92)` fill,
   `rgba(148,163,184,0.35)` keyline) in dark mode and a warm off-white card (`rgba(255,253,247,0.96)`,
   `#cbd5e1` keyline) in light mode — no milky semi-transparent-white hazing on black.
@@ -105,11 +105,11 @@ The Canvas2D engine features interactive viewport management and depth rendering
 
 ## Translucent Color Palette
 
-Fill colors are authored as translucent `rgba()` and re-normalized per theme: dark mode forces alpha
-`0.4` (`normalizeRgba` + `DARK_FILL_ALPHA`), while light mode boosts alpha via `applyThemeAlpha`
-(factor `1.8`, clamped `[0.2, 0.88]`) so soft tones do not wash out on warm paper. Strokes adapt via
-`resolveThemeStrokeColor()` (default `#94a3b8` in dark, `#334155` in light), and every label resolves to
-the universal high-contrast amber `#d97706` (`MEDIUM_DARK_YELLOW`) for the same reason in both themes.
+Fill colors are authored as translucent `rgba()` (or archetype/palette tokens resolved by
+`resolveHarmonizedFill`), then `renderShape` forces the strip alpha to `0.2` (`DARK_FILL_ALPHA = 0.2` —
+80% transparent) in **both** themes. Strokes adapt via `resolveThemeStrokeColor()` (default `#94a3b8` in
+dark, `#334155` in light), and every label resolves to the universal high-contrast amber `#d97706`
+(`MEDIUM_DARK_YELLOW`) in both themes.
 
 | Role | Authored fill | Archetype token |
 | :--- | :--- | :--- |

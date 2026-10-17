@@ -62,3 +62,15 @@ never re-register (or mid-session abort) the tool set; `updateWebMCPContext()` s
 | `search_web` | `{ query: string }` | Live DuckDuckGo results via the same-origin `/api/websearch` proxy. Returns `{ results, fetchedAt, source }`; on failure `{ results: [], unavailable: true }` rather than fabricated data. |
 | `search_research` | `{ query: string }` | ArXiv papers via the same-origin `/api/arxiv` proxy, with `fetchedAt`/`source` and honest unavailability. |
 | `calculate` | `{ expression: string }` | Evaluates decimal math with floating-point correction. |
+
+## First Instruction for a Visiting Agent
+
+The opening instruction to the agent is just the entry point — the detailed contract lives **inside** the
+guide that `get_tool_usage_prompt` returns:
+
+> Call `get_tool_usage_prompt` first and follow it exactly — do not answer or draw until you have.
+
+That returned prompt already carries the tool index, the shape `type` contract, the connector
+`startId`/`endId` rules, and the verify-with-`canvas2d_inspect_shapes` step, so an opening message never
+needs to duplicate them. The contract is also enforced structurally: `canvas2d_draw_shapes` declares
+`required: ["type"]` in its `inputSchema` — see [Canvas2D Scene Graph](/canvas-and-pdf).

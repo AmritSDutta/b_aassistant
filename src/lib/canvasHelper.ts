@@ -15,7 +15,8 @@ export function getRoughCanvas(ctx: CanvasRenderingContext2D): any | null {
   return null;
 }
 
-export const DARK_FILL_ALPHA = 0.4;
+// Hatch/fill alpha, applied in both themes. 0.2 = 80% transparent (20% opaque).
+export const DARK_FILL_ALPHA = 0.2;
 
 export function toFiniteNumber(value: unknown): number | undefined {
   if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
@@ -533,7 +534,8 @@ export function renderShape(
 
   let effectiveFill = resolveHarmonizedFill(shape.fillColor, shape.palette, theme);
   const isDarkScene = theme === 'dark';
-  if (isDarkScene && effectiveFill && effectiveFill !== 'transparent') {
+  // Applied in both themes so the hatch strips are the same transparency everywhere.
+  if (effectiveFill && effectiveFill !== 'transparent') {
     effectiveFill = normalizeRgba(effectiveFill, DARK_FILL_ALPHA);
   }
   const roughness = finiteOr(shape.roughness, isDarkScene ? 0.8 : 1.2);

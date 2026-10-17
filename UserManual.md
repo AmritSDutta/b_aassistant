@@ -112,6 +112,15 @@ bAssistant automatically registers a multi-standard WebMCP provider on four glob
 2. Open bAssistant and navigate to the WebMCP Inspector tab in Chrome DevTools.
 3. You will see all 17 tools listed. You can invoke them manually or attach your LLM API key directly in the extension to let your model explore and draw live.
 
+### First Instruction to Give Your Agent (Copy–Paste)
+Paste this as the opening prompt of a new session:
+
+> Call `get_tool_usage_prompt` first and follow it exactly — do not answer or draw until you have.
+
+That tool returns the full operating prompt, which already contains the drawing contract (every shape needs a `type`; connectors use `startId`/`endId` matching node `id`s) and the verify-with-`canvas2d_inspect_shapes` step — so you never duplicate those rules here.
+
+> **Why:** an agent that skips the guide and omits `type` produces arrows with no node boxes ("0 nodes, 4 connectors").
+
 ---
 
 ## 4. Document Ingestion & Private Search
