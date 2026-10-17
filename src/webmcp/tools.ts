@@ -63,14 +63,63 @@ export const TOOL_DEFINITIONS: WebMCPTool[] = [
   {
     name: 'canvas2d_draw_shapes',
     description:
-      'Appends new structured Canvas2D shapes (rectangle, ellipse, diamond, text, arrow, line, sticker) onto the artistic HTML canvas. Powered by Rough.js hand-drawn sketching (roughness, fillStyle: "hachure"|"zigzag"|"cross-hatch"|"solid") and fluid cubic Bézier splines with tangent arrowheads docking via startId/endId. Supports curated editorial/Risograph palettes (terracotta, cobalt, sage, sunflower, plum), archetype tokens (client, gateway, db, queue, logic), and micro-badges (subtitle: "[POSTGRES]").',
+      'Appends structured shapes to the Canvas2D scene graph (Rough.js hand-drawn sketching). Every element MUST include "type". Nodes: "rectangle" | "ellipse" | "diamond" | "sticker" | "text" with { id, text, x, y, width (~170), height (~90), subtitle?, fillColor?, strokeColor?, fillStyle?, palette? }. Connectors: "arrow" | "line" with { id, startId, endId, text? } that dock edge-to-edge to the nodes named by startId/endId. Use "type" for the kind and "text" for the label — a node without "type" is dropped, and "archetype"/"label" are NOT substitutes for "type"/"text". Example: {"shapes":[{"type":"rectangle","id":"a","text":"Client","x":80,"y":200,"width":170,"height":90,"fillColor":"client"},{"type":"rectangle","id":"b","text":"API Gateway","x":300,"y":200,"width":170,"height":90,"fillColor":"gateway"},{"type":"arrow","id":"e1","startId":"a","endId":"b","text":"HTTPS"}]}. fillColor accepts hex/rgba or a palette token (client, gateway, db, queue, logic, terracotta, cobalt, sage, sunflower, plum). After drawing, call canvas2d_inspect_shapes and confirm node/edge counts before reporting success.',
     inputSchema: {
       type: 'object',
       properties: {
         shapes: {
           type: 'array',
-          items: { type: 'object' },
           description: 'Array of Canvas2D shape objects to append to the canvas scene graph.',
+          items: {
+            type: 'object',
+            required: ['type'],
+            properties: {
+              type: {
+                type: 'string',
+                enum: ['rectangle', 'ellipse', 'diamond', 'sticker', 'text', 'arrow', 'line'],
+                description:
+                  'REQUIRED shape kind. Nodes: rectangle | ellipse | diamond | sticker | text. Connectors: arrow | line. Never omit this.',
+              },
+              id: {
+                type: 'string',
+                description: 'Unique id; connectors reference it via startId/endId.',
+              },
+              text: {
+                type: 'string',
+                description: 'Visible label rendered on the shape. Use "text", not "label".',
+              },
+              subtitle: {
+                type: 'string',
+                description: 'Optional uppercase micro-badge, e.g. "[POSTGRES]".',
+              },
+              x: { type: 'number', description: 'Left x of the node in px.' },
+              y: { type: 'number', description: 'Top y of the node in px.' },
+              width: { type: 'number', description: 'Node width in px (default 160).' },
+              height: { type: 'number', description: 'Node height in px (default 80).' },
+              startId: { type: 'string', description: 'Connector only: id of the source node.' },
+              endId: { type: 'string', description: 'Connector only: id of the target node.' },
+              fillColor: {
+                type: 'string',
+                description:
+                  'Fill hex/rgba, or a palette token: client | gateway | db | queue | logic | terracotta | cobalt | sage | sunflower | plum.',
+              },
+              strokeColor: { type: 'string', description: 'Border color (hex/rgba).' },
+              fillStyle: {
+                type: 'string',
+                enum: ['hachure', 'solid', 'zigzag', 'cross-hatch', 'dots'],
+                description: 'Hand-drawn fill style (default hachure).',
+              },
+              palette: {
+                type: 'string',
+                enum: ['risograph', 'editorial', 'botanical', 'cyberpunk'],
+                description: 'Optional curated palette used to resolve fill tokens.',
+              },
+              roughness: {
+                type: 'number',
+                description: 'Sketch roughness 0-3 (0 renders a clean straight vector).',
+              },
+            },
+          },
         },
       },
       required: ['shapes'],
