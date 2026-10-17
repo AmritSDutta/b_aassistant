@@ -3,13 +3,23 @@ import { globalCanvasEngine, CanvasCommand } from '../lib/canvasEngine';
 import { Canvas2dShape } from '../types/canvas2d';
 import { AGENT_TOOL_GUIDE } from './agentGuide';
 
+export interface SearchToolOutcome<T> {
+  results: T[];
+  fetchedAt?: string;
+  source?: string;
+  unavailable?: boolean;
+  error?: string;
+}
+
 export interface ToolContext {
   getMessages: () => Array<{ sender: 'user' | 'agent'; text: string; timestamp: number }>;
   postMessage: (text: string) => void;
   searchDocument?: (query: string) => Promise<Array<{ pageNumber: number; text: string; score: number }>>;
   cleanDocument?: () => Promise<void>;
-  searchWeb?: (query: string) => Promise<Array<{ title: string; snippet: string; url: string }>>;
-  searchResearch?: (query: string) => Promise<Array<{ title: string; summary: string; authors: string[]; id: string }>>;
+  searchWeb?: (query: string) => Promise<SearchToolOutcome<{ title: string; snippet: string; url: string }>>;
+  searchResearch?: (
+    query: string
+  ) => Promise<SearchToolOutcome<{ title: string; summary: string; authors: string[]; id: string }>>;
   calculate?: (expression: string) => number;
   exportPdf?: () => { success: boolean; error?: string } | void;
   getReferenceUrls?: () => string[];
@@ -53,7 +63,7 @@ export const TOOL_DEFINITIONS: WebMCPTool[] = [
   {
     name: 'canvas2d_draw_shapes',
     description:
-      'Appends new structured Canvas2D shapes (rectangle, ellipse, diamond, text, arrow, line, sticker) onto the HTML canvas scene graph. Arrows attach dynamically to node boundaries via startId/endId and stay attached when shapes move. Supports soft-translucent colors: client "rgba(99,102,241,0.18)" (#818cf8), gateway "rgba(16,185,129,0.16)" (#34d399), db "rgba(168,85,247,0.18)" (#c084fc), queue "rgba(251,146,60,0.18)" (#fb923c), decision "rgba(250,204,21,0.16)" (#fbbf24), or sticker (stickerColor: "yellow"|"mint"|"rose", emoji: "⚠️"|"💡").',
+      'Appends new structured Canvas2D shapes (rectangle, ellipse, diamond, text, arrow, line, sticker) onto the artistic HTML canvas. Powered by Rough.js hand-drawn sketching (roughness, fillStyle: "hachure"|"zigzag"|"cross-hatch"|"solid") and fluid cubic Bézier splines with tangent arrowheads docking via startId/endId. Supports curated editorial/Risograph palettes (terracotta, cobalt, sage, sunflower, plum), archetype tokens (client, gateway, db, queue, logic), and micro-badges (subtitle: "[POSTGRES]").',
     inputSchema: {
       type: 'object',
       properties: {
@@ -436,19 +446,17 @@ export async function executeToolCall(
     case 'search_web': {
       const query = String(args?.query || '');
       if (!context.searchWeb) {
-        return { results: [], message: 'Web search not available' };
+        return { results: [], unavailable: true, error: 'Web search not available' };
       }
-      const results = await context.searchWeb(query);
-      return { results };
+      return await context.searchWeb(query);
     }
 
     case 'search_research': {
       const query = String(args?.query || '');
       if (!context.searchResearch) {
-        return { results: [], message: 'Research search not available' };
+        return { results: [], unavailable: true, error: 'Research search not available' };
       }
-      const results = await context.searchResearch(query);
-      return { results };
+      return await context.searchResearch(query);
     }
 
     case 'calculate': {

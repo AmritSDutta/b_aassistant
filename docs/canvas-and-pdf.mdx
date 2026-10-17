@@ -1,6 +1,6 @@
 ---
 title: Canvas2D Scene Graph & PDF Export
-description: Persistent 2D scene graph, perimeter edge-to-edge docking, soft-translucent color palette, and in-browser PDF generation.
+description: Persistent 2D scene graph with Rough.js hand-drawn rendering, dark-mode calibration, perimeter docking, and in-browser PDF generation.
 ---
 
 # Canvas2D Scene Graph & PDF Export
@@ -46,12 +46,52 @@ Instead of fire-and-forget pixel drawing commands, the canvas maintains a persis
 6. **`arrow` / `line`**: Connectors that bind to node boundaries (`startId`, `endId`) and stay dynamically attached when nodes move.
 7. **`freedraw`**: Freehand stroke stored as a point array (`points`), rendered as a polyline rather than pixels.
 
+## Artistic Rendering (Rough.js)
+
+Shape interiors are rendered with [Rough.js](https://roughjs.com/) (`roughjs ^4.6.6`, MIT) for a
+hand-drawn editorial look rather than rigid vector polygons:
+
+- **Hachure fills** are the default when a fill color is present (`fillStyle: 'hachure'`, `hachureAngle: -41`, `hachureGap: 6`); `solid`, `zigzag`, and `cross-hatch` are opt-in per shape.
+- **`fillWeight`** is set to `max(strokeWidth, 1)` so hatch strokes stay legible against the dark backdrop instead of fading out.
+- **Fluid connectors**: arrows and lines render as orientation-aware cubic Bézier splines (`ctx.bezierCurveTo`) with tangent-aligned arrowheads; set `curved: false` for a clean straight edge.
+- **Palettes**: curated Risograph/editorial tokens (`terracotta`, `cobalt`, `sage`, `sunflower`, `plum`, …) and archetype tokens (`client`, `gateway`, `db`, `queue`, `logic`) are resolved by `resolveHarmonizedFill()`; harsh primary hex inputs (`#ff0000`, `#0000ff`, …) are softened into print-grade tones.
+- Rough.js is used when `roughness > 0`; `roughness: 0` falls back to the plain rounded-rect / ellipse / polygon path.
+
+## Geometry Normalization & Total Type Dispatch
+
+Two invariants keep agent-authored shapes from silently disappearing:
+
+1. **Numeric coercion.** `sanitizeCanvas2dShapes()` coerces `x`, `y`, `width`, `height`, `strokeWidth`,
+   `fontSize`, `roughness`, `bowing`, `hachureAngle`, `hachureGap`, and connector coordinates
+   (`startX/startY/endX/endY`) to finite numbers. This matters because Rough.js computes rectangle
+   corners as `x + width` — a string dimension like `"160"` concatenates to `"100160"` and flings the
+   shape off-canvas. Non-finite values are dropped so defaults apply.
+2. **Type aliases + total dispatch.** Aliases are normalized (`rect`/`box`/`card`/`container`/`node`/`square`
+   → `rectangle`; `circle`/`oval`/`database`/`db` → `ellipse`; `note`/`sticky` → `sticker`; …). The
+   `renderShape` switch enumerates every type and ends in a `default` that renders unknown types as a
+   rectangle with a `console.warn`, so a shape is never dropped without a trace.
+
+## Dark-Mode Calibration
+
+Dark mode is not a color inversion — it needs a controlled alpha and denser hatching to read against the
+`#0d1117` backdrop:
+
+- **Forced fill alpha.** `renderShape` rewrites any fill to `rgba(r, g, b, 0.4)` (`DARK_FILL_ALPHA`) in
+  dark mode via `normalizeRgba()`, which parses hex, `rgb()`/`rgba()`, and named colors. Previously only
+  integer `rgba()` strings were rescaled, so hex fills rendered fully opaque.
+- **Elevated substrate pills.** Connector labels use a slate card (`rgba(15,23,42,0.92)` fill,
+  `rgba(148,163,184,0.35)` keyline) in dark mode and a warm off-white card (`rgba(255,253,247,0.96)`,
+  `#cbd5e1` keyline) in light mode — no milky semi-transparent-white hazing on black.
+- **Single source of truth for theme.** `renderShape`/`drawLabel` trust the passed `theme` argument;
+  `CanvasEngine.syncThemeFromDom()` is the only place that reads the `<html class="dark">` DOM state.
+  This stops dark styling from leaking into light renders (and into offscreen snapshot captures).
+
 ## Perimeter Edge-to-Edge Docking
 
 Connectors compute the dominant vector between shape centers and dock to the facing perimeter boundaries:
 - Never passes through node center text.
 - Connectors stay anchored automatically without manual coordinate calculation.
-- Edge labels render with protective backdrop pills (`rgba(255,255,255,0.95)` in light, `rgba(24,24,27,0.95)` in dark).
+- Edge labels render with protective backdrop pills (`rgba(255,253,247,0.96)` in light, `rgba(15,23,42,0.92)` in dark).
 
 ## Viewport Matrix & Visual Enhancements
 
@@ -60,18 +100,28 @@ The Canvas2D engine features interactive viewport management and depth rendering
 - **Interactive Pan & Smooth Wheel Zoom:** Allows users to drag-to-pan across the canvas plane and zoom with mouse wheel (`zoomAtPoint`, factor 1.1 in / 0.9 out, scale clamped `[0.2, 4]`), keeping the cursor focus pinned. The `Fit View` and `Reset` toolbar buttons map to `fitToContent()` and `resetView()`.
 - **Tight-Crop Snapshot Export:** `getSnapshotDataUrl()` computes the content bounds of all shapes, renders them to an offscreen canvas with a 40px padding (nodes first, then docked connectors), and returns a cropped PNG data URL — used for canvas snapshots in PDF reports and persisted session turns.
 - **2.5D Drop Shadows:** Nodes render with ambient elevation shadows (`shadowOffsetY: 4`, `shadowBlur: 12`), cleared before stroking borders for crisp lines.
-- **Light Theme Contrast Boost & Fill Awareness:** Scaled fill alpha (`applyThemeAlpha`) prevents soft translucent colors from appearing washed out on light paper backgrounds. `resolveThemeTextColor` analyzes background fill luminance and opacity (`parseColorLuminance`), enforcing high-contrast dark slate (`#0f172a`) text across translucent and pale shapes in light mode. These stateless color, geometry, and render-pipeline helpers live in `src/lib/canvasHelper.ts`, consumed by the `CanvasEngine` class in `src/lib/canvasEngine.ts`.
+- **Theme-Aware Contrast:** `applyThemeAlpha` scales fill alpha up in light mode so soft tones stay visible on warm paper; `resolveThemeTextColor` normalizes white/off-white/black/washed-out colors to the universal amber `#d97706` (`MEDIUM_DARK_YELLOW`), while genuine custom accent colors pass through — giving labels equal, readable contrast in both themes. These stateless color, geometry, and render-pipeline helpers live in `src/lib/canvasHelper.ts` (with `parseColorLuminance`, `isLightColor`, `isDarkColor`), consumed by the `CanvasEngine` class in `src/lib/canvasEngine.ts`.
 - **Live DOM Theme Synchronization:** A `MutationObserver` on `document.documentElement` dynamically tracks theme class toggles in real time via `getTheme()`, triggering automatic redraws without delay or state mismatch.
 
-## Soft-Translucent Color Palette
+## Translucent Color Palette
 
-| Role | Fill Color (`rgba`) | Stroke Color | Text Color |
-| :--- | :--- | :--- | :--- |
-| **Client / Ingress** | `rgba(99,102,241,0.18)` | `#818cf8` | `#e0e7ff` |
-| **Server / Gateway** | `rgba(16,185,129,0.16)` | `#34d399` | `#d1fae5` |
-| **Database / Storage** | `rgba(168,85,247,0.18)` | `#c084fc` | `#f3e8ff` |
-| **Cache / Queue** | `rgba(251,146,60,0.18)` | `#fb923c` | `#ffedd5` |
-| **Decision / Logic** | `rgba(250,204,21,0.16)` | `#fbbf24` | `#fef9c3` |
+Fill colors are authored as translucent `rgba()` and re-normalized per theme: dark mode forces alpha
+`0.4` (`normalizeRgba` + `DARK_FILL_ALPHA`), while light mode boosts alpha via `applyThemeAlpha`
+(factor `1.8`, clamped `[0.2, 0.88]`) so soft tones do not wash out on warm paper. Strokes adapt via
+`resolveThemeStrokeColor()` (default `#94a3b8` in dark, `#334155` in light), and every label resolves to
+the universal high-contrast amber `#d97706` (`MEDIUM_DARK_YELLOW`) for the same reason in both themes.
+
+| Role | Authored fill | Archetype token |
+| :--- | :--- | :--- |
+| **Client / Ingress** | `rgba(99,102,241,0.22)` | `client` |
+| **Server / Gateway** | `rgba(16,185,129,0.20)` | `gateway` |
+| **Database / Storage** | `rgba(168,85,247,0.22)` | `db` |
+| **Cache / Queue** | `rgba(251,146,60,0.22)` | `queue` |
+| **Decision / Logic** | `rgba(250,204,21,0.20)` | `logic` |
+
+A **Risograph / editorial** palette is also available via `palette` + a token name: `terracotta`
+`rgba(224,109,83,0.22)`, `cobalt` `rgba(59,102,207,0.22)`, `sage` `rgba(78,154,126,0.22)`, `sunflower`
+`rgba(229,169,59,0.22)`, and `plum` `rgba(124,74,115,0.22)`.
 
 ## Client-Side PDF Generation & Active Session Persistence
 

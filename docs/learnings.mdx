@@ -123,3 +123,67 @@ flowchart TD
    The `cleanPdfSyntaxTokens()` sanitizer strips PDF structural delimiters (`%PDF-`, `endstream`, `endobj`, `/Font`, `/Length`, `/Filter /FlateDecode`, `/ProcSet`, `/MediaBox`) and rejects any extracted chunk containing residual binary bytecode before passing text to the chunk builder.
 3. **Atomic IDB Store Reset**:
    `globalIDBStorage.saveDocument()` unconditionally clears the `documents`, `chunks`, and `bm25_index` stores prior to persisting newly parsed data, guaranteeing zero cross-document contamination.
+
+## Hand-Drawn Canvas Regression: String Geometry Meets Rough.js
+
+Switching the renderer to Rough.js made rectangle nodes **vanish entirely** while ellipses and diamonds
+survived — a non-obvious interaction between type coercion and the library's math.
+
+### The Problem: `+` Concatenates Strings
+`sanitizeCanvas2dShapes()` coerced `x`/`y` but passed `width`/`height` through untouched. Rough.js builds
+a rectangle's corners as `[x + width, y]`:
+
+```js
+const points = [[x, y], [x + width, y], [x + width, y + height], [x, y + height]];
+```
+
+With a string dimension (`"width": "160"`), `100 + "160"` yields `"100160"`, so the rectangle's edges
+collapse far off-canvas. The pre-Rough code used `ctx.roundRect(x, y, "160", "80")`, and the Canvas API
+silently coerced numeric strings — so the bug only appeared after the rewrite. Ellipses were unaffected
+because their math uses `/` and `Math.pow`, which coerce.
+
+### The Solution: Normalize Geometry at the Boundary
+1. **Coerce on ingest** — `sanitizeCanvas2dShapes()` runs every numeric field (`width`, `height`,
+   `strokeWidth`, `fontSize`, `roughness`, `bowing`, `hachureAngle`, `hachureGap`, connector
+   coordinates) through `toFiniteNumber()`; non-finite values are dropped so defaults apply.
+2. **Guard at render time** — `renderShape`/`renderConnector` read dimensions via a `finiteOr()` helper,
+   so unserialized input cannot reach Rough.js.
+3. **Never drop silently** — the `renderShape` switch gained a `default` branch that renders unknown
+   types as a rectangle with a warning, and a `freedraw` case for the polyline type.
+
+### The Test Blind Spot
+Existing canvas tests mocked `getContext()` with an object that had **no `.canvas` property**, so
+`getRoughCanvas()` returned `null` and Rough.js never actually executed — the broken path was green. The
+regression test now supplies a context whose `canvas.getContext()` returns itself, so the real Rough
+draw path runs and string dimensions are asserted to land on-canvas.
+
+## Client-Side Search Behind a Same-Origin Proxy
+
+The `search_web` and `search_research` tools failed in the browser with `net::ERR_FAILED` and
+`TypeError: Failed to fetch` — and then **lied about it**.
+
+### The Problem: CORS + Fabricated Fallbacks
+`export.arxiv.org` and `api.duckduckgo.com` send no `Access-Control-Allow-Origin`, so a direct browser
+`fetch()` was blocked. The `catch` then returned a hardcoded "Fallback preview" object, so visiting
+agents presented placeholder text as a real result. Separately, DuckDuckGo's Instant Answer API is
+encyclopedic and structurally stale.
+
+### The Solution: One Relative URL, Two Runtimes
+Search now calls the same relative `/api/*` path in both environments:
+
+```mermaid
+flowchart TD
+  Client["searchService.ts"] -->|"GET /api/websearch or /api/arxiv"| Api["Same-origin /api layer"]
+  Api --> Dev["Dev: Vite proxy + middleware"]
+  Api --> Prod["Prod: Cloudflare Pages Functions"]
+  Dev --> Upstream["DuckDuckGo HTML / ArXiv Atom"]
+  Prod --> Upstream
+```
+
+1. **Shared parser** — `src/lib/ddgSearch.ts` parses DuckDuckGo HTML results and is imported by both the
+   Vite dev middleware and `functions/api/websearch.ts`, so behaviour matches.
+2. **Dev vs prod** — `vite.config.ts` proxies `/api/arxiv` and mounts the middleware; Cloudflare Pages
+   Functions (`functions/api/*`, scoped by `public/_routes.json`) serve the routes in production.
+3. **Honest results** — every result carries `fetchedAt`/`source`, and a failure returns
+   `{ results: [], unavailable: true, error }`. No fabricated data; the agent guide tells agents to
+   report unavailability rather than invent answers.

@@ -1,24 +1,64 @@
 ---
 title: Research & Math Tools
-description: Overview of free-tier DuckDuckGo, ArXiv, and decimal calculator tools available in bAssistant.
+description: Same-origin DuckDuckGo and ArXiv search through a dev-proxy / Cloudflare Pages Function layer, plus the decimal calculator.
 ---
 
 # Research & Math Tools
 
-To empower visiting AI agents without requiring external paid API keys, bAssistant provides free client-side research and calculation tools.
+bAssistant ships free research and calculation tools so visiting agents do not need paid API keys. Web
+search and academic search run through a **same-origin `/api` layer** rather than fetching third-party
+hosts directly from the browser — the browser blocks the direct calls with CORS, so the proxy is what
+makes the tools work at all.
+
+## Why a proxy layer
+
+`export.arxiv.org` and `api.duckduckgo.com` do not send `Access-Control-Allow-Origin` headers, so a
+`fetch()` from the app origin is rejected and surfaces as `TypeError: Failed to fetch`. bAssistant
+therefore calls relative `/api/*` URLs that resolve identically in both environments:
+
+- **Development** — `vite.config.ts` proxies `/api/arxiv` to `https://export.arxiv.org` and mounts a
+  dev middleware (`dev-search-endpoints`) for `/api/websearch`.
+- **Production** — Cloudflare Pages Functions in `functions/api/` serve the same two routes; the
+  shared parser lives in `src/lib/ddgSearch.ts` so dev and prod behave the same.
+
+`public/_routes.json` restricts Pages Function invocation to `/api/*`, keeping every other path a
+plain static asset.
+
+```mermaid
+flowchart TD
+  Tool["search_web / search_research tool"] --> Service["searchService.ts (browser)"]
+  Service -->|"GET /api/websearch or /api/arxiv"| Api["Same-origin /api layer"]
+  Api --> Dev["Dev: vite.config.ts proxy + middleware"]
+  Api --> Prod["Prod: Cloudflare Pages Functions"]
+  Dev --> DDG["DuckDuckGo HTML results"]
+  Dev --> Arxiv["export.arxiv.org Atom API"]
+  Prod --> DDG
+  Prod --> Arxiv
+```
 
 ## Available Tools
 
 ### 1. `search_web`
-- **Provider**: DuckDuckGo API
-- **Endpoint**: `https://api.duckduckgo.com/?q={query}&format=json`
-- **Output**: Returns top title, snippet, and URL summaries.
+- **Provider**: DuckDuckGo HTML results, parsed server-side by `searchDuckDuckGo()` in `src/lib/ddgSearch.ts`.
+- **Endpoint**: `GET /api/websearch?query={query}` (dev middleware or `functions/api/websearch.ts`).
+- **Output**: Live top-5 `{ title, snippet, url }` results — real current web results, not encyclopedic abstracts.
 
 ### 2. `search_research`
-- **Provider**: ArXiv Public Export API
-- **Endpoint**: `https://export.arxiv.org/api/query?search_query=all:{query}&max_results=5`
-- **Output**: Returns academic paper titles, summaries, author lists, and ArXiv IDs.
+- **Provider**: ArXiv public Atom API.
+- **Endpoint**: `GET /api/arxiv?search_query=all:{query}&start=0&max_results=5` (dev proxy or `functions/api/arxiv.ts`).
+- **Output**: Paper titles, summaries, author lists, and ArXiv IDs.
 
 ### 3. `calculate`
 - **Implementation**: Pure JavaScript sanitized evaluator with precision rounding.
 - **Capabilities**: Standard operators (`+`, `-`, `*`, `/`, `×`, `÷`, `^`), parenthetical groupings, and floating-point correction.
+
+## Freshness & Failure Semantics
+
+Both search functions return a `SearchOutcome` object rather than a bare array:
+
+- Every result carries `fetchedAt` (ISO timestamp) and `source` (`duckduckgo` / `arxiv`) so the agent can
+  judge freshness, verified by unit tests.
+- On any fetch failure the outcome is `{ results: [], unavailable: true, error }` — the service **never**
+  fabricates a placeholder result. `get_tool_usage_prompt` instructs agents to report unavailability to
+  the user instead of inventing answers.
+- Requests are bounded by a 20-second `AbortController` timeout.

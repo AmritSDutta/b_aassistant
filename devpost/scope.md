@@ -21,10 +21,10 @@ Anyone who wants to learn, research, and explore any topic with AI in a cost-eff
 5. The user absorbs the text and visuals together and continues the dialogue.
 
 ## Inspiration & Identity
-- **Mood / Feel:** Clean, utilitarian, responsive, split-screen cockpit for AI-augmented research and visual thinking.
+- **Mood / Feel:** Clean, utilitarian, responsive, split-screen cockpit for AI-augmented research and visual thinking, featuring an artistic editorial illustration canvas engine rather than rigid flowchart software.
 - **Visual Structure:**
   - Left 20%: Branding (top), File Upload (middle), Session Highlights (bottom — starred messages collect here).
-  - Right 80%: HTML Canvas (top 60%), Textual Chat Area (bottom 40%) formatted with Lora typography for optimal longform reading, humanized text rendering (formatting LLM markdown headings, lists, code cards, and bold text without raw markdown symbols), and auto-scrolling to the latest turn.
+  - Right 80%: Artistic HTML Canvas (top 60% — powered by Rough.js hand-drawn sketching, fluid Bézier connectors, tactile paper textures, and Risograph color harmonies), Textual Chat Area (bottom 40%) formatted with Lora typography for optimal longform reading, humanized text rendering (formatting LLM markdown headings, lists, code cards, and bold text without raw markdown symbols), and auto-scrolling to the latest turn.
 - **Warm dual themes:** light = warm paper & navy ink; dark = warm ink surfaces (never cold blue-black), driven by a semantic CSS token layer for comfortable long sessions.
 
 ## Why This Matters to the Learner
@@ -39,7 +39,7 @@ A user opens the single-page application and activates the WebMCP Inspector test
 - `calculate`: Decimal math calculations.
 - `search_document`: Searches uploaded doc content in IndexedDB via BM25 index.
 - `clean_document`: Removes stored content from IndexedDB.
-- `canvas2d_draw_shapes`: Appends structured Canvas2D shapes (rectangles, ellipses, diamonds, text, stickers) and perimeter-docked arrows.
+- `canvas2d_draw_shapes`: Appends structured Canvas2D shapes (rectangles, ellipses, diamonds, text, stickers) with procedural hand-drawn sketching (Rough.js), organic hachure/cross-hatching fills, and fluid perimeter-docked cubic Bézier splines.
 - `canvas2d_inspect_shapes`: Inspects active canvas scene graph & ASCII topology graph.
 - `canvas2d_modify_shape`: Surgical in-place editing of shape label, position, or colors.
 - `canvas2d_clear`: Clears the Canvas2D scene graph.
@@ -52,7 +52,7 @@ A test run demonstrates a visiting agent calling these tools, retrieving data, u
 - **In Now:**
   - React-based single-page application with responsive layout (20% sidebar with dynamic transparent branding logo, file uploader for Doc/PDF < 2MB, enboldened Reference URLs manager for up to 10 probe-verified links, and enboldened Session Highlights; 80% main area split into 60% HTML canvas and 40% chat area).
   - Post-upload processing: in-browser natural per-page extraction using LiteParse (browser WASM / PDF decompressor stream with hex token decoding `<...> Tj` / `[...] TJ` and in-browser DOCX PKZip `word/document.xml` decompression) and client-side BM25 searchable index generation stored in browser datastore (IndexedDB) for accepted files (< 2MB only).
-  - Advanced HTML Canvas2D scene graph with auto-centering `fitToContent`, interactive drag-to-pan, wheel zoom, perimeter edge-to-edge docking, 2.5D drop shadows, universal **medium dark yellow** (`#d97706` / Amber 600) **bold labels** anchored at the **top of elements** (`topCenter`) and on connector pills to guarantee sharp readability in both light and dark modes, soft-translucent color palette (indigo client, emerald gateway, purple database, orange cache/queue, amber logic, sticky-note stickers), and HiDPI resolution.
+  - Artistic HTML Canvas2D Engine: Powered by Rough.js (MIT) procedural sketching for hand-drawn double-stroke borders and organic hachure/cross-hatch fills, fluid generative cubic Bézier connectors with orientation-aware control points and tangent-aligned arrowheads, tactile warm paper grain backdrop (in viewport and export snapshots), curated editorial & Risograph color harmonies (terracotta, warm cobalt, sage mint, sunflower gold), multi-tier soft ambient diffusion shadows, auto-centering `fitToContent`, interactive drag-to-pan, cursor-pinned wheel zoom, universal **medium dark yellow** (`#d97706` / Amber 600) **bold labels** anchored at `topCenter` and on connector pills to guarantee sharp readability in both light and dark modes, and HiDPI resolution.
   - Active session persistence and multi-session history management in browser IndexedDB (`session_turns` & `session_meta`): preserves dialogue history and canvas snapshots across page reloads, with a dedicated Session History Modal to browse, restore, export, or delete past sessions, and a "New Session" restart action.
   - Client-side sequential PDF export (`exportSessionPdf`) with blank session validation (blocking download and alerting when canvas and chat are empty), top-left branding logo (`bassistant_light.jpg`), sequential turn-by-turn reporting (chronological turn badges, user questions if present, per-turn canvas snapshots, and AI responses), Markdown humanization, Indic script rendering (Bengali বাংলা and Hindi हिन्दी), multipage pagination buffer (10mm), and mandatory AI disclaimer footer on every page (`AI generated analysis, verify before applying.`).
   - WebMCP tool provider layer exposing 17 tools:

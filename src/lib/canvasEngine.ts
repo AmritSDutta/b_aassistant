@@ -55,6 +55,9 @@ export class CanvasEngine {
 
   public setTheme(theme: 'dark' | 'light'): void {
     this.theme = theme;
+    if (typeof document !== 'undefined' && document.documentElement) {
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+    }
     this.redraw();
   }
 
@@ -254,7 +257,7 @@ export class CanvasEngine {
       const offCtx = offCanvas.getContext('2d');
       if (!offCtx) return this.canvas.toDataURL('image/png');
 
-      offCtx.fillStyle = this.getTheme() === 'light' ? '#ffffff' : '#09090b';
+      offCtx.fillStyle = this.getTheme() === 'light' ? '#faf8f5' : '#0d1117';
       offCtx.fillRect(0, 0, offCanvas.width, offCanvas.height);
 
       offCtx.save();
@@ -269,6 +272,7 @@ export class CanvasEngine {
   }
 
   public redraw(): void {
+    this.syncThemeFromDom();
     if (!this.ctx || !this.canvas) return;
     const ctx = this.ctx;
 

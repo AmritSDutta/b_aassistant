@@ -2,6 +2,8 @@ export interface WebSearchResult {
   title: string;
   snippet: string;
   url: string;
+  fetchedAt: string;
+  source: string;
 }
 
 export interface ResearchSearchResult {
@@ -9,84 +11,73 @@ export interface ResearchSearchResult {
   summary: string;
   authors: string[];
   id: string;
+  fetchedAt: string;
+  source: string;
 }
 
-export async function searchWeb(query: string): Promise<WebSearchResult[]> {
-  if (!query || query.trim().length === 0) return [];
+export interface SearchOutcome<T> {
+  results: T[];
+  fetchedAt: string;
+  source: string;
+  unavailable?: boolean;
+  error?: string;
+}
 
-  const currentDate = new Date().toISOString().slice(0, 10);
-  const scopedQuery = `as of ${currentDate}, ${query.trim()}`;
-  const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(scopedQuery)}&format=json&no_html=1&skip_disambig=1`;
-
+async function fetchWithTimeout(url: string, timeoutMs = 20000): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`DuckDuckGo responded with status ${response.status}`);
-    }
-
-    const data = await response.json();
-    const results: WebSearchResult[] = [];
-
-    // Abstract text
-    if (data.AbstractText) {
-      results.push({
-        title: data.Heading || query,
-        snippet: data.AbstractText,
-        url: data.AbstractURL || '',
-      });
-    }
-
-    // Related Topics
-    if (Array.isArray(data.RelatedTopics)) {
-      for (const topic of data.RelatedTopics) {
-        if (topic.Text && topic.FirstURL) {
-          results.push({
-            title: topic.Text.split(' - ')[0] || topic.Text.slice(0, 50),
-            snippet: topic.Text,
-            url: topic.FirstURL,
-          });
-        } else if (Array.isArray(topic.Topics)) {
-          for (const sub of topic.Topics) {
-            if (sub.Text && sub.FirstURL) {
-              results.push({
-                title: sub.Text.split(' - ')[0] || sub.Text.slice(0, 50),
-                snippet: sub.Text,
-                url: sub.FirstURL,
-              });
-            }
-          }
-        }
-      }
-    }
-
-    return results.slice(0, 5);
-  } catch (error: any) {
-    console.warn('searchWeb error:', error);
-    return [
-      {
-        title: `Search summary for "${query}"`,
-        snippet: `Network search query executed for: ${query}. (Fallback preview)`,
-        url: `https://duckduckgo.com/?q=${encodeURIComponent(query)}`,
-      },
-    ];
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
   }
 }
 
-export async function searchResearch(query: string): Promise<ResearchSearchResult[]> {
-  if (!query || query.trim().length === 0) return [];
-
-  const url = `https://export.arxiv.org/api/query?search_query=all:${encodeURIComponent(query.trim())}&start=0&max_results=5`;
+export async function searchWeb(query: string): Promise<SearchOutcome<WebSearchResult>> {
+  const fetchedAt = new Date().toISOString();
+  const trimmed = (query || '').trim();
+  if (!trimmed) {
+    return { results: [], fetchedAt, source: 'duckduckgo' };
+  }
 
   try {
-    const response = await fetch(url);
+    const response = await fetchWithTimeout(`/api/websearch?query=${encodeURIComponent(trimmed)}`);
     if (!response.ok) {
-      throw new Error(`ArXiv responded with status ${response.status}`);
+      throw new Error(`Search endpoint responded with status ${response.status}`);
+    }
+    const data = (await response.json()) as { results?: Array<{ title: string; snippet: string; url: string }> };
+    const results = (data.results || []).map((r) => ({ ...r, fetchedAt, source: 'duckduckgo' }));
+    return { results: results.slice(0, 5), fetchedAt, source: 'duckduckgo' };
+  } catch (error: any) {
+    console.warn('searchWeb error:', error);
+    return {
+      results: [],
+      fetchedAt,
+      source: 'duckduckgo',
+      unavailable: true,
+      error: String(error?.message || error),
+    };
+  }
+}
+
+export async function searchResearch(query: string): Promise<SearchOutcome<ResearchSearchResult>> {
+  const fetchedAt = new Date().toISOString();
+  const trimmed = (query || '').trim();
+  if (!trimmed) {
+    return { results: [], fetchedAt, source: 'arxiv' };
+  }
+
+  const url = `/api/arxiv?search_query=all:${encodeURIComponent(trimmed)}&start=0&max_results=5`;
+
+  try {
+    const response = await fetchWithTimeout(url);
+    if (!response.ok) {
+      throw new Error(`ArXiv endpoint responded with status ${response.status}`);
     }
 
     const xmlText = await response.text();
-    const results: ResearchSearchResult[] = [];
+    const parsed: Array<Omit<ResearchSearchResult, 'fetchedAt' | 'source'>> = [];
 
-    // Lightweight XML parsing compatible with browser and DOMParser
     if (typeof DOMParser !== 'undefined') {
       const parser = new DOMParser();
       const doc = parser.parseFromString(xmlText, 'text/xml');
@@ -105,17 +96,16 @@ export async function searchResearch(query: string): Promise<ResearchSearchResul
           if (name) authors.push(name);
         }
 
-        results.push({ title, summary, authors, id });
+        parsed.push({ title, summary, authors, id });
       }
     } else {
-      // Regex-based extractor fallback
       const entryBlocks = xmlText.split('<entry>').slice(1);
       for (const block of entryBlocks) {
         const titleMatch = block.match(/<title>([^<]+)<\/title>/);
         const summaryMatch = block.match(/<summary>([^<]+)<\/summary>/);
         const idMatch = block.match(/<id>([^<]+)<\/id>/);
 
-        results.push({
+        parsed.push({
           title: titleMatch ? titleMatch[1].replace(/\s+/g, ' ').trim() : 'Unknown Paper',
           summary: summaryMatch ? summaryMatch[1].replace(/\s+/g, ' ').trim() : '',
           authors: [],
@@ -124,16 +114,16 @@ export async function searchResearch(query: string): Promise<ResearchSearchResul
       }
     }
 
-    return results.slice(0, 5);
+    const results = parsed.slice(0, 5).map((r) => ({ ...r, fetchedAt, source: 'arxiv' }));
+    return { results, fetchedAt, source: 'arxiv' };
   } catch (error: any) {
     console.warn('searchResearch error:', error);
-    return [
-      {
-        title: `Research preprint match for "${query}"`,
-        summary: `ArXiv paper results queried for: ${query}. (Fallback preview)`,
-        authors: ['ArXiv Contributor'],
-        id: `https://arxiv.org/search/?query=${encodeURIComponent(query)}&searchtype=all`,
-      },
-    ];
+    return {
+      results: [],
+      fetchedAt,
+      source: 'arxiv',
+      unavailable: true,
+      error: String(error?.message || error),
+    };
   }
 }

@@ -355,17 +355,32 @@ export const App: React.FC = () => {
     }
   }, [handlePostAgentMessage, handleSearchDocument, handleCleanDocument, handleExportPdf]);
 
-  // Initialize WebMCP Provider
+  // Keep latest handlers reachable from the (stable) provider context without re-registering
+  const webmcpHandlersRef = useRef({
+    handlePostAgentMessage,
+    handleSearchDocument,
+    handleCleanDocument,
+    handleExportPdf,
+  });
+  webmcpHandlersRef.current = {
+    handlePostAgentMessage,
+    handleSearchDocument,
+    handleCleanDocument,
+    handleExportPdf,
+  };
+
+  // Initialize WebMCP Provider once. Handlers are proxied through a ref so this
+  // never re-registers (and never aborts mid-session on callback identity churn).
   useEffect(() => {
     const context: ToolContext = {
       getMessages: () => messagesRef.current,
-      postMessage: (text: string) => handlePostAgentMessage(text),
-      searchDocument: handleSearchDocument,
-      cleanDocument: handleCleanDocument,
+      postMessage: (text: string) => webmcpHandlersRef.current.handlePostAgentMessage(text),
+      searchDocument: (query: string) => webmcpHandlersRef.current.handleSearchDocument(query),
+      cleanDocument: () => webmcpHandlersRef.current.handleCleanDocument(),
       searchWeb: (query: string) => searchWeb(query),
       searchResearch: (query: string) => searchResearch(query),
       calculate: (expr: string) => calculateMath(expr),
-      exportPdf: handleExportPdf,
+      exportPdf: () => webmcpHandlersRef.current.handleExportPdf(),
       getReferenceUrls: () => referenceUrlsRef.current,
     };
 
@@ -376,7 +391,7 @@ export const App: React.FC = () => {
     return () => {
       provider.unregister();
     };
-  }, [handlePostAgentMessage, handleSearchDocument, handleCleanDocument, handleExportPdf]);
+  }, []);
 
   useEffect(() => {
     updateWebMCPContext();

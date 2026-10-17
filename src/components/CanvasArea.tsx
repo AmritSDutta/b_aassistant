@@ -104,7 +104,7 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({ theme = 'dark', onClear,
           <span className="font-bold" style={{ color: 'var(--ink)' }}>
             Canvas
           </span>
-          <span style={{ color: 'var(--you)' }}>live 2D engine</span>
+          <span style={{ color: 'var(--you)' }}>artistic sketch engine</span>
         </div>
         <div className="flex items-center gap-2">
           <button

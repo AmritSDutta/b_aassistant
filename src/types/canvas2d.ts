@@ -34,6 +34,16 @@ export interface Canvas2dShape {
   // Sticker attributes
   stickerColor?: 'yellow' | 'mint' | 'rose';
   emoji?: string;
+
+  // Artistic & Rough.js parameters
+  roughness?: number;
+  bowing?: number;
+  fillStyle?: 'hachure' | 'solid' | 'zigzag' | 'cross-hatch' | 'dots';
+  hachureAngle?: number;
+  hachureGap?: number;
+  curved?: boolean;
+  palette?: 'risograph' | 'editorial' | 'botanical' | 'cyberpunk';
+  subtitle?: string;
 }
 
 export interface ShapeBounds {

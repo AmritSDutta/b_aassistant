@@ -68,7 +68,11 @@ Source: `scope.md > The Core Loop`.
 
 ### 3. Live HTML Canvas Rendering & Scene Graph
 Source: `scope.md > The Unique Kernel`.
-- **Drawing Engine:** Executes drawing tool calls from visiting agents to render structured Canvas2D shapes (`rectangle`, `ellipse`, `diamond`, `text`, `sticker`) and dynamic perimeter-docked connectors (`arrow`, `line`).
+- **Artistic Drawing Engine:** Executes drawing tool calls from visiting agents to render structured Canvas2D shapes (`rectangle`, `ellipse`, `diamond`, `text`, `sticker`) and dynamic perimeter-docked connectors (`arrow`, `line`) using procedural hand-drawn sketch techniques powered by **Rough.js** (MIT).
+- **Procedural Hand-Drawn Sketching:** Renders organic, double-stroked boundaries, sketchy jittered contours, and textured hachure/cross-hatch fills rather than rigid CAD-like vector polygons.
+- **Fluid Generative Connectors (Bézier Splines):** Replaces rigid straight lines with graceful cubic Bézier splines (`ctx.bezierCurveTo`) whose control points curve naturally according to relative orientation, terminating in tangent-aligned arrowheads with rounded caps.
+- **Tactile Paper Backdrops:** Composites a subtle warm parchment and paper grain texture across the canvas viewport and in offscreen snapshot captures for PDF export.
+- **Curated Editorial & Risograph Color Harmonies:** Built-in artistic palettes (terracotta `#e06d53`, warm cobalt `#3b66cf`, sage mint `#4e9a7e`, sunflower gold `#e5a93b`, plum `#7c4a73`) that automatically harmonize raw primary hex inputs into magazine-grade illustration tones.
 - **Edge-to-Edge Perimeter Docking:** Connectors anchor to shape borders and stay attached when shapes move.
 - **Viewport Auto-Centering (`fitToContent`):** Measures total bounding box of all shapes and computes uniform scaling and offsets so diagrams never clip or land outside the visible canvas viewport.
 - **Interactive Pan & Smooth Wheel Zoom:** Allows users to drag-to-pan across the infinite canvas and zoom with mouse wheel (`zoomAtPoint`), keeping cursor focus stationary.

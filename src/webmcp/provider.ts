@@ -69,7 +69,14 @@ export class WebMCPProvider {
           try {
             const controller = new AbortController();
             this.registeredToolControllers.push(controller);
-            doc.modelContext.registerTool(tool, { signal: controller.signal });
+            const registration = doc.modelContext.registerTool(tool, { signal: controller.signal });
+            // The native registerTool returns a promise that rejects with an AbortError
+            // when the signal is aborted on unregister. Swallow it — aborting is expected.
+            if (registration && typeof registration.then === 'function') {
+              Promise.resolve(registration).catch(() => {
+                /* registration aborted during unregister — benign */
+              });
+            }
           } catch (e) {
             console.warn(`Could not natively register tool ${tool.name}:`, e);
           }
@@ -220,7 +227,7 @@ export class WebMCPProvider {
       this.messageListener = null;
     }
     for (const controller of this.registeredToolControllers) {
-      controller.abort();
+      controller.abort('unregister');
     }
     this.registeredToolControllers = [];
 

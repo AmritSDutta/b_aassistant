@@ -42,6 +42,7 @@ Traces `prd.md > The Core Journey`:
 - **Language & Framework:** TypeScript, React 18/19. Rationale: Standard component model, fast rendering, strict type hints.
 - **Build System:** Vite. Rationale: Fast HMR, direct static export to `dist/` compatible with Cloudflare Pages. [Vite Docs](https://vitejs.dev/)
 - **Styling:** Tailwind CSS over a semantic CSS token layer (`src/index.css`: `--paper/--panel/--card/--ink/--line` + coral/mint/violet accents). Rationale: utility-first speed with one warm palette that swaps per theme (light = paper & ink, dark = warm ink surfaces). [Tailwind Docs](https://tailwindcss.com/)
+- **Artistic Canvas Engine:** `roughjs` (^4.6.6, MIT License). Rationale: Procedural hand-drawn sketching on standard HTML5 canvas contexts (double-stroke borders, organic contours, and textured hachure/cross-hatch fills) at ~11 kB min+gzip with zero external dependencies. [Rough.js Docs](https://roughjs.com/)
 - **Document Parser:** `@llamaindex/liteparse-wasm` with browser stream decompressor (`DecompressionStream('deflate-raw')`) and DOCX zip extraction. Rationale: Zero-backend, browser-native WebAssembly PDF and document extraction with spatial page parsing. [LiteParse Docs](https://developers.llamaindex.ai/liteparse/)
 - **Client Storage:** Native `IndexedDB` with custom lightweight wrapper. Rationale: Built into all modern browsers, handles structured chunk and BM25 index persistence without backend dependencies. Reference URLs persisted in `localStorage`.
 - **Search Engine:** Custom client-side BM25 implementation (`bm25.ts`). Rationale: Pure client-side lexical relevance scoring over document pages without server dependencies.
@@ -83,6 +84,12 @@ Implements `prd.md > Features and Behavior > 3. Live HTML Canvas Rendering & Sce
 Top 60% pane of the main workspace. Renders the HTML5 `<canvas>` element and toolbar:
 - Toolbar with "New Session", "Fit View", "Reset View", "Export PDF", and "Clear Canvas" buttons.
 - `CanvasEngine`: Manages reactive scene graph (`Canvas2dShape[]`), auto-centering viewport matrix (`fitToContent`), interactive drag-to-pan, cursor-pinned wheel zoom (`zoomAtPoint`), perimeter-docked connectors with pill badges, 2.5D drop shadows, live DOM theme synchronization (`getTheme` + `MutationObserver` on `<html>` for instant theme repaint), universal **medium dark yellow** (`#d97706` / Amber 600) **bold labels** anchored at the **top of elements** (`topCenter` with top padding) and on connector pills to guarantee sharp, readable contrast across both light mode and dark mode, adaptive theme strokes (`resolveThemeStrokeColor`), light-mode alpha scaling, HiDPI scaling, and snapshot capture.
+- **Artistic Illustration Upgrades:**
+  - **Procedural Sketching:** Integrates `roughjs` for organic, hand-drawn node boundaries, double strokes, and textured fills (`hachure`, `zigzag`, `cross-hatch`).
+  - **Fluid Generative Connectors:** Replaces rigid straight lines with smooth cubic Bézier splines (`ctx.bezierCurveTo`) whose control points curve gracefully based on relative orientation, terminating in tangent-aligned arrowheads with rounded line caps.
+  - **Tactile Paper Backdrops:** Composites a subtle warm parchment and paper grain texture in the viewport and offscreen snapshot captures.
+  - **Editorial Color Harmonies:** Built-in Risograph palettes (terracotta, sage mint, warm cobalt, sunflower gold) that soften harsh saturated primaries into print-grade tones.
+  - **Organic Depth & Glassmorphism:** 2-stop linear gradient lighting, soft-focus ambient shadows, and simulated paper fold contours on stickers.
 
 ### 4. `ChatArea`
 Implements `prd.md > Features and Behavior > 2. Chat Conversation & History` and `> 6. Long-Dwell Reading Comfort`.

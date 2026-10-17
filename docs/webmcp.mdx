@@ -15,7 +15,9 @@ once, so any inspector, extension, or script finds them regardless of which prot
 1. **`document.modelContext`**: The primary Chromium imperative surface. When the native flag
    (`chrome://flags/#enable-webmcp-testing`) exposes `registerTool`, every tool is registered natively
    with an `AbortController` signal; otherwise a polyfill (`getTools`, `listTools`, `registerTool`,
-   `executeTool`) is installed.
+   `executeTool`) is installed. The promise returned by native `registerTool` is captured and its
+   rejection swallowed, and `unregister()` aborts each controller with a reason (`abort('unregister')`),
+   so tearing down the provider never produces an unhandled `AbortError`.
 2. **`navigator.modelContext`**: Draft-era imperative interface, defined with the same tool object.
 3. **`navigator.modelContextTesting`**: Flag-gated testing interface used by inspector extensions.
 4. **`window.webmcp` and `window.modelContext`**: Direct JavaScript bridge objects offering
@@ -35,6 +37,10 @@ events on `window`, each carrying `detail: { tools }`.
 > Only `get_tool_usage_prompt` and `get_reference_url` set `readOnlyHint: true`. All other tools leave
 > the hint unset (they are not flagged read-only).
 
+**Lifecycle:** the provider is constructed **once** in `App.tsx` and torn down only on unmount. Its
+`ToolContext` closures read the latest handlers through a ref, so message and reference-URL changes
+never re-register (or mid-session abort) the tool set; `updateWebMCPContext()` swaps closures in place.
+
 ## Tool Suite Overview
 
 | Tool | Parameters | Description |
@@ -43,7 +49,7 @@ events on `window`, each carrying `detail: { tools }`.
 | `get_reference_url` | `{}` | Read-only: returns a comma-separated list of external reference/documentation URLs cached in the browser session. |
 | `get_chat_history` | `{}` | Returns recent dialogue history with user messages prefixed by `user:`. |
 | `chat_post` | `{ text: string }` | Posts textual responses, markdown, or status updates to the chat area for the visiting LLM. |
-| `canvas2d_draw_shapes` | `{ shapes: object[] \| string }` | Appends structured Canvas2D shapes (rectangles, ellipses, diamonds, text, stickers, freehand `freedraw`) and perimeter-docked arrows/lines bound via `startId`/`endId`. Accepts an array or a JSON string. |
+| `canvas2d_draw_shapes` | `{ shapes: object[] \| string }` | Appends structured Canvas2D shapes (rectangles, ellipses, diamonds, text, stickers, freehand `freedraw`) rendered with Rough.js hand-drawn sketching, plus fluid Bézier connectors bound via `startId`/`endId`. Supports optional artistic styling (`roughness`, `fillStyle`, `subtitle`, `palette`). Accepts an array or a JSON string. |
 | `canvas2d_inspect_shapes` | `{}` | Returns the active scene graph and an ASCII topology graph for visiting agent self-inspection. |
 | `canvas2d_modify_shape` | `{ nodeId: string, newLabel?: string, fillColor?: string, strokeColor?: string, x?: number, y?: number }` | In-place shape editing (label, position, colors) while keeping connected arrows attached. |
 | `canvas2d_clear` | `{}` | Clears all shapes from the Canvas2D scene graph. |
@@ -53,6 +59,6 @@ events on `window`, each carrying `detail: { tools }`.
 | `canvas_clear` | `{}` | Clears all drawings from the canvas. |
 | `search_document` | `{ query: string }` | Queries IndexedDB using client-side BM25. Removes stop words and returns the top 3 pages. Recommend passing targeted keywords rather than conversational questions. |
 | `clean_document` | `{}` | Purges IndexedDB tables and resets document UI. |
-| `search_web` | `{ query: string }` | Queries DuckDuckGo for web summaries. |
-| `search_research` | `{ query: string }` | Queries ArXiv for scientific preprints. |
+| `search_web` | `{ query: string }` | Live DuckDuckGo results via the same-origin `/api/websearch` proxy. Returns `{ results, fetchedAt, source }`; on failure `{ results: [], unavailable: true }` rather than fabricated data. |
+| `search_research` | `{ query: string }` | ArXiv papers via the same-origin `/api/arxiv` proxy, with `fetchedAt`/`source` and honest unavailability. |
 | `calculate` | `{ expression: string }` | Evaluates decimal math with floating-point correction. |

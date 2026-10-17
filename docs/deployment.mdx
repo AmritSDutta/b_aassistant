@@ -51,5 +51,31 @@ the `dist/` output (dashboard drag-and-drop or Wrangler).
 > of `dist/`, so it is served independently of the fingerprinted `dist/assets/` bundle. Any hosting
 > setup must preserve this root path.
 
-No `wrangler.toml`, `_redirects`, or `_headers` files are committed; the SPA fallback and any routing
-behavior are handled by the Cloudflare Pages defaults.
+## `/api` Search Functions
+
+Web search and academic search cannot be fetched directly from the browser (those hosts send no CORS
+headers), so the app calls relative `/api/*` URLs. In production these are served by **Cloudflare Pages
+Functions** in `functions/`:
+
+| Route | File | Upstream |
+| :--- | :--- | :--- |
+| `/api/arxiv` | `functions/api/arxiv.ts` | `https://export.arxiv.org/api/query` (pass-through Atom XML) |
+| `/api/websearch` | `functions/api/websearch.ts` | DuckDuckGo HTML results, parsed to JSON via `src/lib/ddgSearch.ts` |
+
+`public/_routes.json` scopes Function invocation to `/api/*` (`{ "include": ["/api/*"], "exclude": [] }`),
+so every other path remains a static asset:
+
+```json
+{ "version": 1, "include": ["/api/*"], "exclude": [] }
+```
+
+> **Deploy requirement:** because the app now ships Pages Functions, deploy through a **Pages project**
+> (Wrangler `pages deploy`, or a Git-connected Pages build) so `/functions` is bundled — a plain static
+> upload of `dist/` alone will 404 on `/api/*`. Locally, `npm run dev` does **not** run Functions; the
+> `vite.config.ts` proxy/middleware serves the same routes, and `wrangler pages dev` exercises the real
+> Functions.
+
+In development there is no Pages runtime: `vite.config.ts` proxies `/api/arxiv` to `export.arxiv.org`
+and mounts a `dev-search-endpoints` middleware for `/api/websearch`, so the same relative URLs work in
+both environments. No `wrangler.toml`, `_redirects`, or `_headers` files are committed; SPA fallback
+uses the Cloudflare Pages defaults.

@@ -1,4 +1,144 @@
+import rough from 'roughjs';
 import { Canvas2dShape, ShapeBounds } from '../types/canvas2d';
+
+export function getRoughCanvas(ctx: CanvasRenderingContext2D): any | null {
+  try {
+    if (typeof rough !== 'undefined' && rough && typeof rough.canvas === 'function') {
+      const canvas = ctx?.canvas;
+      if (canvas && typeof canvas.getContext === 'function') {
+        return rough.canvas(canvas);
+      }
+    }
+  } catch {
+    // Graceful fallback in environments without full DOM canvas
+  }
+  return null;
+}
+
+export const DARK_FILL_ALPHA = 0.4;
+
+export function toFiniteNumber(value: unknown): number | undefined {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value.trim());
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return undefined;
+}
+
+function finiteOr(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+const NAMED_COLORS: Record<string, [number, number, number]> = {
+  white: [255, 255, 255],
+  black: [0, 0, 0],
+  red: [255, 0, 0],
+  green: [0, 128, 0],
+  blue: [0, 0, 255],
+  yellow: [255, 255, 0],
+  gray: [128, 128, 128],
+  grey: [128, 128, 128],
+};
+
+export function normalizeRgba(color: string, alpha: number): string {
+  const c = color.trim().toLowerCase();
+  if (c === 'transparent') return 'rgba(0, 0, 0, 0)';
+
+  const hex6 = c.match(/^#([0-9a-f]{6})$/i);
+  if (hex6) {
+    const r = parseInt(hex6[1].slice(0, 2), 16);
+    const g = parseInt(hex6[1].slice(2, 4), 16);
+    const b = parseInt(hex6[1].slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  const hex3 = c.match(/^#([0-9a-f]{3})$/i);
+  if (hex3) {
+    const r = parseInt(hex3[1][0] + hex3[1][0], 16);
+    const g = parseInt(hex3[1][1] + hex3[1][1], 16);
+    const b = parseInt(hex3[1][2] + hex3[1][2], 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  const rgb = c.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*[\d.]+\s*)?\)$/i);
+  if (rgb) {
+    return `rgba(${rgb[1]}, ${rgb[2]}, ${rgb[3]}, ${alpha})`;
+  }
+  const named = NAMED_COLORS[c];
+  if (named) return `rgba(${named[0]}, ${named[1]}, ${named[2]}, ${alpha})`;
+
+  return color;
+}
+
+export const EDITORIAL_PALETTES = {
+  risograph: {
+    terracotta: 'rgba(224, 109, 83, 0.22)',
+    cobalt: 'rgba(59, 102, 207, 0.22)',
+    sage: 'rgba(78, 154, 126, 0.22)',
+    sunflower: 'rgba(229, 169, 59, 0.22)',
+    plum: 'rgba(124, 74, 115, 0.22)',
+  },
+  editorial: {
+    olive: 'rgba(85, 107, 47, 0.22)',
+    ochre: 'rgba(204, 119, 34, 0.22)',
+    slate: 'rgba(47, 53, 66, 0.22)',
+    rose: 'rgba(214, 109, 117, 0.22)',
+  },
+  botanical: {
+    fern: 'rgba(74, 124, 89, 0.22)',
+    moss: 'rgba(141, 153, 111, 0.22)',
+    eucalyptus: 'rgba(92, 131, 116, 0.22)',
+    bark: 'rgba(125, 90, 80, 0.22)',
+  },
+  cyberpunk: {
+    cyan: 'rgba(6, 182, 212, 0.24)',
+    lavender: 'rgba(168, 85, 247, 0.24)',
+    amber: 'rgba(245, 158, 11, 0.24)',
+    carbon: 'rgba(30, 41, 59, 0.28)',
+  },
+};
+
+export function resolveHarmonizedFill(
+  color: string | undefined,
+  paletteName?: string,
+  theme: 'dark' | 'light' = 'dark'
+): string | undefined {
+  if (!color || color === 'transparent') return color;
+  const raw = color.trim().toLowerCase();
+
+  const archetypeMap: Record<string, string> = {
+    client: 'rgba(99, 102, 241, 0.22)',
+    gateway: 'rgba(16, 185, 129, 0.20)',
+    db: 'rgba(168, 85, 247, 0.22)',
+    database: 'rgba(168, 85, 247, 0.22)',
+    queue: 'rgba(251, 146, 60, 0.22)',
+    cache: 'rgba(251, 146, 60, 0.22)',
+    logic: 'rgba(250, 204, 21, 0.20)',
+    decision: 'rgba(250, 204, 21, 0.20)',
+    terracotta: 'rgba(224, 109, 83, 0.22)',
+    cobalt: 'rgba(59, 102, 207, 0.22)',
+    sage: 'rgba(78, 154, 126, 0.22)',
+    sunflower: 'rgba(229, 169, 59, 0.22)',
+    plum: 'rgba(124, 74, 115, 0.22)',
+    olive: 'rgba(85, 107, 47, 0.22)',
+    ochre: 'rgba(204, 119, 34, 0.22)',
+  };
+
+  if (archetypeMap[raw]) {
+    return applyThemeAlpha(archetypeMap[raw], theme);
+  }
+
+  if (paletteName && (EDITORIAL_PALETTES as any)[paletteName]) {
+    const pal = (EDITORIAL_PALETTES as any)[paletteName];
+    if (pal[raw]) return applyThemeAlpha(pal[raw], theme);
+  }
+
+  if (raw === '#ff0000' || raw === 'red') return applyThemeAlpha('rgba(224, 109, 83, 0.24)', theme);
+  if (raw === '#0000ff' || raw === 'blue') return applyThemeAlpha('rgba(59, 102, 207, 0.24)', theme);
+  if (raw === '#00ff00' || raw === 'green') return applyThemeAlpha('rgba(78, 154, 126, 0.24)', theme);
+  if (raw === '#ffff00' || raw === 'yellow') return applyThemeAlpha('rgba(229, 169, 59, 0.24)', theme);
+
+  return applyThemeAlpha(color, theme);
+}
 
 export interface DrawRectCommand {
   type: 'rect';
@@ -116,6 +256,27 @@ export function sanitizeCanvas2dShapes(raw: unknown[]): Canvas2dShape[] {
       if (!el.id) {
         el.id = `c2d_${Date.now()}_${index}_${Math.random().toString(36).substring(2, 7)}`;
       }
+
+      // Normalize shape type aliases from external LLMs and diagrams
+      const rawType = String(el.type).trim().toLowerCase();
+      if (['rect', 'rectangle', 'box', 'card', 'container', 'node', 'square'].includes(rawType)) {
+        el.type = 'rectangle';
+      } else if (['ellipse', 'circle', 'oval', 'database', 'cylinder', 'db'].includes(rawType)) {
+        el.type = 'ellipse';
+      } else if (['diamond', 'rhombus', 'decision'].includes(rawType)) {
+        el.type = 'diamond';
+      } else if (['sticker', 'note', 'sticky', 'postit'].includes(rawType)) {
+        el.type = 'sticker';
+      } else if (['arrow', 'edge', 'connector'].includes(rawType)) {
+        el.type = 'arrow';
+      } else if (['line', 'segment'].includes(rawType)) {
+        el.type = 'line';
+      } else if (['text', 'label'].includes(rawType)) {
+        el.type = 'text';
+      } else if (['freedraw', 'draw', 'sketch'].includes(rawType)) {
+        el.type = 'freedraw';
+      }
+
       const labelText =
         typeof el.text === 'string' && el.text.trim()
           ? el.text
@@ -128,8 +289,44 @@ export function sanitizeCanvas2dShapes(raw: unknown[]): Canvas2dShape[] {
       if (labelText && labelText.trim()) {
         el.text = labelText;
       }
-      if (typeof el.x !== 'number') el.x = 80 * (index + 1);
-      if (typeof el.y !== 'number') el.y = 80 * (index + 1);
+      const subtitleText =
+        typeof el.subtitle === 'string' && el.subtitle.trim()
+          ? el.subtitle
+          : typeof (el as any).sublabel === 'string' && (el as any).sublabel.trim()
+          ? (el as any).sublabel
+          : typeof (el as any).description === 'string' && (el as any).description.trim()
+          ? (el as any).description
+          : undefined;
+      delete (el as any).sublabel;
+      delete (el as any).description;
+      if (subtitleText && subtitleText.trim()) {
+        el.subtitle = subtitleText.trim();
+      }
+      el.x = toFiniteNumber(el.x) ?? 80 * (index + 1);
+      el.y = toFiniteNumber(el.y) ?? 80 * (index + 1);
+
+      const numericFields = [
+        'width',
+        'height',
+        'strokeWidth',
+        'fontSize',
+        'roughness',
+        'bowing',
+        'hachureAngle',
+        'hachureGap',
+        'startX',
+        'startY',
+        'endX',
+        'endY',
+      ] as const;
+      for (const field of numericFields) {
+        const coerced = toFiniteNumber((el as any)[field]);
+        if (coerced === undefined) {
+          delete (el as any)[field];
+        } else {
+          (el as any)[field] = coerced;
+        }
+      }
       return el;
     });
 }
@@ -329,94 +526,259 @@ export function renderShape(
   theme: 'dark' | 'light'
 ): void {
   ctx.save();
-  ctx.strokeStyle = resolveThemeStrokeColor(shape.strokeColor, theme);
-  ctx.lineWidth = typeof shape.strokeWidth === 'number' ? shape.strokeWidth : DEFAULT_STROKE_WIDTH;
+  const strokeColor = resolveThemeStrokeColor(shape.strokeColor, theme);
+  const strokeWidth = typeof shape.strokeWidth === 'number' ? shape.strokeWidth : DEFAULT_STROKE_WIDTH;
+  ctx.strokeStyle = strokeColor;
+  ctx.lineWidth = strokeWidth;
 
-  const effectiveFill = applyThemeAlpha(shape.fillColor, theme);
+  let effectiveFill = resolveHarmonizedFill(shape.fillColor, shape.palette, theme);
+  const isDarkScene = theme === 'dark';
+  if (isDarkScene && effectiveFill && effectiveFill !== 'transparent') {
+    effectiveFill = normalizeRgba(effectiveFill, DARK_FILL_ALPHA);
+  }
+  const roughness = finiteOr(shape.roughness, isDarkScene ? 0.8 : 1.2);
+  const bowing = finiteOr(shape.bowing, isDarkScene ? 0.8 : 1.2);
+  const fillStyle = shape.fillStyle || (effectiveFill && effectiveFill !== 'transparent' ? 'hachure' : undefined);
+  const hachureAngle = finiteOr(shape.hachureAngle, -41);
+  const hachureGap = finiteOr(shape.hachureGap, 6);
+  const fillWeight = Math.max(strokeWidth, 1);
+
+  const rc = roughness > 0 ? getRoughCanvas(ctx) : null;
 
   switch (shape.type) {
-    case 'rectangle': {
-      const w = shape.width ?? DEFAULT_WIDTH;
-      const h = shape.height ?? DEFAULT_HEIGHT;
-      roundedRectPath(ctx, shape.x, shape.y, w, h, 10);
-      if (effectiveFill && effectiveFill !== 'transparent') {
-        applyShadow(ctx, theme);
-        ctx.fillStyle = effectiveFill;
-        ctx.fill();
-        clearShadow(ctx);
+    case 'rectangle':
+    case 'rect' as any:
+    case 'box' as any:
+    case 'card' as any:
+    case 'node' as any:
+    case 'container' as any:
+    case 'square' as any: {
+      const w = finiteOr(shape.width, DEFAULT_WIDTH);
+      const h = finiteOr(shape.height, DEFAULT_HEIGHT);
+
+      let renderedRough = false;
+      if (rc) {
+        try {
+          applyShadow(ctx, theme);
+          rc.rectangle(shape.x, shape.y, w, h, {
+            roughness,
+            bowing,
+            stroke: strokeColor,
+            strokeWidth,
+            fill: effectiveFill,
+            fillStyle,
+            fillWeight,
+            hachureAngle,
+            hachureGap,
+          });
+          clearShadow(ctx);
+          renderedRough = true;
+        } catch {
+          renderedRough = false;
+        }
       }
-      ctx.stroke();
+
+      if (!renderedRough) {
+        roundedRectPath(ctx, shape.x, shape.y, w, h, 10);
+        if (effectiveFill && effectiveFill !== 'transparent') {
+          applyShadow(ctx, theme);
+          ctx.fillStyle = effectiveFill;
+          ctx.fill();
+          clearShadow(ctx);
+        }
+        ctx.stroke();
+      }
+
       if (shape.text) {
         drawLabel(ctx, shape.text, shape.x + w / 2, shape.y + 12, w - 16, shape, 'topCenter', false, theme);
       }
       break;
     }
-    case 'ellipse': {
-      const w = shape.width ?? 150;
-      const h = shape.height ?? 90;
-      ctx.beginPath();
-      ctx.ellipse(shape.x + w / 2, shape.y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
-      if (effectiveFill && effectiveFill !== 'transparent') {
-        applyShadow(ctx, theme);
-        ctx.fillStyle = effectiveFill;
-        ctx.fill();
-        clearShadow(ctx);
+    case 'ellipse':
+    case 'circle' as any:
+    case 'oval' as any:
+    case 'database' as any:
+    case 'cylinder' as any:
+    case 'db' as any: {
+      const w = finiteOr(shape.width, 150);
+      const h = finiteOr(shape.height, 90);
+      const cx = shape.x + w / 2;
+      const cy = shape.y + h / 2;
+
+      let renderedRough = false;
+      if (rc) {
+        try {
+          applyShadow(ctx, theme);
+          rc.ellipse(cx, cy, w, h, {
+            roughness,
+            bowing,
+            stroke: strokeColor,
+            strokeWidth,
+            fill: effectiveFill,
+            fillStyle,
+            fillWeight,
+            hachureAngle,
+            hachureGap,
+          });
+          clearShadow(ctx);
+          renderedRough = true;
+        } catch {
+          renderedRough = false;
+        }
       }
-      ctx.stroke();
+
+      if (!renderedRough) {
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, w / 2, h / 2, 0, 0, Math.PI * 2);
+        if (effectiveFill && effectiveFill !== 'transparent') {
+          applyShadow(ctx, theme);
+          ctx.fillStyle = effectiveFill;
+          ctx.fill();
+          clearShadow(ctx);
+        }
+        ctx.stroke();
+      }
+
       if (shape.text) {
-        drawLabel(ctx, shape.text, shape.x + w / 2, shape.y + 14, w - 24, shape, 'topCenter', false, theme);
+        drawLabel(ctx, shape.text, cx, shape.y + 14, w - 24, shape, 'topCenter', false, theme);
       }
       break;
     }
-    case 'diamond': {
-      const w = shape.width ?? DEFAULT_WIDTH;
-      const h = shape.height ?? DEFAULT_HEIGHT;
+    case 'diamond':
+    case 'rhombus' as any:
+    case 'decision' as any: {
+      const w = finiteOr(shape.width, DEFAULT_WIDTH);
+      const h = finiteOr(shape.height, DEFAULT_HEIGHT);
       const cx = shape.x + w / 2;
       const cy = shape.y + h / 2;
-      ctx.beginPath();
-      ctx.moveTo(cx, shape.y);
-      ctx.lineTo(shape.x + w, cy);
-      ctx.lineTo(cx, shape.y + h);
-      ctx.lineTo(shape.x, cy);
-      ctx.closePath();
-      if (effectiveFill && effectiveFill !== 'transparent') {
-        applyShadow(ctx, theme);
-        ctx.fillStyle = effectiveFill;
-        ctx.fill();
-        clearShadow(ctx);
+
+      let renderedRough = false;
+      if (rc) {
+        try {
+          applyShadow(ctx, theme);
+          rc.polygon(
+            [
+              [cx, shape.y],
+              [shape.x + w, cy],
+              [cx, shape.y + h],
+              [shape.x, cy],
+            ],
+            {
+              roughness,
+              bowing,
+              stroke: strokeColor,
+              strokeWidth,
+              fill: effectiveFill,
+              fillStyle,
+              hachureAngle,
+              hachureGap,
+            }
+          );
+          clearShadow(ctx);
+          renderedRough = true;
+        } catch {
+          renderedRough = false;
+        }
       }
-      ctx.stroke();
+
+      if (!renderedRough) {
+        ctx.beginPath();
+        ctx.moveTo(cx, shape.y);
+        ctx.lineTo(shape.x + w, cy);
+        ctx.lineTo(cx, shape.y + h);
+        ctx.lineTo(shape.x, cy);
+        ctx.closePath();
+        if (effectiveFill && effectiveFill !== 'transparent') {
+          applyShadow(ctx, theme);
+          ctx.fillStyle = effectiveFill;
+          ctx.fill();
+          clearShadow(ctx);
+        }
+        ctx.stroke();
+      }
+
       if (shape.text) {
         drawLabel(ctx, shape.text, cx, shape.y + 16, w * 0.7, shape, 'topCenter', false, theme);
       }
       break;
     }
-    case 'sticker': {
-      const w = shape.width ?? 160;
-      const h = shape.height ?? 90;
+    case 'sticker':
+    case 'note' as any:
+    case 'sticky' as any:
+    case 'postit' as any: {
+      const w = finiteOr(shape.width, 160);
+      const h = finiteOr(shape.height, 90);
       const color = shape.stickerColor || 'yellow';
       const fills: Record<string, string> = {
         yellow: 'rgba(254, 240, 138, 0.95)',
         mint: 'rgba(167, 243, 208, 0.95)',
         rose: 'rgba(254, 205, 211, 0.95)',
       };
-      applyShadow(ctx, theme);
-      ctx.fillStyle = fills[color] || fills.yellow;
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
-      roundedRectPath(ctx, shape.x, shape.y, w, h, 6);
+      const stickerFill = fills[color] || fills.yellow;
+
+      let renderedRough = false;
+      if (rc) {
+        try {
+          applyShadow(ctx, theme);
+          rc.rectangle(shape.x, shape.y, w, h, {
+            roughness: 0.8,
+            bowing: 1.0,
+            fill: stickerFill,
+            fillStyle: 'solid',
+            stroke: 'rgba(0, 0, 0, 0.18)',
+            strokeWidth: 1.2,
+          });
+          clearShadow(ctx);
+          renderedRough = true;
+        } catch {
+          renderedRough = false;
+        }
+      }
+
+      if (!renderedRough) {
+        applyShadow(ctx, theme);
+        ctx.fillStyle = stickerFill;
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
+        roundedRectPath(ctx, shape.x, shape.y, w, h, 6);
+        ctx.fill();
+        clearShadow(ctx);
+        ctx.stroke();
+      }
+
+      // Simulated tactile tape banner at top
+      ctx.save();
+      ctx.fillStyle = theme === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.45)';
+      roundedRectPath(ctx, shape.x + w / 2 - 20, shape.y - 4, 40, 10, 2);
       ctx.fill();
-      clearShadow(ctx);
-      ctx.stroke();
+      ctx.restore();
 
       let display = shape.text || '';
       if (shape.emoji) display = `${shape.emoji} ${display}`;
-      drawLabel(ctx, display, shape.x + 12, shape.y + 12, w - 24, { ...shape, textColor: '#1f2937' }, 'topLeft', false, theme);
+      drawLabel(ctx, display, shape.x + 12, shape.y + 14, w - 24, { ...shape, textColor: '#1f2937' }, 'topLeft', false, theme);
       break;
     }
     case 'text': {
       if (shape.text) {
         drawLabel(ctx, shape.text, shape.x, shape.y, 400, shape, 'topLeft', false, theme);
       }
+      break;
+    }
+    case 'freedraw' as any: {
+      if (Array.isArray(shape.points) && shape.points.length > 1) {
+        ctx.beginPath();
+        shape.points.forEach(([px, py], i) => {
+          const fx = finiteOr(px, 0);
+          const fy = finiteOr(py, 0);
+          if (i === 0) ctx.moveTo(fx, fy);
+          else ctx.lineTo(fx, fy);
+        });
+        ctx.stroke();
+      }
+      break;
+    }
+    default: {
+      console.warn(`renderShape: unknown shape type "${String((shape as any).type)}" — rendering as rectangle.`);
+      renderShape(ctx, { ...shape, type: 'rectangle' }, theme);
       break;
     }
   }
@@ -430,10 +792,12 @@ export function renderConnector(
   theme: 'dark' | 'light'
 ): void {
   ctx.save();
-  let x1 = shape.startX ?? shape.x;
-  let y1 = shape.startY ?? shape.y;
-  let x2 = shape.endX ?? shape.x + 160;
-  let y2 = shape.endY ?? shape.y;
+  const baseX = finiteOr(shape.x, 0);
+  const baseY = finiteOr(shape.y, 0);
+  let x1 = finiteOr(shape.startX, baseX);
+  let y1 = finiteOr(shape.startY, baseY);
+  let x2 = finiteOr(shape.endX, baseX + 160);
+  let y2 = finiteOr(shape.endY, baseY);
 
   // Edge-to-Edge perimeter auto-docking
   if (shape.startId && shape.endId) {
@@ -454,30 +818,85 @@ export function renderConnector(
   ctx.strokeStyle = resolveThemeStrokeColor(shape.strokeColor, theme);
   ctx.lineWidth = typeof shape.strokeWidth === 'number' ? shape.strokeWidth : 1.5;
 
-  // Line
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.lineTo(x2, y2);
-  ctx.stroke();
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const dist = Math.hypot(dx, dy);
 
-  // Arrowhead
-  if (shape.type === 'arrow') {
-    const angle = Math.atan2(y2 - y1, x2 - x1);
-    const size = 10;
+  if (shape.curved === false || dist < 12) {
+    // Clean straight connection fallback
     ctx.beginPath();
-    ctx.moveTo(x2, y2);
-    ctx.lineTo(x2 - size * Math.cos(angle - Math.PI / 6), y2 - size * Math.sin(angle - Math.PI / 6));
-    ctx.lineTo(x2 - size * Math.cos(angle + Math.PI / 6), y2 - size * Math.sin(angle + Math.PI / 6));
-    ctx.closePath();
-    ctx.fillStyle = ctx.strokeStyle;
-    ctx.fill();
-  }
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
 
-  // Label with backdrop pill
-  if (shape.text) {
-    const mx = (x1 + x2) / 2;
-    const my = (y1 + y2) / 2;
-    drawLabel(ctx, shape.text, mx, my, 220, shape, 'center', true, theme);
+    if (shape.type === 'arrow') {
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      const size = 11;
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - size * Math.cos(angle - Math.PI / 6), y2 - size * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(x2 - size * Math.cos(angle + Math.PI / 6), y2 - size * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.fill();
+    }
+
+    if (shape.text) {
+      const mx = (x1 + x2) / 2;
+      const my = (y1 + y2) / 2;
+      drawLabel(ctx, shape.text, mx, my, 220, shape, 'center', true, theme);
+    }
+  } else {
+    // Fluid generative cubic Bézier spline
+    let cx1: number;
+    let cy1: number;
+    let cx2: number;
+    let cy2: number;
+
+    if (Math.abs(dx) >= Math.abs(dy)) {
+      const curvature = Math.min(Math.abs(dx) * 0.5, 120);
+      const signX = dx >= 0 ? 1 : -1;
+      cx1 = x1 + curvature * signX;
+      cy1 = y1;
+      cx2 = x2 - curvature * signX;
+      cy2 = y2;
+    } else {
+      const curvature = Math.min(Math.abs(dy) * 0.5, 120);
+      const signY = dy >= 0 ? 1 : -1;
+      cx1 = x1;
+      cy1 = y1 + curvature * signY;
+      cx2 = x2;
+      cy2 = y2 - curvature * signY;
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.bezierCurveTo(cx1, cy1, cx2, cy2, x2, y2);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // Tangent angle at arrival point t=1: (x2 - cx2, y2 - cy2)
+    if (shape.type === 'arrow') {
+      const tangentDx = x2 - cx2;
+      const tangentDy = y2 - cy2;
+      const angle = Math.atan2(tangentDy, tangentDx);
+      const size = 11;
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - size * Math.cos(angle - Math.PI / 6), y2 - size * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(x2 - size * Math.cos(angle + Math.PI / 6), y2 - size * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.fill();
+    }
+
+    // Midpoint label position at cubic Bézier t=0.5
+    if (shape.text) {
+      const mx = 0.125 * x1 + 0.375 * cx1 + 0.375 * cx2 + 0.125 * x2;
+      const my = 0.125 * y1 + 0.375 * cy1 + 0.375 * cy2 + 0.125 * y2;
+      drawLabel(ctx, shape.text, mx, my, 220, shape, 'center', true, theme);
+    }
   }
 
   ctx.restore();
@@ -494,6 +913,8 @@ export function drawLabel(
   withPill: boolean = false,
   theme: 'dark' | 'light' = 'dark'
 ): void {
+  const effectiveTheme: 'dark' | 'light' = theme;
+
   const fontSize = typeof shape.fontSize === 'number' && shape.fontSize > 0 ? shape.fontSize : DEFAULT_FONT_SIZE;
   ctx.font = `bold ${fontSize}px ${CANVAS_FONT_STACK}`;
 
@@ -506,8 +927,8 @@ export function drawLabel(
       const w = ctx.measureText(line).width;
       if (w > maxLineWidth) maxLineWidth = w;
     }
-    const padX = 8;
-    const padY = 3;
+    const padX = effectiveTheme === 'dark' ? 6 : 8;
+    const padY = effectiveTheme === 'dark' ? 2 : 3;
     const badgeW = maxLineWidth + padX * 2;
     const badgeH = lines.length * lineHeight + padY * 2;
     const badgeX = anchor === 'center' || anchor === 'topCenter' ? cx - badgeW / 2 : cx - padX;
@@ -515,29 +936,57 @@ export function drawLabel(
 
     ctx.save();
     roundedRectPath(ctx, badgeX, badgeY, badgeW, badgeH, 6);
-    ctx.fillStyle = theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(15, 23, 42, 0.95)';
+    if (effectiveTheme === 'dark') {
+      // Sleek elevated dark substrate: crisp against #0d1117 without milky white hazing
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+      ctx.lineWidth = 1.2;
+    } else {
+      ctx.fillStyle = 'rgba(255, 253, 247, 0.96)';
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1;
+    }
     ctx.fill();
-    ctx.strokeStyle = theme === 'light' ? '#cbd5e1' : 'rgba(255, 255, 255, 0.16)';
-    ctx.lineWidth = 1;
     ctx.stroke();
     ctx.restore();
   }
 
-  ctx.fillStyle = resolveThemeTextColor(shape.textColor, theme, withPill, shape.fillColor);
+  ctx.fillStyle = resolveThemeTextColor(shape.textColor, effectiveTheme, withPill, shape.fillColor);
 
+  let currentY = cy;
   if (anchor === 'center') {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const startY = cy - ((lines.length - 1) * lineHeight) / 2;
     lines.forEach((line, i) => ctx.fillText(line, cx, startY + i * lineHeight));
+    currentY = startY + lines.length * lineHeight;
   } else if (anchor === 'topCenter') {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     lines.forEach((line, i) => ctx.fillText(line, cx, cy + i * lineHeight));
+    currentY = cy + lines.length * lineHeight;
   } else {
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
     lines.forEach((line, i) => ctx.fillText(line, cx, cy + i * lineHeight));
+    currentY = cy + lines.length * lineHeight;
+  }
+
+  // Micro-badge / subtitle beneath main label
+  if (shape.subtitle && !withPill) {
+    ctx.save();
+    ctx.font = 'bold 9px monospace, sans-serif';
+    ctx.fillStyle = effectiveTheme === 'light' ? '#64748b' : '#94a3b8';
+    if (anchor === 'topCenter' || anchor === 'center') {
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(shape.subtitle.toUpperCase(), cx, currentY + 3);
+    } else {
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText(shape.subtitle.toUpperCase(), cx, currentY + 3);
+    }
+    ctx.restore();
   }
 }
 

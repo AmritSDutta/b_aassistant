@@ -15,28 +15,24 @@ This guide explains how to use every other tool correctly. Read it before acting
 
 ## Research, Math & Context
 - \`get_reference_url\`: returns a comma-separated list of external reference and documentation URLs added by the user in the sidebar. Use these for external documentation and context.
-- \`search_web\` (DuckDuckGo) for general web lookups.
-- \`search_research\` (ArXiv) for scientific papers and preprints.
+- \`search_web\` (DuckDuckGo) for general web lookups. Returns live results with a \`fetchedAt\` timestamp.
+- \`search_research\` (ArXiv) for scientific papers and preprints. Returns results with a \`fetchedAt\` timestamp.
+- If a search returns \`unavailable: true\`, the network is unreachable — tell the user you could not retrieve live data and do NOT invent results. Never present search output as fresher than its \`fetchedAt\`.
 - \`calculate\` for decimal-safe math (e.g. "12.5 * 4.2 + 3.1").
 
-## Visualization (Canvas)
+## Visualization (Canvas & Artistic Sketch Engine)
 Prefer the structured scene graph tools over legacy drawing:
 - \`canvas2d_draw_shapes\`: append nodes (\`rectangle\`, \`ellipse\`, \`diamond\`, \`text\`, \`sticker\`)
-  with \`id\`, \`text\`, \`x\`, \`y\`.
-  Standard 4-Tier Column Architecture (Left-to-Right Flow):
-  * Tier 1: Ingress (X ≈ 60-100) — Clients, Mobile App, Browser, Public Consumers.
-  * Tier 2: Gateway & Auth (X ≈ 280-320) — Reverse Proxy, API Gateway, CDN, Rate Limiter.
-  * Tier 3: Core / Compute (X ≈ 500-560) — Business Microservices, Workflow Engines, Job Processors.
-  * Tier 4: Persistence / Egress (X ≈ 720-800) — Primary DB, Redis Cache, S3 Storage, External APIs.
-  Node dimensions are 160x80 px. Vertical spacing between rows should be ~120px (e.g. Y = 80, 200, 320).
-  Arrows bind cleanly via \`startId\` and \`endId\` with automatic edge-to-edge docking; label them with \`text\`.
-  Approved translucent palette:
-  * Ingress: "rgba(99,102,241,0.18)"
-  * Gateway: "rgba(16,185,129,0.16)"
-  * Core: "rgba(14,165,233,0.18)"
-  * Persistence: "rgba(168,85,247,0.18)"
-  * Queue / Event: "rgba(251,146,60,0.18)"
-  * Decision / Security: "rgba(250,204,21,0.16)"
+  with \`id\`, \`text\`, \`x\`, \`y\`, and optional artistic styling (\`roughness\`, \`fillStyle: 'hachure'|'zigzag'|'cross-hatch'|'solid'\`, \`subtitle\`, \`palette\`).
+  * Connectors (\`arrow\`, \`line\`): bind cleanly via \`startId\` and \`endId\`. The engine automatically renders them as fluid cubic Bézier curves with orientation-aware curvature and tangent-aligned arrowheads.
+  * Expressive Topologies:
+    - 4-Tier Column Flow (X ≈ 80, 300, 520, 740; Y = 80, 200, 320): Ingress → Gateway → Services → Data.
+    - Constellation / Hub & Spoke: Central core at (400, 250) with orbiting concept satellites.
+    - Narrative River / Stepped Flow: Organic diagonal or S-curve flow for phased workflows.
+  * Curated Editorial Palettes:
+    - Risograph: "terracotta" (\`rgba(224,109,83,0.22)\`), "cobalt" (\`rgba(59,102,207,0.22)\`), "sage" (\`rgba(78,154,126,0.22)\`), "sunflower" (\`rgba(229,169,59,0.22)\`), "plum" (\`rgba(124,74,115,0.22)\`).
+    - Archetypes: "client" (indigo), "gateway" (emerald), "db" (purple), "queue" (orange), "logic" (amber).
+  * Display Typography: Labels render in bold display serif; add \`subtitle: "[POSTGRES]"\` or \`"[REST API]"\` for uppercase monospace micro-badges.
   The live canvas engine automatically centers and fits viewport to your drawn coordinates.
 - \`canvas2d_inspect_shapes\`: call BEFORE modifying to see existing layout, node list, and ASCII topology.
 - \`canvas2d_modify_shape\`: targeted edits (rename, recolor, reposition) by \`nodeId\` — never redraw everything for small changes.

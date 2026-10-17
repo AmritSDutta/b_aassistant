@@ -4,8 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Codebase Overview
 - **Project**: `bAssistant` — a zero-backend, 100% client-side React SPA on Vite, deployed to Cloudflare Pages. It equips visiting LLMs/WebMCP agents with in-browser tools for canvas diagramming, private document retrieval (LiteParse + BM25 in IndexedDB), and research lookups.
-- **Stack**: React 18 + TypeScript + Tailwind (dark mode via `class` strategy). No backend, no server, no vector DB.
-- `.agents/`, `agent/`, `devpost/`, and `skills-lock.json` are Devpost hackathon-course artifacts, not application code. All app code lives in `src/`.
+- **Stack**: React 18 + TypeScript + Tailwind (dark mode via `class` strategy). No backend, no app server, no vector DB. The only non-browser code is the thin `functions/` Cloudflare Pages Functions that proxy `/api` search (dev equivalents live in `vite.config.ts`).
+- `.agents/`, `agent/`, `devpost/`, and `skills-lock.json` are Devpost hackathon-course artifacts, not application code. All app code lives in `src/`; the docs7 site lives in `docs/`.
 
 ## Development Commands
 - `npm.cmd run dev`: Launch local Vite dev server (`http://localhost:5173`).
@@ -13,6 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm.cmd test -- src/tests/bm25.test.ts`: Run a single test file. Add `-t "name"` to filter by test name.
 - `npm.cmd run build`: Type-check (`tsc`) and build the production bundle into `dist/`. This is the only lint/type gate — no ESLint is configured.
 - `npx docs7 dev docs`: Preview the `docs7` documentation site at http://localhost:3333. Validate diagrams with the `docs7-playbook` skill scripts: `validate-mermaid.mjs` (strict-mode Mermaid parse) and, against the running server, `check-pages.mjs` (every nav page serves 200, no orphaned `.mdx`) and `render-check.mjs` (real browser render + legibility scale).
+- `npx wrangler pages dev dist`: Run the real `/api` Cloudflare Pages Functions locally (the Vite dev server uses a proxy + middleware instead; plain `npm run dev` does not execute Functions).
 - Always use `npm.cmd` on Windows rather than `npm` to avoid PowerShell execution policy blocks.
 
 ## Key Technical Standards & Invariants
@@ -35,14 +36,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### WebMCP Bridge
 - `src/webmcp/provider.ts` exposes **17 tools** on every discovery surface simultaneously: `document.modelContext`, `navigator.modelContext` + `navigator.modelContextTesting`, `window.webmcp` / `window.modelContext`, hidden DOM `<form toolname=...>` elements, `window.addEventListener('message')` (JSON-RPC 2.0), and `webmcp:ready` / `modelcontext:ready` custom events.
+- Lifecycle: native `registerTool` returns a promise that rejects on teardown, so `register()` captures and `.catch()`es it and `unregister()` calls `controller.abort('unregister')` — no unhandled `AbortError`. `App.tsx` constructs the provider **once** and proxies handlers through a ref (`updateWebMCPContext()` swaps closures in place), so message/URL changes never re-register or mid-session abort the tool set.
 - Tool registry (definitions + dispatch in `src/webmcp/tools.ts`): `get_tool_usage_prompt` (read-only, zero-arg; returns the agent operating guide from `src/webmcp/agentGuide.ts` — visiting agents should call it first), `get_reference_url` (read-only, zero-arg; returns comma-separated stored reference URLs), `chat_post`, `canvas2d_draw_shapes`, `canvas2d_inspect_shapes`, `canvas2d_modify_shape`, `canvas2d_clear`, `export_pdf`, `canvas_draw`, `draw_diagram`, `canvas_clear`, `get_chat_history`, `search_document`, `clean_document`, `search_web`, `search_research`, `calculate`.
 
 ### Canvas2D Scene Graph
 - Shapes are typed in `src/types/canvas2d.ts`: `rectangle`, `ellipse`, `diamond`, `text`, `arrow`, `line`, `freedraw`, `sticker`. State persists as `Canvas2dShape[]` in the engine, not as pixels.
 - Arrows/lines bind to nodes via `startId`/`endId` and stay attached when shapes move. Redraw is two-pass: nodes/containers first, then connectors with edge-to-edge perimeter docking and pill labels (`canvasEngine.redraw()`).
 - Live DOM theme synchronization: `CanvasEngine` constructor mounts a `MutationObserver` on `document.documentElement` (`class` attribute) and exposes `getTheme(): 'dark' | 'light'`, instantly re-rendering canvas scenes upon theme toggles.
-- Fill-aware contrast: `resolveThemeTextColor(color, theme, isConnectorPill, fillColor)` evaluates background fill luminance and opacity (`parseColorLuminance`); translucent shape fills (`alpha < 0.6`) automatically resolve to dark slate `#0f172a` in light mode for readability.
-- Stateless canvas logic (geometry, color/theme contrast, and the ctx-based render pipeline — `getShapeBounds`, `perimeterEdgeToEdge`, `sanitizeCanvas2dShapes`, `computeContentBounds`, `renderScene`, `renderShape`, `renderConnector`, `drawLabel`, `renderLegacyCommand`, `resolveThemeTextColor`, etc.) lives in `src/lib/canvasHelper.ts`. `CanvasEngine` (`src/lib/canvasEngine.ts`) keeps only state, viewport math, shape CRUD, and orchestration, delegating all drawing and geometry to the helper. Tests import the pure helpers directly from `canvasHelper`.
+- Artistic rendering (Rough.js ^4.6.6): nodes render via `rough.canvas()` with hachure fills by default (`fillStyle: 'hachure'`, `hachureGap: 6`, `fillWeight = max(strokeWidth, 1)`); `roughness: 0` falls back to the plain path. Connectors are orientation-aware cubic Bézier splines with tangent arrowheads (`curved: false` for a straight edge). `resolveHarmonizedFill` maps archetype tokens (`client`/`gateway`/`db`/`queue`/`logic`) and Risograph palette tokens to translucent tones.
+- Geometry normalization (critical): `sanitizeCanvas2dShapes` coerces every numeric field (`width`/`height`/`strokeWidth`/`fontSize`/`roughness`/`bowing`/`hachureAngle`/`hachureGap` + connector coords) via `toFiniteNumber`; `renderShape`/`renderConnector` re-guard with `finiteOr`. **Why:** Rough.js computes rectangle corners as `x + width`, so a string dimension (`"160"`) string-concatenates to `"100160"` and the rectangle flies off-canvas. Type aliases are normalized (`rect`/`box`/`card`/`node`/`container`/`square` → `rectangle`, `circle`/`oval`/`db` → `ellipse`, `note`/`sticky` → `sticker`, …) and the `renderShape` switch ends in a `default` that renders unknown types as a rectangle with a warning — never silently dropped.
+- Dark-mode calibration: `renderShape` forces any fill to `rgba(r, g, b, 0.4)` (`DARK_FILL_ALPHA`) in dark mode via `normalizeRgba` (parses hex/`rgb()`/`rgba()`/named). Light mode keeps authored alpha boosted by `applyThemeAlpha` (factor 1.8, clamp `[0.2, 0.88]`). `renderShape`/`drawLabel` trust the passed `theme` argument; only `CanvasEngine.syncThemeFromDom()` reads the `<html class="dark">` DOM state.
+- Fill-aware contrast: `resolveThemeTextColor(color, theme, isConnectorPill, fillColor)` evaluates luminance/opacity (`parseColorLuminance`, `isLightColor`, `isDarkColor`); white/off-white/black/washed-out colors resolve to the universal amber `#d97706` (`MEDIUM_DARK_YELLOW`), custom accents pass through. Stroke colors adapt via `resolveThemeStrokeColor` (default `#94a3b8` dark / `#334155` light).
+- Stateless canvas logic (geometry, color/theme contrast, and the ctx-based render pipeline — `getRoughCanvas`, `resolveHarmonizedFill`, `normalizeRgba`, `toFiniteNumber`, `getShapeBounds`, `perimeterEdgeToEdge`, `sanitizeCanvas2dShapes`, `computeContentBounds`, `renderScene`, `renderShape`, `renderConnector`, `drawLabel`, `renderLegacyCommand`, `resolveThemeTextColor`, etc.) lives in `src/lib/canvasHelper.ts`. `CanvasEngine` (`src/lib/canvasEngine.ts`) keeps only state, viewport math, shape CRUD, and orchestration, delegating all drawing and geometry to the helper. Tests import the pure helpers directly from `canvasHelper`.
 - `canvas2d_draw_shapes` descriptions embed the approved translucent color palette (client/gateway/db/queue/decision rgba values) — keep tool descriptions in sync with renderer capabilities.
 - Interactive viewport controls live in `src/components/CanvasArea.tsx`: drag-to-pan, cursor-anchored wheel-zoom (`zoomAtPoint`, scale clamp `[0.2, 4]`), `Fit View` (`fitToContent`, clamp `[0.2, 1.5]`), `Reset` (`resetView`), plus `New Session` / `Export PDF` / `Clear`. `canvasEngine.getSnapshotDataUrl()` returns a tight-cropped PNG (40px padding) used for PDF and session snapshots.
 
@@ -50,6 +55,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Files must be strictly `< 2MB` and `.pdf`, `.doc`, or `.docx`; violations trigger the `NotificationModal` popup (`src/App.tsx`).
 - Pipeline: FileUpload → LiteParse WASM (`@llamaindex/liteparse-wasm`, with browser stream-parser fallback, hex token decoding `<...> Tj` / `[...] TJ`, and in-browser DOCX PKZip `word/document.xml` decompression) → natural page chunks → `BM25Index` → IndexedDB. On mount, the app restores doc/chunks/index from IndexedDB; `search_document` lazily rehydrates from IDB when memory is empty.
 - BM25 search returns top-3 chunks; if the query has no keyword overlap it falls back to returning the first 3 chunks as a preview.
+
+### Research & Search (Web + ArXiv)
+- Third-party search hosts (`export.arxiv.org`, `api.duckduckgo.com`) send no CORS headers, so `searchService.ts` (`searchWeb`, `searchResearch`) calls **same-origin relative URLs** — `/api/websearch?query=` and `/api/arxiv?search_query=all:...` — never the upstream hosts directly.
+- The `/api` layer has two implementations that must stay in sync: the Vite dev proxy (`/api/arxiv` → `export.arxiv.org`) plus a `dev-search-endpoints` middleware for `/api/websearch` in `vite.config.ts`; and Cloudflare Pages Functions `functions/api/arxiv.ts` + `functions/api/websearch.ts` in production, scoped by `public/_routes.json` (`include: ["/api/*"]`). The DuckDuckGo HTML→JSON parser is shared at `src/lib/ddgSearch.ts`.
+- Both functions return a `SearchOutcome<T>` (`{ results, fetchedAt, source, unavailable?, error? }`), never a bare array and never fabricated fallback data; results carry `fetchedAt`/`source`. `tools.ts` returns the outcome directly and `agentGuide.ts` tells agents to report `unavailable` instead of inventing answers. Requests use a 20s `AbortController` timeout.
 
 ### PDF Export Engine
 - `src/lib/pdfExportService.ts` exports sequential executive deliberation PDFs:
@@ -77,9 +87,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Reference URLs cached in `localStorage['b_reference_urls']`. No external servers, no vector databases.
 
 ### Testing
-- All unit tests live in `src/tests/` (15 Vitest suites, 106 tests) and must remain strictly hermetic and isolated — no network, no real IndexedDB dependencies leaking between tests.
+- All unit tests live in `src/tests/` (19 Vitest suites, 136 tests) and must remain strictly hermetic and isolated — no network, no real IndexedDB dependencies leaking between tests.
 - Vitest is configured inside `vite.config.ts` (`environment: 'jsdom'`, `globals: true`); there is no separate vitest config file.
+- Canvas tests must exercise the real Rough.js path: mock `getContext()` with an object whose `canvas.getContext()` returns itself, or `getRoughCanvas()` returns `null` and Rough never runs (this blind spot previously hid a rectangle regression).
+- If React component tests fail with `act(...) is not supported in production builds of React`, the shell has `NODE_ENV=production`; run `NODE_ENV=test npm test` (`set NODE_ENV=test&& npx vitest run` on Windows cmd) instead.
 
 ## Documentation Reference
 - [README.md](file:///C:/codebase/b_aassistant/README.md) — human-facing quickstart.
-- [docs/docs.json](file:///C:/codebase/b_aassistant/docs/docs.json) — full docs7 component and architecture documentation (`index.mdx`, `architecture.mdx`, `cockpit-ui.mdx`, `webmcp.mdx`, `canvas-and-pdf.mdx`, `document-processing.mdx`, `research-tools.mdx`, `sessions-vault.mdx`, `dwell-time-research.mdx`, `liteparse-research.mdx`, `learnings.mdx`, `deployment.mdx`).
+- [docs/docs.json](file:///C:/codebase/b_aassistant/docs/docs.json) — full docs7 component and architecture documentation (`index.mdx`, `indroduction.mdx`, `architecture.mdx`, `cockpit-ui.mdx`, `webmcp.mdx`, `canvas-and-pdf.mdx`, `document-processing.mdx`, `research-tools.mdx`, `sessions-vault.mdx`, `dwell-time-research.mdx`, `liteparse-research.mdx`, `learnings.mdx`, `deployment.mdx`). `docs/custom.css` widens Mermaid frames; every page must be listed in `docs.json` navigation or it renders nowhere.
