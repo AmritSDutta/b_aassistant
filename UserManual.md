@@ -12,11 +12,12 @@
 4. [Document Ingestion & Private Search](#4-document-ingestion--private-search)
 5. [Managing Reference URLs](#5-managing-reference-urls)
 6. [Interactive Canvas2D Diagram Studio](#6-interactive-canvas2d-diagram-studio)
-7. [Conversational Reader & Highlights](#7-conversational-reader--highlights)
-8. [Session Vault & Multi-Turn Persistence](#8-session-vault--multi-turn-persistence)
-9. [Exporting Publication-Ready PDF Reports](#9-exporting-publication-ready-pdf-reports)
-10. [Source & Inspection Protection](#10-source--inspection-protection)
-11. [Troubleshooting & FAQs](#11-troubleshooting--faqs)
+7. [Bidirectional Live Voice Mode (Gemini Live)](#7-bidirectional-live-voice-mode-gemini-live)
+8. [Conversational Reader & Highlights](#8-conversational-reader--highlights)
+9. [Session Vault & Multi-Turn Persistence](#9-session-vault--multi-turn-persistence)
+10. [Exporting Publication-Ready PDF Reports](#10-exporting-publication-ready-pdf-reports)
+11. [Source & Inspection Protection](#11-source--inspection-protection)
+12. [Troubleshooting & FAQs](#12-troubleshooting--faqs)
 
 ---
 
@@ -28,12 +29,13 @@ bAssistant is structured as an ergonomic **20/80 dual-zone cockpit**:
 +---------------------+-------------------------------------------------------+
 | 20% Sidebar         | 80% Primary Workspace                                |
 |                     |                                                       |
-| [Logo] [Tips] [Theme| [Canvas2D Studio (Top 60%)]                           |
-|                     | Live interactive architecture diagrams, flowcharts,  |
-| [Document Upload]   | containers, and connectors drawn by visiting AI       |
-| (< 2MB PDF/DOCX)    | [Fit View] [Reset] [New Session] [Export PDF]         |
-|                     +-------------------------------------------------------+
-| [Reference URLs]    | [Dialogue Reader (Bottom 40%)]                        |
+| [Logo] [Tips]       | [Canvas2D Studio (Top 60%)]                           |
+| [🎙️ Voice] [Theme]  | Live interactive architecture diagrams, flowcharts,  |
+|                     | containers, and connectors drawn by visiting AI       |
+| [Document Upload]   | [Fit View] [Reset] [New Session] [Export PDF]         |
+| (< 2MB PDF/DOCX)    +-------------------------------------------------------+
+|                     | [Dialogue Reader (Bottom 40%)]                        |
+| [Reference URLs]    | Header: [Voice HUD: Mic, Status, Captions, Settings]  |
 | (Up to 10 links)    | Conversational dialogue stream (user: prefixing)      |
 |                     | [A-] [A+] [Maximize Reader]                           |
 | [Session Highlights]|                                                       |
@@ -43,9 +45,9 @@ bAssistant is structured as an ergonomic **20/80 dual-zone cockpit**:
 +---------------------+-------------------------------------------------------+
 ```
 
-- **Top-Left Header**: Dynamic theme-aware branding logo, `[ tips ]` onboarding guide button, and `[ ☀ light / ☾ dark ]` mode toggle.
+- **Top-Left Header**: Dynamic theme-aware branding logo, `[ tips ]` onboarding guide button, `[ 🎙️ voice ]` shortcut button, and `[ ☀ light / ☾ dark ]` mode toggle.
 - **Left Sidebar**: Document uploader, external reference links manager, session star repository, and sessions archive footer.
-- **Main Area**: Top 60% HTML5 Canvas2D studio and bottom 40% readable chat area with font sizing and reading progress tracking.
+- **Main Area**: Top 60% HTML5 Canvas2D studio and bottom 40% readable chat area with font sizing, reading progress tracking, and docked Voice Live Controller HUD.
 
 ---
 
@@ -97,7 +99,7 @@ bAssistant automatically registers a multi-standard WebMCP provider on four glob
 | `canvas2d_inspect_shapes`| Canvas | Returns active scene graph and ASCII topology tree. |
 | `canvas2d_modify_shape` | Canvas | Surgically updates shape text, position, or color in-place. |
 | `canvas2d_clear` | Canvas | Resets the 2D scene graph. |
-| `search_web` | Research | DuckDuckGo web search query. |
+| `search_web` | Research | Keyless Tavily AI search as primary with automatic DuckDuckGo fallback. |
 | `search_research` | Research | ArXiv scientific paper search. |
 | `calculate` | Math | Decimal-safe arithmetic calculation. |
 | `export_pdf` | Reports | Triggers publication-quality PDF report download. |
@@ -158,7 +160,52 @@ The top 60% workspace is a high-performance Canvas2D scene graph engine designed
 
 ---
 
-## 7. Conversational Reader & Highlights
+## 7. Bidirectional Live Voice Mode (Gemini Live)
+
+bAssistant features a real-time, low-latency conversational voice assistant powered by Google's Gemini Multimodal Live API over WebSockets, orchestrated through a **Two-Tier Architecture**.
+
+### 7.1 Two-Tier System Architecture
+- **Tier 1: Conversational Live Agent** (`gemini-2.5-flash-native-audio-preview` or `gemini-2.0-flash-exp`)  
+  Streams bidirectional 16kHz PCM audio directly to and from your browser microphone and speakers. It listens, reasons, interrupts naturally, and responds with spoken explanations in milliseconds.
+- **Tier 2: Visual Subagent** (`gemini-2.5-flash`)  
+  Executes computationally heavy visual diagramming in the background. When you ask for an architecture diagram or flowchart, Tier 1 delegates the task to Tier 2 via `generate_diagram_and_explanation` and immediately acknowledges verbally (*"I'm drawing that architecture on the canvas for you now..."*). Tier 2 creates the Canvas2D shapes, arranges nodes and connectors, and posts the in-depth technical explanation into the dialogue reader.
+
+### 7.2 Configuration & Client-Side Encryption
+1. Click the `[ 🎙️ voice ]` button in the cockpit header or the settings gear in the Voice HUD.
+2. Enter your Google Gemini API key.
+3. Select your preferred voice persona (`Puck`, `Charon`, `Kore`, `Fenrir`, or `Aoede`).
+4. Choose the endpoint model (defaults to `gemini-2.5-flash-native-audio-preview`).
+5. **Zero-Knowledge Encryption**: Your API key is encrypted directly in your browser using **Web Crypto AES-GCM-256** with an ephemeral salt and saved into IndexedDB (`bassistant_secure_vault`). It is never stored in plaintext `localStorage`, never logged, and never transmitted to any proxy or third-party server.
+
+### 7.3 Starting a Voice Session & Preflight Audio Check
+1. Click the microphone icon in the Voice HUD docked in the dialogue reader header (or the header shortcut).
+2. **Automated Preflight Check**: bAssistant runs a 1-second microphone calibration test:
+   - Verifies browser audio permissions.
+   - Measures ambient audio level.
+   - Alerts you immediately if the microphone is muted or disconnected before initiating the WebSocket stream.
+3. Once connected, the HUD status turns green: **Live Listening**.
+
+### 7.4 Spoken Commands & Background Diagram Dispatch
+You can talk to bAssistant conversationally just like a pair programmer:
+- *"Explain the trade-offs between REST and gRPC."* &rarr; Live spoken conversational answer.
+- *"Draw an event-driven architecture with Kafka, order service, payment service, and notification service."* &rarr; Tier 1 issues immediate verbal acknowledgment, while Tier 2 renders the full diagram onto the Canvas2D studio and writes structured notes into chat.
+- *"What is the status of my diagram?"* &rarr; The live model checks active background tasks via `get_background_task_status` and updates you verbally.
+- *"Search the latest docs for Vite 6 features."* &rarr; Tier 1 uses `search_web` (Tavily/DuckDuckGo) and summarizes key insights.
+
+### 7.5 Voice HUD & Background Task Status
+The docked Voice HUD keeps you informed without obstructing your workspace:
+- **Status Indicator**: Displays real-time states (`Standby`, `Connecting...`, `Live Listening`, `Thinking...`, `Speaking`).
+- **Live Activity Badge**: When background rendering or searching is underway, an animated badge appears (e.g., `⚡ Drawing Architecture...`).
+- **Ephemeral Captions**: Transcribes incoming model speech in the HUD without polluting your persistent session chat history with transient spoken chitchat.
+- **Task Cache Tracking**: Background operations are tracked in IndexedDB (`bassistant_background_tasks`) so task progress survives transient state changes.
+
+### 7.6 Clean Disconnect & Teardown
+- Click the active microphone button in the HUD to end the call.
+- The WebSocket connection closes cleanly (status code 1000), microphone audio tracks are released immediately, and the status returns to `Standby`.
+
+---
+
+## 8. Conversational Reader & Highlights
 
 The bottom 40% dialogue stream features long-dwell reading ergonomics:
 
@@ -174,7 +221,7 @@ The bottom 40% dialogue stream features long-dwell reading ergonomics:
 
 ---
 
-## 8. Session Vault & Multi-Turn Persistence
+## 9. Session Vault & Multi-Turn Persistence
 
 bAssistant preserves your complete deliberation state across page reloads:
 
@@ -187,7 +234,7 @@ bAssistant preserves your complete deliberation state across page reloads:
 
 ---
 
-## 9. Exporting Publication-Ready PDF Reports
+## 10. Exporting Publication-Ready PDF Reports
 
 Export comprehensive, turn-by-turn executive reports directly from the client:
 
@@ -203,7 +250,7 @@ Export comprehensive, turn-by-turn executive reports directly from the client:
 
 ---
 
-## 10. Source & Inspection Protection
+## 11. Source & Inspection Protection
 
 To provide distraction-free usage and safeguard application layout integrity, bAssistant includes client-side protection:
 - **Right-Click**: Disables the default browser context menu.
@@ -213,15 +260,29 @@ To provide distraction-free usage and safeguard application layout integrity, bA
 
 ---
 
-## 11. Troubleshooting & FAQs
+## 12. Troubleshooting & FAQs
 
 ### Q: Why did my document upload fail?
 - **File size**: Ensure your file is strictly **under 2MB**.
 - **Format**: Accepted formats are `.pdf`, `.docx`, and `.doc`.
 - **Scanned images**: bAssistant extracts natural text and XML tokens; scanned image-only PDFs without OCR layers cannot be tokenized by BM25.
 
-### Q: Where are my documents and chats stored?
-All data stays 100% inside your browser's local **IndexedDB** database. No server receives your documents, chat prompts, or canvas diagrams.
+### Q: Where are my documents, voice keys, and chats stored?
+All data stays 100% inside your browser's local **IndexedDB** database (`bassistant_session`, `bassistant_docs`, `bassistant_secure_vault`). No server receives your documents, chat prompts, API keys, or canvas diagrams.
+
+### Q: How does Web Search work without an API key?
+bAssistant's `search_web` tool leverages keyless Tavily AI extraction as its primary engine, backed by automated DuckDuckGo fallback. You do not need to configure any search credentials.
+
+### Q: Why does Live Voice Mode need a Gemini API Key?
+Live Voice Mode establishes a direct, ultra-low latency WebSocket stream directly from your browser to Google's Gemini Multimodal Live API (`wss://generativelanguage.googleapis.com`). Because bAssistant has zero backend servers, your personal key authorizes the stream directly from your client. It is encrypted in IndexedDB using AES-GCM-256 and never leaves your browser.
+
+### Q: Why doesn't the voice model read long code or markdown aloud?
+To prevent auditory fatigue, bAssistant's two-tier design instructs Tier 1 (Voice) to give concise spoken answers and immediately delegate architectural diagrams and comprehensive technical notes to Tier 2 (Visual Subagent). Detailed structured text is posted directly to the dialogue reader while you continue talking.
+
+### Q: What if the voice status stays on "Connecting..." or fails?
+1. Verify that your Gemini API key is valid and has Multimodal Live API access enabled in Google AI Studio.
+2. Check your browser microphone permissions for `bassistant.pages.dev` or `localhost`.
+3. If your microphone was muted or in use by another app, close other meeting tabs and reconnect.
 
 ### Q: How do I reopen the onboarding guide?
 Click the `[ tips ]` button in the top-left cockpit header beside the theme toggle at any time.
