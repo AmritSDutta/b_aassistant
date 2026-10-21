@@ -170,10 +170,10 @@ Self-contained, decoupled voice package:
 - `prompts.ts`: Centralized prompt templates (`VOICE_LIVE_AGENT_PROMPT_TEMPLATE`, `SUBAGENT_SYSTEM_PROMPT_TEMPLATE`), runtime temporal anchor `{current_date}` replacement (`resolvePromptWithCurrentDate`), and complete embedded WebMCP tool suite catalogs.
 - `audio/recorder.ts`: `AudioWorkletRecorder` loading `/audio-capture-processor.js` for 16 kHz PCM stream.
 - `audio/player.ts`: `StreamingAudioPlayer` gapless 24 kHz scheduler with instant barge-in `interrupt()`.
-- `providers/geminiLiveProvider.ts`: `ILiveVoiceProvider` implementation via `@google/genai` (`ai.live.connect`).
+- `providers/geminiLiveProvider.ts`: `ILiveVoiceProvider` implementation via `@google/genai` (`ai.live.connect`). `close()` terminates the active WebSocket via `session.conn.close(1000, 'Normal Closure')` and disposes `StreamingAudioPlayer`.
 - `providers/geminiSubagentProvider.ts`: `ISubagentProvider` implementation via `@google/genai` (`ai.models.generateContent`).
 - `bridge/voiceBridge.ts`: WebMCP tool translation and subagent task coordination (clears canvas, draws fresh shapes, posts answer to chat, returns voice summary).
-- `hooks/useVoiceAgent.ts`: React voice agent lifecycle hook.
+- `hooks/useVoiceAgent.ts`: React voice agent lifecycle hook equipped with an `isSessionActiveRef` cancellation token guarding asynchronous events (`onEnd`, `onTurnComplete`, `onStart`) from mutating state when stopped, guaranteeing reliable `standby` reset.
 - `components/VoiceLiveController.tsx`, `VoiceSettingsModal.tsx`, `AudioPreflightModal.tsx`.
 
 ## Data Model

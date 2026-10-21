@@ -6,6 +6,7 @@ export interface LiveSessionCallbacks {
   onOutputTranscription?: (text: string) => void;
   onTurnComplete?: () => void;
   onError?: (err: unknown) => void;
+  onClose?: () => void;
   onToolCall?: (name: string, args: Record<string, unknown>) => Promise<unknown>;
 }
 

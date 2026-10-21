@@ -111,6 +111,7 @@ export class GeminiLiveProvider implements ILiveVoiceProvider {
         },
         onclose: () => {
           player.close();
+          callbacks.onClose?.();
         },
       },
     });
@@ -127,9 +128,19 @@ export class GeminiLiveProvider implements ILiveVoiceProvider {
       close: () => {
         player.close();
         try {
-          (session as { close?: () => void }).close?.();
-        } catch {
-          // Ignore close error
+          const raw = session as unknown as {
+            close?: () => void;
+            conn?: { close?: (code?: number, reason?: string) => void; readyState?: number };
+          };
+          if (typeof raw.close === 'function') {
+            raw.close();
+          } else if (raw.conn && typeof raw.conn.close === 'function') {
+            if (raw.conn.readyState === 0 || raw.conn.readyState === 1) {
+              raw.conn.close(1000, 'Normal Closure');
+            }
+          }
+        } catch (err) {
+          console.warn('Failed to cleanly close Live session websocket:', err);
         }
       },
     };

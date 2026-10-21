@@ -37,8 +37,11 @@ export function useVoiceAgent(options: UseVoiceAgentOptions) {
 
   const sessionRef = useRef<ILiveVoiceSession | null>(null);
   const recorderRef = useRef<AudioWorkletRecorder | null>(null);
+  const isSessionActiveRef = useRef<boolean>(false);
 
   const stopListening = useCallback(() => {
+    isSessionActiveRef.current = false;
+
     if (recorderRef.current) {
       try {
         recorderRef.current.stop();
@@ -78,6 +81,7 @@ export function useVoiceAgent(options: UseVoiceAgentOptions) {
       return;
     }
 
+    isSessionActiveRef.current = true;
     setErrorMessage(null);
     setStatus('connecting');
     setStatusText('Connecting to Gemini Live...');
@@ -96,32 +100,39 @@ export function useVoiceAgent(options: UseVoiceAgentOptions) {
         },
         {
           onStart: () => {
+            if (!isSessionActiveRef.current) return;
             setIsSpeaking(true);
             setStatus('speaking');
             setStatusText('Speaking');
           },
           onEnd: () => {
+            if (!isSessionActiveRef.current) return;
             setIsSpeaking(false);
             setStatus('listening');
             setStatusText('Listening');
           },
           onInterrupted: () => {
+            if (!isSessionActiveRef.current) return;
             setIsSpeaking(false);
             setStatus('interrupted');
             setStatusText('Interrupted');
             setCaptionPreview('Assistant interrupted');
           },
           onInputTranscription: (text: string, isFinal: boolean) => {
+            if (!isSessionActiveRef.current) return;
             setCaptionPreview(`You: ${text}${isFinal ? '' : '...'}`);
           },
           onOutputTranscription: (text: string) => {
+            if (!isSessionActiveRef.current) return;
             setCaptionPreview(`AI: ${text}`);
           },
           onTurnComplete: () => {
+            if (!isSessionActiveRef.current) return;
             setStatus('listening');
             setStatusText('Listening');
           },
           onToolCall: async (name: string, args: Record<string, unknown>) => {
+            if (!isSessionActiveRef.current) return { error: 'Session stopped' };
             setStatus('executing');
             setStatusText(`Executing ${name}...`);
             setCaptionPreview(`Tool: ${name}`);
@@ -129,11 +140,19 @@ export function useVoiceAgent(options: UseVoiceAgentOptions) {
               const res = await voiceBridge.handleToolCall(name, args);
               return res;
             } finally {
-              setStatus('speaking');
-              setStatusText('Speaking');
+              if (isSessionActiveRef.current) {
+                setStatus('speaking');
+                setStatusText('Speaking');
+              }
+            }
+          },
+          onClose: () => {
+            if (isSessionActiveRef.current) {
+              stopListening();
             }
           },
           onError: (err: unknown) => {
+            if (!isSessionActiveRef.current) return;
             const errStr = err instanceof Error ? err.message : String(err);
             setStatus('error');
             setStatusText(`Error: ${errStr}`);
@@ -143,20 +162,33 @@ export function useVoiceAgent(options: UseVoiceAgentOptions) {
         }
       );
 
+      if (!isSessionActiveRef.current) {
+        session.close();
+        return;
+      }
+
       sessionRef.current = session;
 
       const recorder = new AudioWorkletRecorder();
       await recorder.start((chunk: string) => {
-        if (sessionRef.current) {
+        if (isSessionActiveRef.current && sessionRef.current) {
           sessionRef.current.sendRealtimeAudio(chunk);
         }
       });
+
+      if (!isSessionActiveRef.current) {
+        recorder.stop();
+        session.close();
+        sessionRef.current = null;
+        return;
+      }
 
       recorderRef.current = recorder;
       setIsListening(true);
       setStatus('listening');
       setStatusText('Listening live...');
     } catch (err) {
+      if (!isSessionActiveRef.current) return;
       const errStr = err instanceof Error ? err.message : String(err);
       setStatus('error');
       setStatusText('Connection failed');
@@ -175,12 +207,12 @@ export function useVoiceAgent(options: UseVoiceAgentOptions) {
   ]);
 
   const toggleListening = useCallback(() => {
-    if (isListening) {
+    if (isListening || isSessionActiveRef.current || status === 'connecting') {
       stopListening();
     } else {
       void startListening();
     }
-  }, [isListening, startListening, stopListening]);
+  }, [isListening, startListening, status, stopListening]);
 
   useEffect(() => {
     return () => {

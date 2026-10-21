@@ -179,6 +179,10 @@ Source: `research.md` (dwell-time mechanisms 1–6).
   - Synced to browser `sessionStorage` under `bassistant_background_tasks` (LRU cap of 20 tasks).
   - Gemini Live can inspect task status mid-conversation via the `get_background_task_status` tool to answer user inquiries verbally.
   - The Voice HUD (`VoiceLiveController`) reactively renders an animated status badge (`⚡ Drawing Architecture...`) while a task is in progress.
+- **Reliable Session Teardown & Lifecycle State Guarantee**:
+  - Stopping the live voice agent explicitly terminates the underlying WebSocket connection (`session.conn.close(1000)`).
+  - All asynchronous callback events (`onEnd`, `onTurnComplete`, `onStart`, `onToolCall`) are strictly guarded against an active-session cancellation token (`isSessionActiveRef`), preventing trailing server events from flipping the UI back to `Live Listening` once stopped.
+  - In-flight session initialization or microphone startup is immediately aborted if the user cancels during connection.
 
 ## States and Boundaries
 
