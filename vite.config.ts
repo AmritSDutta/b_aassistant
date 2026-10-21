@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { searchDuckDuckGo } from './src/lib/ddgSearch';
+import { searchTavilyKeyless } from './src/lib/tavilySearch';
 
 export default defineConfig({
   plugins: [
@@ -19,6 +20,21 @@ export default defineConfig({
             res.end(JSON.stringify(payload));
           };
 
+          // 1. Try Keyless Tavily Search first
+          try {
+            const tavilyResults = await searchTavilyKeyless(query);
+            if (tavilyResults && tavilyResults.length > 0) {
+              return send(200, {
+                results: tavilyResults,
+                fetchedAt: new Date().toISOString(),
+                source: 'tavily',
+              });
+            }
+          } catch (tavilyErr) {
+            console.warn('Tavily search failed or rate-limited in dev, falling back to DuckDuckGo:', tavilyErr);
+          }
+
+          // 2. Fallback to DuckDuckGo HTML scraper
           try {
             send(200, { results: await searchDuckDuckGo(query), fetchedAt: new Date().toISOString(), source: 'duckduckgo' });
           } catch (error: any) {

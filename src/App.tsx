@@ -18,6 +18,15 @@ import { searchWeb, searchResearch } from './lib/searchService';
 import { globalCanvasEngine } from './lib/canvasEngine';
 import { exportSessionPdf } from './lib/pdfExportService';
 import { initSourceProtection } from './lib/sourceProtection';
+import {
+  useVoiceSettings,
+  useVoiceAgent,
+  GeminiSubagentProvider,
+  VoiceBridge,
+  VoiceLiveController,
+  VoiceSettingsModal,
+  AudioPreflightModal,
+} from './voice';
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB strictly
 const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
@@ -411,6 +420,68 @@ export const App: React.FC = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
+  const {
+    apiKey,
+    setApiKey,
+    liveModel,
+    setLiveModel,
+    subagentModel,
+    setSubagentModel,
+    studioVoice,
+    setStudioVoice,
+  } = useVoiceSettings();
+
+  const [showVoiceSettings, setShowVoiceSettings] = useState(false);
+  const [showPreflight, setShowPreflight] = useState(false);
+  const [isPreflightApproved, setIsPreflightApproved] = useState(false);
+
+  const voiceBridgeRef = useRef<VoiceBridge | null>(null);
+  if (!voiceBridgeRef.current) {
+    voiceBridgeRef.current = new VoiceBridge({
+      subagent: new GeminiSubagentProvider(apiKey, subagentModel),
+      postChatMessage: handlePostAgentMessage,
+      toolContext: {
+        getMessages: () => messagesRef.current,
+        postMessage: (t: string) => handlePostAgentMessage(t),
+        searchDocument: (q: string) => handleSearchDocument(q),
+        cleanDocument: () => handleCleanDocument(),
+        searchWeb: (q: string) => searchWeb(q),
+        searchResearch: (q: string) => searchResearch(q),
+        calculate: (e: string) => calculateMath(e),
+        exportPdf: () => handleExportPdf(),
+        getReferenceUrls: () => referenceUrlsRef.current,
+      },
+    });
+  }
+
+  useEffect(() => {
+    if (voiceBridgeRef.current) {
+      voiceBridgeRef.current.setSubagent(new GeminiSubagentProvider(apiKey, subagentModel));
+      voiceBridgeRef.current.setPostChatMessage(handlePostAgentMessage);
+      voiceBridgeRef.current.setToolContext({
+        getMessages: () => messagesRef.current,
+        postMessage: handlePostAgentMessage,
+        searchDocument: handleSearchDocument,
+        cleanDocument: handleCleanDocument,
+        searchWeb: (q: string) => searchWeb(q),
+        searchResearch: (q: string) => searchResearch(q),
+        calculate: (e: string) => calculateMath(e),
+        exportPdf: handleExportPdf,
+        getReferenceUrls: () => referenceUrlsRef.current,
+      });
+    }
+  }, [apiKey, subagentModel, handlePostAgentMessage, handleSearchDocument, handleCleanDocument, handleExportPdf]);
+
+  const voiceAgent = useVoiceAgent({
+    apiKey,
+    liveModel,
+    studioVoice,
+    voiceBridge: voiceBridgeRef.current,
+    onRequireSettings: () => setShowVoiceSettings(true),
+    onRequirePreflight: () => setShowPreflight(true),
+    isPreflightApproved,
+  });
+
   const handleNewSession = useCallback(async () => {
     const newSid = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     setSessionId(newSid);
@@ -686,7 +757,12 @@ export const App: React.FC = () => {
         className="w-[20%] min-w-[220px] max-w-[360px] h-full flex flex-col border-r"
         style={{ borderColor: 'var(--line)', background: 'var(--panel)' }}
       >
-        <Branding theme={theme} onToggleTheme={toggleTheme} onOpenTips={() => setShowWelcome(true)} />
+        <Branding
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          onOpenTips={() => setShowWelcome(true)}
+          onOpenVoiceSettings={() => setShowVoiceSettings(true)}
+        />
         <FileUpload
           activeDoc={activeDoc}
           onFileSelect={handleFileSelect}
@@ -732,11 +808,48 @@ export const App: React.FC = () => {
           messages={messages}
           onSendMessage={handleSendMessage}
           onToggleHighlight={handleToggleHighlight}
+          voiceController={
+            <VoiceLiveController
+              status={voiceAgent.status}
+              statusText={voiceAgent.statusText}
+              captionPreview={voiceAgent.captionPreview}
+              isListening={voiceAgent.isListening}
+              onToggleListening={voiceAgent.toggleListening}
+              onOpenSettings={() => setShowVoiceSettings(true)}
+            />
+          }
         />
       </main>
 
       {/* First-load onboarding */}
       <WelcomeModal isOpen={showWelcome} onClose={handleCloseWelcome} />
+
+      {/* Voice Settings Modal */}
+      <VoiceSettingsModal
+        isOpen={showVoiceSettings}
+        onClose={() => setShowVoiceSettings(false)}
+        apiKey={apiKey}
+        liveModel={liveModel}
+        subagentModel={subagentModel}
+        studioVoice={studioVoice}
+        onSave={async (settings) => {
+          await setApiKey(settings.apiKey);
+          setLiveModel(settings.liveModel);
+          setSubagentModel(settings.subagentModel);
+          setStudioVoice(settings.studioVoice);
+        }}
+      />
+
+      {/* Audio Preflight Modal */}
+      <AudioPreflightModal
+        isOpen={showPreflight}
+        onClose={() => setShowPreflight(false)}
+        onSuccess={() => {
+          setIsPreflightApproved(true);
+          setShowPreflight(false);
+          void voiceAgent.startListening();
+        }}
+      />
 
       {/* Session History Modal */}
       <HistoryModal

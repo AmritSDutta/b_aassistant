@@ -19,7 +19,7 @@ This guide explains how to use every other tool correctly. Read it before acting
 | \`canvas2d_clear\` | \`{}\` | Reset the scene graph. |
 | \`search_document\` | \`{ query }\` | BM25 search of the uploaded document; returns top 3 pages. Pass keywords, not sentences. |
 | \`clean_document\` | \`{}\` | Purge stored document chunks and index. |
-| \`search_web\` | \`{ query }\` | Live DuckDuckGo results (carry a \`fetchedAt\`). |
+| \`search_web\` | \`{ query }\` | Live Tavily AI / DuckDuckGo results (carry a \`fetchedAt\`). |
 | \`search_research\` | \`{ query }\` | ArXiv papers/preprints (carry a \`fetchedAt\`). |
 | \`get_reference_url\` | \`{}\` | Read-only: comma-separated stored reference URLs. |
 | \`calculate\` | \`{ expression }\` | Decimal-safe math, e.g. "12.5 * 4.2 + 3.1". |
@@ -36,7 +36,7 @@ This guide explains how to use every other tool correctly. Read it before acting
 
 ## Research, Math & Context
 - \`get_reference_url\`: returns a comma-separated list of external reference and documentation URLs added by the user in the sidebar. Use these for external documentation and context.
-- \`search_web\` (DuckDuckGo) for general web lookups. Returns live results with a \`fetchedAt\` timestamp.
+- \`search_web\` (keyless Tavily AI search as primary with automatic DuckDuckGo fallback) for general web lookups. Returns live results with a \`fetchedAt\` timestamp and \`source\`.
 - \`search_research\` (ArXiv) for scientific papers and preprints. Returns results with a \`fetchedAt\` timestamp.
 - If a search returns \`unavailable: true\`, the network is unreachable — tell the user you could not retrieve live data and do NOT invent results. Never present search output as fresher than its \`fetchedAt\`.
 - \`calculate\` for decimal-safe math (e.g. "12.5 * 4.2 + 3.1").

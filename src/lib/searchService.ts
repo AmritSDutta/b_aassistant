@@ -37,7 +37,7 @@ export async function searchWeb(query: string): Promise<SearchOutcome<WebSearchR
   const fetchedAt = new Date().toISOString();
   const trimmed = (query || '').trim();
   if (!trimmed) {
-    return { results: [], fetchedAt, source: 'duckduckgo' };
+    return { results: [], fetchedAt, source: 'tavily' };
   }
 
   try {
@@ -45,9 +45,13 @@ export async function searchWeb(query: string): Promise<SearchOutcome<WebSearchR
     if (!response.ok) {
       throw new Error(`Search endpoint responded with status ${response.status}`);
     }
-    const data = (await response.json()) as { results?: Array<{ title: string; snippet: string; url: string }> };
-    const results = (data.results || []).map((r) => ({ ...r, fetchedAt, source: 'duckduckgo' }));
-    return { results: results.slice(0, 5), fetchedAt, source: 'duckduckgo' };
+    const data = (await response.json()) as {
+      results?: Array<{ title: string; snippet: string; url: string }>;
+      source?: string;
+    };
+    const source = data.source || 'duckduckgo';
+    const results = (data.results || []).map((r) => ({ ...r, fetchedAt, source }));
+    return { results: results.slice(0, 5), fetchedAt, source };
   } catch (error: any) {
     console.warn('searchWeb error:', error);
     return {

@@ -17,18 +17,38 @@ describe('Search Service', () => {
     expect(researchOutcome.results).toEqual([]);
   });
 
-  it('returns live web results with a freshness timestamp', async () => {
+  it('returns live web results with a freshness timestamp and tavily source', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ results: [{ title: 'Result', snippet: 'Snippet', url: 'https://example.com' }] }),
+      json: async () => ({
+        results: [{ title: 'Tavily Result', snippet: 'Clean Tavily Snippet', url: 'https://example.com' }],
+        source: 'tavily',
+      }),
     } as any);
 
     const outcome = await searchWeb('test query');
     expect(outcome.unavailable).toBeFalsy();
     expect(outcome.results.length).toBe(1);
-    expect(outcome.results[0].title).toBe('Result');
+    expect(outcome.results[0].title).toBe('Tavily Result');
     expect(outcome.results[0].fetchedAt).toBeTruthy();
+    expect(outcome.results[0].source).toBe('tavily');
+    expect(outcome.source).toBe('tavily');
+  });
+
+  it('returns live web results with duckduckgo source on fallback', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        results: [{ title: 'DDG Result', snippet: 'DDG Snippet', url: 'https://duckduckgo.com' }],
+        source: 'duckduckgo',
+      }),
+    } as any);
+
+    const outcome = await searchWeb('test query');
+    expect(outcome.unavailable).toBeFalsy();
+    expect(outcome.results.length).toBe(1);
     expect(outcome.results[0].source).toBe('duckduckgo');
+    expect(outcome.source).toBe('duckduckgo');
   });
 
   it('reports unavailability instead of fabricating results on network error (web)', async () => {

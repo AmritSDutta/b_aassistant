@@ -13,6 +13,7 @@ interface ChatAreaProps {
   messages: ChatMessage[];
   onSendMessage: (text: string) => void;
   onToggleHighlight?: (id: string) => void;
+  voiceController?: React.ReactNode;
 }
 
 const FONT_STEPS = [15, 17, 19];
@@ -23,7 +24,12 @@ function readFontSize(): number {
   return FONT_STEPS.includes(raw) ? raw : 17;
 }
 
-export const ChatArea: React.FC<ChatAreaProps> = ({ messages, onSendMessage, onToggleHighlight }) => {
+export const ChatArea: React.FC<ChatAreaProps> = ({
+  messages,
+  onSendMessage,
+  onToggleHighlight,
+  voiceController,
+}) => {
   const [input, setInput] = useState('');
   const [fontSize, setFontSize] = useState<number>(readFontSize);
   const [maximized, setMaximized] = useState(false);
@@ -204,10 +210,13 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ messages, onSendMessage, onT
 
   const renderControls = (onExpand?: () => void, onClose?: () => void) => (
     <div
-      className="px-3 py-1.5 border-b flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.09em] font-bold"
+      className="px-3 py-1.5 border-b flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.09em] font-bold flex-wrap gap-2"
       style={{ borderColor: 'var(--line)', color: 'var(--ink-soft)', background: 'var(--card)' }}
     >
-      <span>Dialogue</span>
+      <div className="flex items-center gap-2">
+        <span>Dialogue</span>
+        {voiceController}
+      </div>
       <span className="flex items-center gap-2">
         <button type="button" aria-label="Decrease font size" onClick={() => stepFontSize(-1)} className="px-1">
           A-

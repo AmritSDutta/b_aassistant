@@ -289,7 +289,8 @@ export const TOOL_DEFINITIONS: WebMCPTool[] = [
   },
   {
     name: 'search_web',
-    description: 'Searches the web using DuckDuckGo.',
+    description:
+      'Searches the web using Tavily AI keyless search (primary) with automatic DuckDuckGo fallback. Returns top ranked web results with title, snippet, URL, source, and fetchedAt timestamp.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -521,3 +522,5 @@ export async function executeToolCall(
       throw new Error(`Unknown tool: ${name}`);
   }
 }
+
+export const executeTool = executeToolCall;

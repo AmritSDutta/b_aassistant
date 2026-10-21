@@ -4,9 +4,15 @@ interface BrandingProps {
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
   onOpenTips?: () => void;
+  onOpenVoiceSettings?: () => void;
 }
 
-export const Branding: React.FC<BrandingProps> = ({ theme, onToggleTheme, onOpenTips }) => {
+export const Branding: React.FC<BrandingProps> = ({
+  theme,
+  onToggleTheme,
+  onOpenTips,
+  onOpenVoiceSettings,
+}) => {
   return (
     <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--line)' }}>
       <div className="flex items-center space-x-2">
@@ -29,8 +35,20 @@ export const Branding: React.FC<BrandingProps> = ({ theme, onToggleTheme, onOpen
         </div>
       </div>
 
-      {/* Header Actions: Tips + Theme Toggle */}
+      {/* Header Actions: Tips + Voice + Theme Toggle */}
       <div className="flex items-center gap-1.5">
+        {onOpenVoiceSettings && (
+          <button
+            type="button"
+            onClick={onOpenVoiceSettings}
+            aria-label="Voice & Subagent Settings"
+            className="px-2 py-1 rounded-md border transition-colors font-mono text-[10px] font-bold uppercase tracking-[0.06em] hover:opacity-80"
+            style={{ borderColor: 'var(--line)', color: 'var(--accent)', background: 'var(--card)' }}
+            title="Open Voice Live & Subagent settings"
+          >
+            🎙️ voice
+          </button>
+        )}
         {onOpenTips && (
           <button
             type="button"

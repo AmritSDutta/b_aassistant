@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@google/genai": "^2.30.0",
     "@llamaindex/liteparse-wasm": "^2.16.0",
     "jspdf": "^4.2.1",
     "react": "^18.3.1",

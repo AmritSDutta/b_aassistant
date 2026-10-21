@@ -46,7 +46,10 @@ Traces `prd.md > The Core Journey`:
 - **Document Parser:** `@llamaindex/liteparse-wasm` with browser stream decompressor (`DecompressionStream('deflate-raw')`) and DOCX zip extraction. Rationale: Zero-backend, browser-native WebAssembly PDF and document extraction with spatial page parsing. [LiteParse Docs](https://developers.llamaindex.ai/liteparse/)
 - **Client Storage:** Native `IndexedDB` with custom lightweight wrapper. Rationale: Built into all modern browsers, handles structured chunk and BM25 index persistence without backend dependencies. Reference URLs persisted in `localStorage`.
 - **Search Engine:** Custom client-side BM25 implementation (`bm25.ts`). Rationale: Pure client-side lexical relevance scoring over document pages without server dependencies.
-- **Testing:** Vitest + React Testing Library. Rationale: Fast, strictly hermetic testing execution without external network calls (12 test suites, 80 tests).
+- **Web Search Client:** Keyless Tavily search (`src/lib/tavilySearch.ts`) via `X-Tavily-Access-Mode: keyless` with DuckDuckGo HTML scraping fallback.
+- **Live Voice SDK:** `@google/genai` (^2.30.0). Rationale: Direct browser WebSocket support for bidirectional duplex audio (`ai.live.connect`) and subagent structured generation (`ai.models.generateContent`).
+- **Cryptographic Storage:** Web Cryptography API (`window.crypto.subtle`). Rationale: Native browser-grade AES-GCM-256 encryption with non-extractable keys in IndexedDB (`SecureVault`) preventing script exfiltration.
+- **Testing:** Vitest + React Testing Library. Rationale: Fast, strictly hermetic testing execution without external network calls.
 - **Hosting:** Cloudflare Pages. Rationale: Instant static distribution with zero operational server overhead.
 
 ## Where It Runs and How Someone Tries It
@@ -154,6 +157,24 @@ Dedicated standalone string normalization utility module (`src/lib/symbolHumaniz
 - `humanizeSymbols(text: string): string`: Normalizes LaTeX directional arrows (`$\rightarrow$`, `$\to$`, `\rightarrow`, etc.), relations (`$\leq$`, `$\neq$`, etc.), arithmetic (`$\times$`, `$\pm$`, etc.), and Greek characters to clean Unicode for UI display. Preserves currency quantities (`$100`, `$50M`).
 - `humanizeSymbolsForPdf(text: string): string`: Translates LaTeX and Unicode symbols to clean, non-crashing ASCII strings (`->`, `<-`, `=>`, `<=`, `>=`, `!=`, `~=`) for standard jsPDF Latin-1 typefaces.
 
+### 10. `tavilySearch`
+Implements `prd.md > Features and Behavior > 8. Keyless Tavily Web Search`.
+Standalone module (`src/lib/tavilySearch.ts`) querying `https://api.tavily.com/search` with header `X-Tavily-Access-Mode: keyless` and returning `{ title, snippet, url, score }`. Backed by DuckDuckGo fallback in the `/api/websearch` proxy.
+
+### 11. `src/voice/` Module Suite
+Implements `prd.md > Features and Behavior > 9. Live Voice Mode & Pluggable Architecture`.
+Self-contained, decoupled voice package:
+- `types/provider.ts`: Declares abstract interfaces `ILiveVoiceProvider` (connect, stream, interrupt, tool response), `ILiveVoiceSession`, and `ISubagentProvider` (generateTask).
+- `config/cryptoStorage.ts`: AES-GCM-256 non-extractable key encryption via `window.crypto.subtle` stored in IndexedDB (`SecureVault`).
+- `config/modelRegistry.ts`: Model provider registry with defaults `gemini-3.8-live` (Live audio) and `gemini-3.5-flash-lite` (Subagent text).
+- `audio/recorder.ts`: `AudioWorkletRecorder` loading `/audio-capture-processor.js` for 16 kHz PCM stream.
+- `audio/player.ts`: `StreamingAudioPlayer` gapless 24 kHz scheduler with instant barge-in `interrupt()`.
+- `providers/geminiLiveProvider.ts`: `ILiveVoiceProvider` implementation via `@google/genai` (`ai.live.connect`).
+- `providers/geminiSubagentProvider.ts`: `ISubagentProvider` implementation via `@google/genai` (`ai.models.generateContent`).
+- `bridge/voiceBridge.ts`: WebMCP tool translation and subagent task coordination (clears canvas, draws fresh shapes, posts answer to chat, returns voice summary).
+- `hooks/useVoiceAgent.ts`: React voice agent lifecycle hook.
+- `components/VoiceLiveController.tsx`, `VoiceSettingsModal.tsx`, `AudioPreflightModal.tsx`.
+
 ## Data Model
 
 ### 1. `IndexedDB` (`bAssistantDB`)
@@ -188,8 +209,17 @@ Dedicated standalone string normalization utility module (`src/lib/symbolHumaniz
   - `key`: string (`active_session_id`)
   - `value`: string
 
-### 2. Application State (React State / Local Storage)
+### 2. `IndexedDB` (`SecureVault`)
+- **Store `keys`**:
+  - `id`: string (`device_master_key_v1`)
+  - `key`: CryptoKey (non-extractable 256-bit AES-GCM master key)
+
+### 3. Application State (React State / Local Storage)
 - `theme`: `'dark' | 'light'` (persisted in `localStorage`).
+- `apiKey`: encrypted string `__ENC__:v1:<iv>:<cipher>` (persisted in `localStorage['GEMINI_API_KEY']`).
+- `liveModel`: `'gemini-3.8-live'` (persisted in `localStorage['VOICE_LIVE_MODEL']`).
+- `subagentModel`: `'gemini-3.5-flash-lite'` (persisted in `localStorage['GEMINI_MODEL']`).
+- `studioVoice`: `'Puck'` (persisted in `localStorage['STUDIO_VOICE']`).
 - `sessionId`: string (persisted in IndexedDB `session_meta`).
 - `sessionTurns`: Array<SessionTurnRecord> (persisted in IndexedDB `session_turns`).
 - `chatMessages`: Array<{ id: string, sender: 'user' | 'agent', text: string, timestamp: number }>.
@@ -223,8 +253,18 @@ C:/codebase/b_aassistant/
 │   │   ├── idbStorage.ts        # IndexedDB connection and document store
 │   │   ├── bm25.ts              # Client-side BM25 indexer and query scorer
 │   │   ├── searchService.ts     # DDGS search & ArXiv API fetch handlers
+│   │   ├── tavilySearch.ts      # Keyless Tavily search client (primary)
 │   │   ├── symbolHumanizer.ts   # LaTeX symbol & arrow normalizer (UI & PDF)
 │   │   └── mathEvaluator.ts     # Decimal math calculator
+│   ├── voice/                   # Isolated Voice Live & Pluggable Model Package
+│   │   ├── index.ts             # Public package exports
+│   │   ├── types/               # Provider & audio interfaces (ILiveVoiceProvider, ISubagentProvider)
+│   │   ├── config/              # Crypto storage (AES-GCM-256) & model registry (gemini-3.8-live)
+│   │   ├── audio/               # AudioWorklet recorder (16 kHz) & gapless player (24 kHz)
+│   │   ├── providers/           # GeminiLiveProvider & GeminiSubagentProvider implementations
+│   │   ├── bridge/              # Tool adapter & subagent task bridge
+│   │   ├── hooks/               # useVoiceSettings & useVoiceAgent
+│   │   └── components/          # VoiceLiveController, VoiceSettingsModal, AudioPreflightModal
 │   ├── webmcp/
 │   │   ├── types.ts             # WebMCP tool interfaces & JSON-RPC schema
 │   │   ├── tools.ts             # 17 tool declarations (schemas & dispatch)
@@ -241,6 +281,11 @@ C:/codebase/b_aassistant/
 │       ├── humanizedMessage.test.tsx # Chat humanization
 │       ├── documentProcessing.test.ts# LiteParse parsing pipeline
 │       ├── searchService.test.ts# Web/research fallbacks
+│       ├── tavilySearch.test.ts # Keyless Tavily search & mapping
+│       ├── cryptoStorage.test.ts# AES-GCM-256 key encryption
+│       ├── modelRegistry.test.ts# Voice model provider registry
+│       ├── audioUtils.test.ts   # Audio scheduler and interrupt
+│       ├── voiceLiveController.test.tsx # Voice HUD widget rendering
 │       ├── seoAndRobots.test.ts # robots.txt, sitemap, meta tags & JSON-LD schema
 │       └── chatArea.test.tsx    # Dwell enrichments: popup, fonts, highlights
 ├── public/                      # Static assets & crawler standards
@@ -248,8 +293,9 @@ C:/codebase/b_aassistant/
 │   ├── sitemap.xml              # Canonical URL sitemap for indexing
 │   ├── bassistant_light.jpg     # Light-mode branding logo
 │   ├── bassistant_dark.jpg      # Dark-mode branding logo
-│   └── liteparse_wasm_bg.wasm   # LiteParse WASM binary
-├── docs/                        # docs7 documentation site
+│   ├── liteparse_wasm_bg.wasm   # LiteParse WASM binary
+│   └── audio-capture-processor.js # 16 kHz AudioWorklet processor
+├── docs/                        # docs7 documentation site (includes tavily-search.mdx, voice-agent.mdx)
 ├── devpost/                     # Devpost hackathon project artifacts
 │   ├── learner-profile.md
 │   ├── scope.md / scope.html
@@ -262,8 +308,10 @@ C:/codebase/b_aassistant/
 ```
 
 ## External Services and Dependencies
+- **Tavily Search API:** Keyless AI search endpoint (`POST https://api.tavily.com/search`, `X-Tavily-Access-Mode: keyless`). Free, zero auth.
 - **DuckDuckGo API:** Public CORS-accessible endpoint for web search summaries (`https://api.duckduckgo.com/?q={query}&format=json`). Free, zero auth.
 - **ArXiv API:** Public export search endpoint (`https://export.arxiv.org/api/query?search_query=all:{query}&max_results=5`). Free, zero auth.
+- **Gemini Live WebSocket API (`@google/genai`):** Direct client-side WebSocket communication for bidirectional duplex audio (`ai.live.connect`).
 - **Cloudflare Pages:** Free static hosting.
 
 ## Important Failure Modes

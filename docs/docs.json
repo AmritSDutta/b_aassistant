@@ -15,7 +15,11 @@
       },
       {
         "group": "Capabilities",
-        "pages": ["cockpit-ui", "webmcp", "canvas-and-pdf", "document-processing", "research-tools", "sessions-vault"]
+        "pages": ["cockpit-ui", "webmcp", "canvas-and-pdf", "document-processing", "research-tools", "tavily-search", "sessions-vault"]
+      },
+      {
+        "group": "Voice Agent",
+        "pages": ["voice-agent"]
       },
       {
         "group": "Research & Learnings",

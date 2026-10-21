@@ -30,7 +30,10 @@ A responsive, single-page cockpit filling 100% of the viewport, vertically parti
   - **Section 4 (Bottom) — Session Highlights:** Enboldened `Session Highlights` section collecting starred dialogue messages for instant revisit.
 - **Main Workspace (80% width):**
   - **Top Area (60% height) — HTML Canvas:** Interactive visual display area for programmatic drawing (shapes, lines, graphs, diagrams). Includes UI action buttons (such as "Clear Canvas") that mirror exposed WebMCP tools.
-  - **Bottom Area (40% height) — Chat Area:** Scrollable dialogue log displaying `user:` messages and agent responses, formatted with Lora longform reading typography and auto-scrolling to the latest turn, with a bottom text input and send button.
+  - **Bottom Area (40% height) — Chat Area:** Scrollable dialogue log displaying `user:` messages and agent responses, formatted with Lora longform reading typography and auto-scrolling to the latest turn, with a bottom text input and send button. The dialogue header bar docks the compact `VoiceLiveController` (animated mic toggle, live status pill, real-time transient caption preview, and quick settings gear).
+- **Modals & Overlays:**
+  - `VoiceSettingsModal`: Modal for configuring Gemini API key (AES-GCM-256 encrypted), Live audio model (`gemini-3.8-live` default), Subagent model (`gemini-3.5-flash-lite`), and Prebuilt Studio Voice (Puck, Charon, Kore, Fenrir, Aoede).
+  - `AudioPreflightModal`: Quick 1-second microphone permission and volume meter check before connecting to the live audio socket.
 
 ## Look and Feel
 - **Theme:** Dual-mode theme support (Light and Dark mode) switched via a toggle in the branding header.
@@ -124,7 +127,7 @@ Source: `scope.md > The POC Boundary`.
 The application exposes 17 standard WebMCP tools for visiting LLMs:
 - `get_tool_usage_prompt`: Read-only, zero-argument tool returning the agent operating guide for using every other tool; marked `readOnlyHint: true` and meant to be called first.
 - `get_reference_url`: Read-only, zero-argument tool returning comma-separated list of up to 10 stored reference URLs cached in browser storage.
-- `search_web`: Executes web search queries using DuckDuckGo (DDGS).
+- `search_web`: Executes web search queries using Keyless Tavily AI search as primary with automatic DuckDuckGo fallback.
 - `search_research`: Executes academic literature searches via ArXiv.
 - `calculate`: Evaluates decimal math expressions.
 - `search_document`: Searches ingested document chunks in IndexedDB using the BM25 index with stop-word filtering.
@@ -154,6 +157,20 @@ Source: `research.md` (dwell-time mechanisms 1–6).
 - **Valid robots.txt Directives:** Standalone plain-text `public/robots.txt` providing valid search engine crawling instructions and pointing to `sitemap.xml`, preventing SPA catch-all HTML fallback from producing crawler syntax errors.
 - **Sitemap Indexing:** Standard `public/sitemap.xml` listing primary public routes for canonical search indexing.
 
+### 8. Keyless Tavily Web Search with Automatic DuckDuckGo Fallback
+- **Primary AI Search Engine**: Uses Tavily Search API (`POST https://api.tavily.com/search`) with `X-Tavily-Access-Mode: keyless` to fetch clean, ranked, and scored content optimized for LLM consumption without HTML garbage or token bloat.
+- **Two-Tier Proxy Fallback**: Integrated in the same-origin `/api/websearch` layer (Vite dev middleware & Cloudflare Pages Functions). If Tavily is unavailable or rate-limited (HTTP 429), it immediately and seamlessly falls back to DuckDuckGo HTML scraping.
+- **Honest Metadata**: All search outcomes carry `source: 'tavily'` or `source: 'duckduckgo'` along with the ISO `fetchedAt` timestamp.
+
+### 9. Bidirectional Full-Duplex Live Voice Mode & Pluggable Architecture (`src/voice/`)
+- **Dual-Tier Agent Topology**:
+  - **Tier 1 (Conversational Audio Orchestrator)**: Default `gemini-3.8-live` handling 16 kHz microphone capture via `AudioWorkletProcessor` (`public/audio-capture-processor.js`), 24 kHz gapless PCM output playback, and zero-latency barge-in interruption (audio halts instantly on user speech).
+  - **Tier 2 (Domain Subagent Engine)**: High-throughput text generator (`gemini-3.5-flash-lite`) invoked when diagrams or in-depth technical analysis are requested (`generate_diagram_and_explanation`). The subagent clears the canvas, draws fresh shapes, and posts the substantive technical explanation directly to the chat area and IndexedDB.
+- **Ephemeral Spoken Conversation Policy**: Spoken speech turns and live audio chitchat remain ephemeral in the audio stream and Voice HUD caption pill. They are **not** written to the persistent dialogue history, keeping the reading notes and PDF reports clean and executive.
+- **Pluggable Provider Contracts**: Abstract interfaces (`ILiveVoiceProvider` and `ISubagentProvider`) decouple the audio pipeline from Google Gemini, allowing OpenAI Realtime, Mistral, or local Ollama models to be plugged in effortlessly.
+- **Hardware Preflight Modal**: Quick 1-second audio check verifying microphone permissions and visual volume meter before initiating the live socket connection.
+- **Client-Side Key Encryption**: Encrypts user API keys with 256-bit AES-GCM via Web Cryptography API (`window.crypto.subtle`) using non-extractable keys in IndexedDB (`SecureVault`), saving formatted ciphertext (`__ENC__:v1:...`) to `localStorage`.
+
 ## States and Boundaries
 
 - **Initial State:** Canvas is blank; chat is blank; file upload shows empty dropzone; theme defaults to selected mode.
@@ -174,17 +191,22 @@ Source: `research.md` (dwell-time mechanisms 1–6).
 - **WebMCP Integration:** Standard browser-native WebMCP implementation; no custom in-page inspector UI needed as standard external inspectors and agents interact directly.
 - **Chat Protocol:** User prompts prefixed with `user:` and accessible via WebMCP tools so visiting models can understand user intent.
 - **Reading Typography:** Lora serif font tuned for longform comfort (17px, line-height 1.75, subtle tracking, 72ch measure) with automatic scrolling to the most recent turn.
+- **Search Paradigm Decision:** Keyless Tavily AI search as primary endpoint to provide clean, ranked snippets without HTML noise, backed by DuckDuckGo fallback.
+- **Voice Architecture Decision:** Decoupled dual-tier topology (`gemini-3.8-live` audio orchestrator + `gemini-3.5-flash-lite` subagent) prevents audio latency and token bloat during complex diagram generation.
+- **Voice Persistence Decision:** Ephemeral spoken chitchat preserves executive clarity in the chat stream; only substantive subagent knowledge is archived into IndexedDB deliberation turns.
 
 ## What We're Building
 - 20/80 split React single-page application with Light/Dark toggle.
 - File upload for Doc/PDF < 1MB with LiteParse WASM parsing, natural per-page chunking, and IndexedDB BM25 indexing.
 - HTML canvas with live 2D scene graph engine, Clear button, and Export PDF button.
 - Chat stream formatted in Lora longform reading typography, multi-line prompt textarea, and auto-scroll to newest message.
+- Keyless Tavily web search with automatic DuckDuckGo fallback.
+- Isolated voice module in `src/voice/` featuring `gemini-3.8-live` full-duplex audio, subagent diagram generation, preflight audio modal, and AES-GCM-256 key encryption.
 - Long-dwell UI layer: warm token dual themes, onboarding WelcomeModal, chat popup maximize, A-/A+ persisted font steps, reading-progress bar, Session Highlights in sidebar Section 3, thinking pulse, copy/star message actions, drag-over dropzone feedback, and session strip.
-- Complete WebMCP tool suite (16 tools: `get_tool_usage_prompt` [read-only agent operating guide], `search_web`, `search_research`, `calculate`, `search_document` [returning top 3 pages with stop-word stripping], `clean_document`, `canvas2d_draw_shapes`, `canvas2d_inspect_shapes`, `canvas2d_modify_shape`, `canvas2d_clear`, `export_pdf`, `canvas_draw`, `draw_diagram`, `canvas_clear`, `chat_post`, `get_chat_history`).
+- Complete WebMCP tool suite (17 tools).
 - Cloudflare Pages deployment configuration.
 - Project documentation:
-  - Documentation site created via `docs7` skill.
+  - Documentation site created via `docs7` skill, updated with `docs/tavily-search.mdx` and dedicated `"Voice Agent"` section with `docs/voice-agent.mdx`.
   - `README.md` for humans.
   - `CLAUDE.md` for AI agents.
   - `AGENTS.md` referencing `CLAUDE.md` and `README.md` (and nothing else).

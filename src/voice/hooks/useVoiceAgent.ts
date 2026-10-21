@@ -1,0 +1,202 @@
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { VoiceStatus } from '../types/audio';
+import { ILiveVoiceSession } from '../types/provider';
+import { GeminiLiveProvider } from '../providers/geminiLiveProvider';
+import { AudioWorkletRecorder } from '../audio/recorder';
+import { getVoiceToolDeclarations } from '../bridge/toolAdapter';
+import { VoiceBridge } from '../bridge/voiceBridge';
+
+export interface UseVoiceAgentOptions {
+  apiKey: string;
+  liveModel: string;
+  studioVoice: string;
+  voiceBridge: VoiceBridge;
+  onRequireSettings?: () => void;
+  onRequirePreflight?: () => void;
+  isPreflightApproved?: boolean;
+}
+
+export function useVoiceAgent(options: UseVoiceAgentOptions) {
+  const {
+    apiKey,
+    liveModel,
+    studioVoice,
+    voiceBridge,
+    onRequireSettings,
+    onRequirePreflight,
+    isPreflightApproved = false,
+  } = options;
+
+  const [status, setStatus] = useState<VoiceStatus>('standby');
+  const [statusText, setStatusText] = useState<string>('Standby');
+  const [captionPreview, setCaptionPreview] = useState<string>('');
+  const [isListening, setIsListening] = useState<boolean>(false);
+  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const sessionRef = useRef<ILiveVoiceSession | null>(null);
+  const recorderRef = useRef<AudioWorkletRecorder | null>(null);
+
+  const stopListening = useCallback(() => {
+    if (recorderRef.current) {
+      try {
+        recorderRef.current.stop();
+      } catch {
+        // Ignore stop errors
+      }
+      recorderRef.current = null;
+    }
+
+    if (sessionRef.current) {
+      try {
+        sessionRef.current.close();
+      } catch {
+        // Ignore close errors
+      }
+      sessionRef.current = null;
+    }
+
+    setIsListening(false);
+    setIsSpeaking(false);
+    setStatus('standby');
+    setStatusText('Standby');
+  }, []);
+
+  const startListening = useCallback(async () => {
+    if (!apiKey) {
+      if (onRequireSettings) {
+        onRequireSettings();
+      } else {
+        alert('Please configure your Gemini API Key in Voice Settings.');
+      }
+      return;
+    }
+
+    if (!isPreflightApproved && onRequirePreflight) {
+      onRequirePreflight();
+      return;
+    }
+
+    setErrorMessage(null);
+    setStatus('connecting');
+    setStatusText('Connecting to Gemini Live...');
+
+    try {
+      const provider = new GeminiLiveProvider();
+      const tools = getVoiceToolDeclarations();
+
+      const session = await provider.connect(
+        {
+          apiKey,
+          model: liveModel,
+          voiceName: studioVoice,
+          systemInstruction:
+            'You are an intelligent full-duplex voice assistant for bAssistant. Keep spoken responses concise, direct, and technical. When the user asks to draw, diagram, explain an architecture, or search, invoke the appropriate tool.',
+          tools,
+        },
+        {
+          onStart: () => {
+            setIsSpeaking(true);
+            setStatus('speaking');
+            setStatusText('Speaking');
+          },
+          onEnd: () => {
+            setIsSpeaking(false);
+            setStatus('listening');
+            setStatusText('Listening');
+          },
+          onInterrupted: () => {
+            setIsSpeaking(false);
+            setStatus('interrupted');
+            setStatusText('Interrupted');
+            setCaptionPreview('Assistant interrupted');
+          },
+          onInputTranscription: (text: string, isFinal: boolean) => {
+            setCaptionPreview(`You: ${text}${isFinal ? '' : '...'}`);
+          },
+          onOutputTranscription: (text: string) => {
+            setCaptionPreview(`AI: ${text}`);
+          },
+          onTurnComplete: () => {
+            setStatus('listening');
+            setStatusText('Listening');
+          },
+          onToolCall: async (name: string, args: Record<string, unknown>) => {
+            setStatus('executing');
+            setStatusText(`Executing ${name}...`);
+            setCaptionPreview(`Tool: ${name}`);
+            try {
+              const res = await voiceBridge.handleToolCall(name, args);
+              return res;
+            } finally {
+              setStatus('speaking');
+              setStatusText('Speaking');
+            }
+          },
+          onError: (err: unknown) => {
+            const errStr = err instanceof Error ? err.message : String(err);
+            setStatus('error');
+            setStatusText(`Error: ${errStr}`);
+            setErrorMessage(errStr);
+            stopListening();
+          },
+        }
+      );
+
+      sessionRef.current = session;
+
+      const recorder = new AudioWorkletRecorder();
+      await recorder.start((chunk: string) => {
+        if (sessionRef.current) {
+          sessionRef.current.sendRealtimeAudio(chunk);
+        }
+      });
+
+      recorderRef.current = recorder;
+      setIsListening(true);
+      setStatus('listening');
+      setStatusText('Listening live...');
+    } catch (err) {
+      const errStr = err instanceof Error ? err.message : String(err);
+      setStatus('error');
+      setStatusText('Connection failed');
+      setErrorMessage(errStr);
+      stopListening();
+    }
+  }, [
+    apiKey,
+    liveModel,
+    studioVoice,
+    voiceBridge,
+    onRequireSettings,
+    onRequirePreflight,
+    isPreflightApproved,
+    stopListening,
+  ]);
+
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      stopListening();
+    } else {
+      void startListening();
+    }
+  }, [isListening, startListening, stopListening]);
+
+  useEffect(() => {
+    return () => {
+      stopListening();
+    };
+  }, [stopListening]);
+
+  return {
+    status,
+    statusText,
+    captionPreview,
+    isListening,
+    isSpeaking,
+    errorMessage,
+    startListening,
+    stopListening,
+    toggleListening,
+  };
+}
