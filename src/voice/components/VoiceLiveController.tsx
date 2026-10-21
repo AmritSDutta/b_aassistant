@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { VoiceStatus } from '../types/audio';
+import { globalTaskManager, BackgroundTaskRecord } from '../tasks/taskManager';
 
 interface VoiceLiveControllerProps {
   status: VoiceStatus;
@@ -18,6 +19,19 @@ export const VoiceLiveController: React.FC<VoiceLiveControllerProps> = ({
   onToggleListening,
   onOpenSettings,
 }) => {
+  const [activeTask, setActiveTask] = useState<BackgroundTaskRecord | null>(null);
+
+  useEffect(() => {
+    const updateActive = (): void => {
+      const active = globalTaskManager.getActiveTasks();
+      setActiveTask(active.length > 0 ? active[0] : null);
+    };
+
+    updateActive();
+    return globalTaskManager.subscribe(() => {
+      updateActive();
+    });
+  }, []);
   const getStatusBadge = () => {
     switch (status) {
       case 'connecting':
@@ -100,6 +114,17 @@ export const VoiceLiveController: React.FC<VoiceLiveControllerProps> = ({
       </button>
 
       {getStatusBadge()}
+
+      {activeTask && (
+        <span
+          data-testid="voice-bg-task-badge"
+          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-300 border border-amber-500/30 animate-pulse"
+          title={`Background Subagent: ${activeTask.prompt}`}
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+          ⚡ Drawing Architecture...
+        </span>
+      )}
 
       {captionPreview && (
         <div

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, act } from '@testing-library/react';
 import { VoiceLiveController } from '../voice/components/VoiceLiveController';
+import { globalTaskManager } from '../voice/tasks/taskManager';
 
 describe('VoiceLiveController', () => {
   it('renders standby state correctly', () => {
@@ -95,5 +96,37 @@ describe('VoiceLiveController', () => {
 
     fireEvent.click(getByTestId('voice-settings-btn'));
     expect(handleOpenSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders reactive background task badge when a task is in progress', () => {
+    globalTaskManager.clearTasks();
+
+    const { getByTestId, queryByTestId } = render(
+      <VoiceLiveController
+        status="standby"
+        statusText="Standby"
+        captionPreview=""
+        isListening={false}
+        onToggleListening={() => {}}
+        onOpenSettings={() => {}}
+      />
+    );
+
+    expect(queryByTestId('voice-bg-task-badge')).toBeNull();
+
+    let task: { id: string } = { id: '' };
+    act(() => {
+      task = globalTaskManager.createTask('diagram_and_explanation', 'Rendering test');
+      globalTaskManager.updateTask(task.id, { status: 'in_progress' });
+    });
+
+    expect(getByTestId('voice-bg-task-badge')).toBeTruthy();
+    expect(getByTestId('voice-bg-task-badge').textContent).toContain('Drawing Architecture');
+
+    act(() => {
+      globalTaskManager.updateTask(task.id, { status: 'completed' });
+    });
+
+    expect(queryByTestId('voice-bg-task-badge')).toBeNull();
   });
 });

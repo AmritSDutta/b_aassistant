@@ -19,7 +19,7 @@
       },
       {
         "group": "Voice Agent",
-        "pages": ["voice-agent"]
+        "pages": ["voice-agent", "background-tasks"]
       },
       {
         "group": "Research & Learnings",

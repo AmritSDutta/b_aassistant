@@ -38,11 +38,11 @@ flowchart TD
     Canvas["Artistic Canvas Engine (Rough.js)"]
     Chat["Chat Dialogue & IndexedDB Turns Vault"]
 
-    Orchestrator -->|toolCall: generate_diagram_and_explanation| Bridge
-    Bridge --> Subagent
+    Orchestrator -->|async toolCall: generate_diagram_and_explanation| Bridge
+    Bridge -->|Immediate dispatch ACK ~50ms| Orchestrator
+    Bridge -.->|Background Generation| Subagent
     Subagent -->|Structured Shapes JSON| Canvas
     Subagent -->|Technical Markdown Explanation| Chat
-    Bridge -->|Spoken Summary| Orchestrator
   end
 ```
 
@@ -53,8 +53,8 @@ flowchart TD
 Real-time audio models (`gemini-3.8-live`, `gemini-2.5-flash-native-audio-preview-12-2025`) are optimized for low-latency conversational audio, natural speech inflection, and rapid turn-taking. However, requiring native-audio models to synthesize massive JSON payloads or dense vector structures mid-speech introduces audio stutter and token bloat.
 
 To solve this, bAssistant decouples conversational speech from heavy technical synthesis:
-1. **Tier 1 (Audio Orchestrator)**: `gemini-3.8-live` handles real-time conversational banter, microphone audio streaming, and voice personality.
-2. **Tier 2 (Structured Subagent)**: `gemini-3.5-flash-lite` generates dense Canvas2D shapes and comprehensive markdown breakdowns when the user asks for diagrams, system designs, or calculations.
+1. **Tier 1 (Audio Orchestrator)**: `gemini-3.8-live` handles real-time conversational banter, microphone audio streaming, and voice personality. When diagrams are requested, it invokes `generate_diagram_and_explanation` as an internal asynchronous bridge tool, immediately receiving confirmation so it can acknowledge to the user with zero awkward pause.
+2. **Tier 2 (Structured Subagent)**: `gemini-3.5-flash-lite` runs in the background to generate dense Canvas2D shapes and comprehensive markdown breakdowns when the user asks for diagrams, system designs, or calculations.
 
 ---
 
@@ -102,10 +102,10 @@ export interface ISubagentProvider {
 
 To prevent API keys stored in the browser from being exfiltrated via third-party scripts:
 1. `cryptoStorage.ts` generates a non-extractable 256-bit AES-GCM key using `window.crypto.subtle`.
-2. The master key is stored in IndexedDB (`SecureVault` database, `keys` store, key ID `device_master_key_v1`).
-3. User keys are encrypted with a unique 12-byte initialization vector (IV) and written to `localStorage` as:
+2. The master key is stored in IndexedDB (`bassistant_secure_vault` database, `bassistant_keys` store, key ID `bassistant_device_master_key_v1`).
+3. User keys are encrypted with a unique 12-byte initialization vector (IV) and written to `localStorage` under `bassistant_gemini_api_key` as:
    ```
-   __ENC__:v1:<base64_iv>:<base64_ciphertext>
+   __BASSISTANT_ENC__:v1:<base64_iv>:<base64_ciphertext>
    ```
 4. Raw secret key bytes never leave the local browser environment.
 
@@ -117,3 +117,35 @@ To prevent API keys stored in the browser from being exfiltrated via third-party
 - **Streaming Audio Player (`StreamingAudioPlayer`)**: Schedules incoming 24 kHz PCM chunks against the precise `AudioContext.currentTime` clock to eliminate stutter and jitter.
 - **Zero-Latency Barge-In**: When the user starts speaking while the assistant is talking, `serverContent.interrupted === true` triggers `player.interrupt()`, immediately flushing queued audio buffers.
 - **Pre-flight Audio Check (`AudioPreflightModal`)**: Provides a 1-second microphone permission and volume level verification before initiating live sessions.
+
+---
+
+## 6. Centralized Prompts, Temporal Anchoring & WebMCP Tool Suite
+
+All system instructions are maintained centrally in [`src/voice/prompts.ts`](file:///C:/codebase/b_aassistant/src/voice/prompts.ts):
+
+### Real-Time Temporal Anchoring
+Each prompt template includes the anchor:
+```text
+You are working as of: {current_date}.
+```
+Before any prompt is passed to the Gemini Live WebSocket (`gemini-3.8-live`) or the Subagent generation engine (`gemini-3.5-flash-lite`), `resolvePromptWithCurrentDate(template)` dynamically evaluates the client's current date (e.g. `2026-10-21`) and injects it into the prompt.
+
+### Prompt Structure & Tool Catalog
+To ensure both Tier 1 and Tier 2 agents operate with clean role boundaries:
+- **Voice Bridge Tools (Tier 1 Live Agent Only)**:
+  - `generate_diagram_and_explanation`: Asynchronous bridge tool (not a WebMCP tool) that delegates visual architecture generation to the background Subagent. Tier 1 receives immediate dispatch confirmation (~50ms) to acknowledge the user verbally while the subagent runs in the background.
+  - `get_background_task_status`: Queries the status and progress of background tasks from browser cache, allowing Gemini Live to answer questions like *"Is my diagram done yet?"* verbally.
+- **WebMCP Tool Catalog (Tier 1 — non-visual only)**:
+  - **Retrieval & Context**: `search_web`, `search_research`, `search_document`, `get_reference_url`, and `clean_document`.
+  - **Canvas**: `canvas2d_clear` (voice users can wipe the canvas verbally; all drawing and editing flows through the `generate_diagram_and_explanation` bridge tool).
+  - **Dialogue & Reporting**: `calculate`, `export_pdf`, `chat_post`, `get_chat_history`, and `get_tool_usage_prompt`.
+- **Visual Shape Tools (Tier 2 Subagent & visiting WebMCP agents only)**: `canvas2d_draw_shapes`, `canvas2d_inspect_shapes`, and `canvas2d_modify_shape` are deliberately excluded from the Tier 1 declarations — the live voice model never manipulates raw shape JSON.
+- The Subagent prompt is purged of `generate_diagram_and_explanation` to prevent circular bridge calls.
+
+---
+
+## 7. Background Task Handling
+
+Every asynchronous dispatch is tracked by the [`TaskManager`](file:///C:/codebase/b_aassistant/src/voice/tasks/taskManager.ts) in browser `sessionStorage` (`bassistant_background_tasks`, LRU cap of 20, lifecycle `queued` -> `in_progress` -> `completed` / `failed`), with stale-task demotion on reload, serialized dispatch ordering, the `get_background_task_status` voice tool, and the reactive HUD badge. See [Background Task Handling](/background-tasks) for the full contract.
+

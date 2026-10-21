@@ -165,11 +165,20 @@ Source: `research.md` (dwell-time mechanisms 1–6).
 ### 9. Bidirectional Full-Duplex Live Voice Mode & Pluggable Architecture (`src/voice/`)
 - **Dual-Tier Agent Topology**:
   - **Tier 1 (Conversational Audio Orchestrator)**: Default `gemini-3.8-live` handling 16 kHz microphone capture via `AudioWorkletProcessor` (`public/audio-capture-processor.js`), 24 kHz gapless PCM output playback, and zero-latency barge-in interruption (audio halts instantly on user speech).
-  - **Tier 2 (Domain Subagent Engine)**: High-throughput text generator (`gemini-3.5-flash-lite`) invoked when diagrams or in-depth technical analysis are requested (`generate_diagram_and_explanation`). The subagent clears the canvas, draws fresh shapes, and posts the substantive technical explanation directly to the chat area and IndexedDB.
+  - **Tier 2 (Domain Subagent Engine)**: High-throughput text generator (`gemini-3.5-flash-lite`) invoked when diagrams or in-depth technical analysis are requested via the asynchronous bridge tool (`generate_diagram_and_explanation`). The bridge returns immediately to Tier 1 to prevent voice pauses, while the subagent runs in the background to clear the canvas, draw fresh shapes, and post the substantive technical explanation directly to the chat area and IndexedDB.
 - **Ephemeral Spoken Conversation Policy**: Spoken speech turns and live audio chitchat remain ephemeral in the audio stream and Voice HUD caption pill. They are **not** written to the persistent dialogue history, keeping the reading notes and PDF reports clean and executive.
 - **Pluggable Provider Contracts**: Abstract interfaces (`ILiveVoiceProvider` and `ISubagentProvider`) decouple the audio pipeline from Google Gemini, allowing OpenAI Realtime, Mistral, or local Ollama models to be plugged in effortlessly.
 - **Hardware Preflight Modal**: Quick 1-second audio check verifying microphone permissions and visual volume meter before initiating the live socket connection.
-- **Client-Side Key Encryption**: Encrypts user API keys with 256-bit AES-GCM via Web Cryptography API (`window.crypto.subtle`) using non-extractable keys in IndexedDB (`SecureVault`), saving formatted ciphertext (`__ENC__:v1:...`) to `localStorage`.
+- **Client-Side Key Encryption**: Encrypts user API keys with 256-bit AES-GCM via Web Cryptography API (`window.crypto.subtle`) using non-extractable keys in IndexedDB (`bassistant_secure_vault`), saving formatted ciphertext (`__BASSISTANT_ENC__:v1:...`) to `localStorage` under `bassistant_` prefix.
+- **Centralized Prompts & Dynamic Temporal Anchoring (`src/voice/prompts.ts`)**:
+  - System prompt templates for both Tier 1 Live Voice and Tier 2 Subagent are maintained in a dedicated module.
+  - Dynamic runtime temporal anchoring replaces `{current_date}` with the real-time calendar date (`YYYY-MM-DD`) at dispatch time.
+  - Prompts clearly differentiate between internal Voice Bridge delegation tools (asynchronous `generate_diagram_and_explanation`, `get_background_task_status` with explicit usage patterns) and client WebMCP tools (`canvas2d_*`, `search_*`, `calculate`, `export_pdf`). The Subagent prompt is purged of circular bridge calls.
+- **Background Task Status Tracking in Browser Cache (`src/voice/tasks/taskManager.ts`)**:
+  - Background subagent tasks are tracked with `bassistant_task_` IDs and lifecycle states (`queued`, `in_progress`, `completed`, `failed`).
+  - Synced to browser `sessionStorage` under `bassistant_background_tasks` (LRU cap of 20 tasks).
+  - Gemini Live can inspect task status mid-conversation via the `get_background_task_status` tool to answer user inquiries verbally.
+  - The Voice HUD (`VoiceLiveController`) reactively renders an animated status badge (`⚡ Drawing Architecture...`) while a task is in progress.
 
 ## States and Boundaries
 

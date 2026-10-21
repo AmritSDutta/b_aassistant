@@ -87,11 +87,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Reference URLs cached in `localStorage['b_reference_urls']`. No external servers, no vector databases.
 
 ### Testing
-- All unit tests live in `src/tests/` (19 Vitest suites, 136 tests) and must remain strictly hermetic and isolated — no network, no real IndexedDB dependencies leaking between tests.
+- All unit tests live in `src/tests/` (28 Vitest suites, 184 tests) and must remain strictly hermetic and isolated — no network, no real IndexedDB dependencies leaking between tests.
 - Vitest is configured inside `vite.config.ts` (`environment: 'jsdom'`, `globals: true`); there is no separate vitest config file.
 - Canvas tests must exercise the real Rough.js path: mock `getContext()` with an object whose `canvas.getContext()` returns itself, or `getRoughCanvas()` returns `null` and Rough never runs (this blind spot previously hid a rectangle regression).
 - If React component tests fail with `act(...) is not supported in production builds of React`, the shell has `NODE_ENV=production`; run `NODE_ENV=test npm test` (`set NODE_ENV=test&& npx vitest run` on Windows cmd) instead.
 
 ## Documentation Reference
 - [README.md](file:///C:/codebase/b_aassistant/README.md) — human-facing quickstart.
-- [docs/docs.json](file:///C:/codebase/b_aassistant/docs/docs.json) — full docs7 component and architecture documentation (`index.mdx`, `indroduction.mdx`, `architecture.mdx`, `cockpit-ui.mdx`, `webmcp.mdx`, `canvas-and-pdf.mdx`, `document-processing.mdx`, `research-tools.mdx`, `sessions-vault.mdx`, `dwell-time-research.mdx`, `liteparse-research.mdx`, `learnings.mdx`, `deployment.mdx`). `docs/custom.css` widens Mermaid frames; every page must be listed in `docs.json` navigation or it renders nowhere.
+- [docs/docs.json](file:///C:/codebase/b_aassistant/docs/docs.json) — full docs7 component and architecture documentation (`index.mdx`, `indroduction.mdx`, `architecture.mdx`, `cockpit-ui.mdx`, `webmcp.mdx`, `canvas-and-pdf.mdx`, `document-processing.mdx`, `research-tools.mdx`, `tavily-search.mdx`, `sessions-vault.mdx`, `voice-agent.mdx`, `background-tasks.mdx`, `dwell-time-research.mdx`, `liteparse-research.mdx`, `learnings.mdx`, `deployment.mdx`). `docs/custom.css` widens Mermaid frames; every page must be listed in `docs.json` navigation or it renders nowhere.

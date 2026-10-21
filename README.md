@@ -106,7 +106,10 @@ Full architectural and developer specifications built with `docs7` are located i
 - `docs/canvas-and-pdf.mdx` — Canvas2D scene graph engine & multilingual PDF export
 - `docs/document-processing.mdx` — Zero-backend LiteParse WASM & BM25 indexing
 - `docs/research-tools.mdx` — DuckDuckGo, ArXiv, and decimal calculator tools
+- `docs/tavily-search.mdx` — Keyless Tavily web search with DuckDuckGo fallback
 - `docs/sessions-vault.mdx` — Session vault, IndexedDB persistence & restore-on-mount
+- `docs/voice-agent.mdx` — Full-duplex Gemini Live voice mode & two-tier agent topology
+- `docs/background-tasks.mdx` — Asynchronous subagent task dispatch, TaskManager cache & status tool
 - `docs/dwell-time-research.mdx` — Evidence-backed long-dwell UI design mechanisms
 - `docs/liteparse-research.mdx` — In-browser document parsing research & benchmarks
 - `docs/learnings.mdx` — Engineering learnings: WebMCP discovery, Indic PDF, WASM isolation

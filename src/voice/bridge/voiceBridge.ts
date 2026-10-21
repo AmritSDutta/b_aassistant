@@ -2,22 +2,36 @@ import { ISubagentProvider } from '../types/provider';
 import { globalCanvasEngine } from '../../lib/canvasEngine';
 import { Canvas2dShape } from '../../types/canvas2d';
 import { executeToolCall, ToolContext } from '../../webmcp/tools';
+import { getSubagentSystemPrompt } from '../prompts';
+import { TaskManager, globalTaskManager } from '../tasks/taskManager';
 
 export interface VoiceBridgeOptions {
   subagent: ISubagentProvider;
   postChatMessage: (text: string) => void;
   toolContext?: Partial<ToolContext>;
+  taskManager?: TaskManager;
 }
 
 export class VoiceBridge {
   private subagent: ISubagentProvider;
   private postChatMessage: (text: string) => void;
   private toolContext: Partial<ToolContext>;
+  private taskManager: TaskManager;
+  private activeDiagramTask: Promise<void> | null = null;
 
   constructor(options: VoiceBridgeOptions) {
     this.subagent = options.subagent;
     this.postChatMessage = options.postChatMessage;
     this.toolContext = options.toolContext || {};
+    this.taskManager = options.taskManager || globalTaskManager;
+  }
+
+  getTaskManager(): TaskManager {
+    return this.taskManager;
+  }
+
+  getActiveDiagramTask(): Promise<void> | null {
+    return this.activeDiagramTask;
   }
 
   setSubagent(subagent: ISubagentProvider): void {
@@ -37,6 +51,10 @@ export class VoiceBridge {
       return this.handleDiagramAndExplanation(args);
     }
 
+    if (name === 'get_background_task_status') {
+      return this.handleGetBackgroundTaskStatus(args);
+    }
+
     const fullContext: ToolContext = {
       getMessages: this.toolContext.getMessages || (() => []),
       postMessage: this.postChatMessage,
@@ -52,46 +70,119 @@ export class VoiceBridge {
     return executeToolCall(name, args, fullContext);
   }
 
-  private async handleDiagramAndExplanation(args: Record<string, unknown>): Promise<unknown> {
+  private handleDiagramAndExplanation(args: Record<string, unknown>): Record<string, unknown> {
     const prompt = String(args.prompt || '');
     const clearFirst = args.clearCanvasFirst !== false;
+    const systemInstruction = getSubagentSystemPrompt();
 
-    const systemInstruction = `You are an expert system architect and visual designer for bAssistant.
-When requested to design, diagram, or explain a system, you must provide:
-1. A JSON code block labeled "json" containing {"shapes": [...]}.
-   Every shape MUST adhere strictly to:
-   - Nodes: {"type": "rectangle" | "ellipse" | "diamond" | "sticker" | "text", "id": "...", "text": "...", "subtitle": "...", "x": number, "y": number, "width": number, "height": number, "fillColor": "...", "strokeColor": "..."}
-   - Connectors: {"type": "arrow" | "line", "id": "...", "startId": "...", "endId": "...", "text": "..."}
-   - Layout: distribute nodes horizontally left-to-right (e.g. x = 80, 300, 520, 740; y = 200, width = 170, height = 90). Connectors must reference valid node IDs in startId and endId.
-2. A comprehensive, technical markdown explanation answering the user's architectural questions in depth.`;
+    const task = this.taskManager.createTask('diagram_and_explanation', prompt);
 
-    const subagentResponse = await this.subagent.generateText(
-      `Design and explain the following system architecture on the visual canvas: ${prompt}`,
-      systemInstruction
-    );
+    // Serialize background dispatches: a second request waits for the first to
+    // finish so two concurrent clearCanvasFirst runs cannot wipe the newer diagram.
+    const run = async (): Promise<void> => {
+      this.taskManager.updateTask(task.id, { status: 'in_progress' });
+      try {
+        const subagentResponse = await this.subagent.generateText(
+          `Design and explain the following system architecture on the visual canvas: ${prompt}`,
+          systemInstruction
+        );
 
-    const { shapes, explanation } = this.extractShapesAndExplanation(subagentResponse);
+        const { shapes, explanation } = this.extractShapesAndExplanation(subagentResponse);
 
-    if (shapes && shapes.length > 0) {
-      if (clearFirst) {
-        globalCanvasEngine.clear();
+        if (shapes && shapes.length > 0) {
+          if (clearFirst) {
+            globalCanvasEngine.clear();
+          }
+          globalCanvasEngine.appendShapes(shapes);
+          globalCanvasEngine.fitToContent();
+        }
+
+        const substantiveMessage = explanation.trim() || subagentResponse.trim();
+        if (substantiveMessage) {
+          this.postChatMessage(substantiveMessage);
+        }
+
+        const count = shapes ? shapes.length : 0;
+        this.taskManager.updateTask(task.id, {
+          status: 'completed',
+          shapesCount: count,
+          resultSummary: `Rendered ${count} architecture elements and posted analysis.`,
+          completedAt: Date.now(),
+        });
+      } catch (err) {
+        const errMessage = err instanceof Error ? err.message : String(err);
+        console.error('Asynchronous diagram subagent execution failed:', err);
+        this.taskManager.updateTask(task.id, {
+          status: 'failed',
+          error: errMessage,
+          completedAt: Date.now(),
+        });
+        this.postChatMessage(
+          `**Diagram Generation Notice**: Unable to generate visual diagram: ${errMessage}`
+        );
       }
-      globalCanvasEngine.appendShapes(shapes);
-      globalCanvasEngine.fitToContent();
-    }
+    };
 
-    const substantiveMessage = explanation.trim() || subagentResponse.trim();
-    if (substantiveMessage) {
-      this.postChatMessage(substantiveMessage);
-    }
+    const previous = this.activeDiagramTask;
+    this.activeDiagramTask = (previous ?? Promise.resolve())
+      .then(run)
+      .catch(() => {
+        // run() handles its own errors; this only guards the error path itself.
+      });
 
-    const shapeCount = shapes ? shapes.length : 0;
     return {
-      status: 'success',
-      shapesRendered: shapeCount,
-      summary: shapeCount > 0
-        ? `Rendered ${shapeCount} architecture elements on the visual canvas and posted the complete technical specification to the chat area.`
-        : 'Detailed technical analysis generated and posted to the chat area.',
+      status: 'dispatched',
+      asynchronous: true,
+      taskId: task.id,
+      message:
+        'Visual subagent has been dispatched in the background to render the diagram on the visual canvas and post the technical analysis to chat.',
+    };
+  }
+
+  private handleGetBackgroundTaskStatus(args: Record<string, unknown>): Record<string, unknown> {
+    const taskId = typeof args.taskId === 'string' ? args.taskId : undefined;
+    const task = taskId ? this.taskManager.getTask(taskId) : this.taskManager.getLatestTask();
+
+    if (!task) {
+      return {
+        found: false,
+        message: 'No background tasks found in browser cache.',
+      };
+    }
+
+    const elapsedSeconds = Math.round((Date.now() - task.createdAt) / 1000);
+
+    if (task.status === 'completed') {
+      return {
+        found: true,
+        taskId: task.id,
+        status: 'completed',
+        prompt: task.prompt,
+        elapsedSeconds,
+        shapesRendered: task.shapesCount || 0,
+        message: `Task ${task.id} completed. ${task.shapesCount || 0} architecture elements rendered on the canvas.`,
+      };
+    }
+
+    if (task.status === 'in_progress' || task.status === 'queued') {
+      return {
+        found: true,
+        taskId: task.id,
+        status: task.status,
+        prompt: task.prompt,
+        elapsedSeconds,
+        message: `Task ${task.id} is currently ${task.status} (${elapsedSeconds}s elapsed). Still working in the background.`,
+      };
+    }
+
+    return {
+      found: true,
+      taskId: task.id,
+      status: 'failed',
+      prompt: task.prompt,
+      elapsedSeconds,
+      error: task.error || 'Unknown error',
+      message: `Task ${task.id} failed: ${task.error}`,
     };
   }
 

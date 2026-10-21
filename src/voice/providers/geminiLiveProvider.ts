@@ -6,6 +6,7 @@ import {
   LiveSessionCallbacks,
 } from '../types/provider';
 import { StreamingAudioPlayer } from '../audio/player';
+import { getVoiceLiveSystemPrompt } from '../prompts';
 
 export class GeminiLiveProvider implements ILiveVoiceProvider {
   readonly id = 'gemini-live';
@@ -45,9 +46,7 @@ export class GeminiLiveProvider implements ILiveVoiceProvider {
         systemInstruction: {
           parts: [
             {
-              text:
-                config.systemInstruction ||
-                'You are an intelligent voice assistant. Speak naturally, concisely, and execute tools when requested.',
+              text: config.systemInstruction || getVoiceLiveSystemPrompt(),
             },
           ],
         },

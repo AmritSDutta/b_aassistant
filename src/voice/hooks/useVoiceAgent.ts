@@ -5,6 +5,7 @@ import { GeminiLiveProvider } from '../providers/geminiLiveProvider';
 import { AudioWorkletRecorder } from '../audio/recorder';
 import { getVoiceToolDeclarations } from '../bridge/toolAdapter';
 import { VoiceBridge } from '../bridge/voiceBridge';
+import { getVoiceLiveSystemPrompt } from '../prompts';
 
 export interface UseVoiceAgentOptions {
   apiKey: string;
@@ -90,8 +91,7 @@ export function useVoiceAgent(options: UseVoiceAgentOptions) {
           apiKey,
           model: liveModel,
           voiceName: studioVoice,
-          systemInstruction:
-            'You are an intelligent full-duplex voice assistant for bAssistant. Keep spoken responses concise, direct, and technical. When the user asks to draw, diagram, explain an architecture, or search, invoke the appropriate tool.',
+          systemInstruction: getVoiceLiveSystemPrompt(),
           tools,
         },
         {

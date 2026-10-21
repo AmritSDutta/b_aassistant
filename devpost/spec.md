@@ -165,8 +165,9 @@ Standalone module (`src/lib/tavilySearch.ts`) querying `https://api.tavily.com/s
 Implements `prd.md > Features and Behavior > 9. Live Voice Mode & Pluggable Architecture`.
 Self-contained, decoupled voice package:
 - `types/provider.ts`: Declares abstract interfaces `ILiveVoiceProvider` (connect, stream, interrupt, tool response), `ILiveVoiceSession`, and `ISubagentProvider` (generateTask).
-- `config/cryptoStorage.ts`: AES-GCM-256 non-extractable key encryption via `window.crypto.subtle` stored in IndexedDB (`SecureVault`).
+- `config/cryptoStorage.ts`: AES-GCM-256 non-extractable key encryption via `window.crypto.subtle` stored in IndexedDB (`bassistant_secure_vault`).
 - `config/modelRegistry.ts`: Model provider registry with defaults `gemini-3.8-live` (Live audio) and `gemini-3.5-flash-lite` (Subagent text).
+- `prompts.ts`: Centralized prompt templates (`VOICE_LIVE_AGENT_PROMPT_TEMPLATE`, `SUBAGENT_SYSTEM_PROMPT_TEMPLATE`), runtime temporal anchor `{current_date}` replacement (`resolvePromptWithCurrentDate`), and complete embedded WebMCP tool suite catalogs.
 - `audio/recorder.ts`: `AudioWorkletRecorder` loading `/audio-capture-processor.js` for 16 kHz PCM stream.
 - `audio/player.ts`: `StreamingAudioPlayer` gapless 24 kHz scheduler with instant barge-in `interrupt()`.
 - `providers/geminiLiveProvider.ts`: `ILiveVoiceProvider` implementation via `@google/genai` (`ai.live.connect`).
@@ -209,17 +210,17 @@ Self-contained, decoupled voice package:
   - `key`: string (`active_session_id`)
   - `value`: string
 
-### 2. `IndexedDB` (`SecureVault`)
-- **Store `keys`**:
-  - `id`: string (`device_master_key_v1`)
+### 2. `IndexedDB` (`bassistant_secure_vault`)
+- **Store `bassistant_keys`**:
+  - `id`: string (`bassistant_device_master_key_v1`)
   - `key`: CryptoKey (non-extractable 256-bit AES-GCM master key)
 
 ### 3. Application State (React State / Local Storage)
-- `theme`: `'dark' | 'light'` (persisted in `localStorage`).
-- `apiKey`: encrypted string `__ENC__:v1:<iv>:<cipher>` (persisted in `localStorage['GEMINI_API_KEY']`).
-- `liveModel`: `'gemini-3.8-live'` (persisted in `localStorage['VOICE_LIVE_MODEL']`).
-- `subagentModel`: `'gemini-3.5-flash-lite'` (persisted in `localStorage['GEMINI_MODEL']`).
-- `studioVoice`: `'Puck'` (persisted in `localStorage['STUDIO_VOICE']`).
+- `theme`: `'dark' | 'light'` (persisted in `localStorage['b_theme']`).
+- `apiKey`: encrypted string `__BASSISTANT_ENC__:v1:<iv>:<cipher>` (persisted in `localStorage['bassistant_gemini_api_key']`).
+- `liveModel`: `'gemini-3.8-live'` (persisted in `localStorage['bassistant_voice_live_model']`).
+- `subagentModel`: `'gemini-3.5-flash-lite'` (persisted in `localStorage['bassistant_subagent_model']`).
+- `studioVoice`: `'Puck'` (persisted in `localStorage['bassistant_studio_voice']`).
 - `sessionId`: string (persisted in IndexedDB `session_meta`).
 - `sessionTurns`: Array<SessionTurnRecord> (persisted in IndexedDB `session_turns`).
 - `chatMessages`: Array<{ id: string, sender: 'user' | 'agent', text: string, timestamp: number }>.

@@ -5,7 +5,7 @@ export function getVoiceToolDeclarations(): ToolDeclaration[] {
     {
       name: 'generate_diagram_and_explanation',
       description:
-        'Generates an architectural diagram on the visual canvas and writes a substantive technical explanation into the chat area. Call this whenever the user asks to draw, diagram, design an architecture, or visualize a system.',
+        'Asynchronously dispatches the visual subagent to design an architectural diagram on the visual canvas and write a technical breakdown in chat. Returns immediately so you can confirm to the user while drawing happens in the background.',
       parameters: {
         type: 'OBJECT',
         properties: {
@@ -22,9 +22,22 @@ export function getVoiceToolDeclarations(): ToolDeclaration[] {
       },
     },
     {
-      name: 'search_web',
+      name: 'get_background_task_status',
       description:
-        'Searches the web using Tavily AI keyless search with automatic DuckDuckGo fallback for fresh information.',
+        'Checks the execution status and progress of an asynchronous background task (e.g. diagram generation). Use this when the user asks if their diagram or task is finished or in progress.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          taskId: {
+            type: 'STRING',
+            description: 'Optional ID of the background task to inspect. If omitted, checks the latest task.',
+          },
+        },
+      },
+    },
+    {
+      name: 'search_web',
+      description: 'Searches the web for live information and current facts.',
       parameters: {
         type: 'OBJECT',
         properties: {
@@ -38,8 +51,7 @@ export function getVoiceToolDeclarations(): ToolDeclaration[] {
     },
     {
       name: 'search_document',
-      description:
-        'Searches the uploaded PDF/document chunks in IndexedDB using BM25 index. Pass specific keywords.',
+      description: 'Searches uploaded documents for keywords and topics.',
       parameters: {
         type: 'OBJECT',
         properties: {
@@ -49,6 +61,66 @@ export function getVoiceToolDeclarations(): ToolDeclaration[] {
           },
         },
         required: ['query'],
+      },
+    },
+    {
+      name: 'search_research',
+      description: 'Searches scientific research papers and preprints for a query.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          query: {
+            type: 'STRING',
+            description: 'The research query or keywords to look up in scientific papers.',
+          },
+        },
+        required: ['query'],
+      },
+    },
+    {
+      name: 'get_reference_url',
+      description: 'Retrieves the external documentation and reference URLs stored in the current session.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {},
+      },
+    },
+    {
+      name: 'clean_document',
+      description: 'Deletes the uploaded document and its search index from the current workspace.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {},
+      },
+    },
+    {
+      name: 'chat_post',
+      description: 'Posts a message into the persistent chat stream for the user to read.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          text: {
+            type: 'STRING',
+            description: 'The message text to post into the chat stream.',
+          },
+        },
+        required: ['text'],
+      },
+    },
+    {
+      name: 'get_chat_history',
+      description: 'Reads the recent chat conversation history.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {},
+      },
+    },
+    {
+      name: 'get_tool_usage_prompt',
+      description: 'Reads the operating guide for all available tools.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {},
       },
     },
     {
