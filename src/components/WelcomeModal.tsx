@@ -15,6 +15,10 @@ const STEPS: Array<{ title: string; body: string }> = [
     body: 'Type in the chat. Your agent answers in the stream (user: prefix) and maps systems live on the canvas above.',
   },
   {
+    title: 'Talk to it live (voice mode)',
+    body: 'Tap [ 🎙️ voice ] in the header to save a Gemini API key, then hit the mic in the chat toolbar for a hands-free, full-duplex live session. Ask out loud and bAssistant keeps drawing on the canvas while it talks.',
+  },
+  {
     title: 'Add context (Optional)',
     body: 'Optionally drop a PDF/Word file (under 2MB) or add reference URLs in the sidebar to provide custom project context. Documents are parsed and indexed privately in your browser — nothing leaves your machine.',
   },

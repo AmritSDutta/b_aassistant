@@ -141,7 +141,7 @@ bAssistant allows you to upload reference documents for private query and analys
 Ground your visiting AI model with up to 10 live documentation links or reference articles:
 
 1. In the sidebar under **Reference URLs**, paste any HTTP/HTTPS URL into the input field and click **Add**.
-2. bAssistant probes the URL status with a quick HEAD/GET request.
+2. bAssistant probes the URL with a single cross-origin (`no-cors`) GET request bounded by a 5-second timeout before caching it.
 3. Visiting agents invoke `get_reference_url` to read your stored links and tailor their research.
 4. Click the **×** button beside any link to remove it from your session.
 
@@ -165,16 +165,16 @@ The top 60% workspace is a high-performance Canvas2D scene graph engine designed
 bAssistant features a real-time, low-latency conversational voice assistant powered by Google's Gemini Multimodal Live API over WebSockets, orchestrated through a **Two-Tier Architecture**.
 
 ### 7.1 Two-Tier System Architecture
-- **Tier 1: Conversational Live Agent** (`gemini-2.5-flash-native-audio-preview` or `gemini-2.0-flash-exp`)  
+- **Tier 1: Conversational Live Agent** (`gemini-3.8-live` by default; fallbacks `gemini-2.5-flash-native-audio-preview-12-2025` or `gemini-3.1-flash-live-preview`)  
   Streams bidirectional 16kHz PCM audio directly to and from your browser microphone and speakers. It listens, reasons, interrupts naturally, and responds with spoken explanations in milliseconds.
-- **Tier 2: Visual Subagent** (`gemini-2.5-flash`)  
+- **Tier 2: Visual Subagent** (`gemini-3.5-flash-lite`)  
   Executes computationally heavy visual diagramming in the background. When you ask for an architecture diagram or flowchart, Tier 1 delegates the task to Tier 2 via `generate_diagram_and_explanation` and immediately acknowledges verbally (*"I'm drawing that architecture on the canvas for you now..."*). Tier 2 creates the Canvas2D shapes, arranges nodes and connectors, and posts the in-depth technical explanation into the dialogue reader.
 
 ### 7.2 Configuration & Client-Side Encryption
 1. Click the `[ 🎙️ voice ]` button in the cockpit header or the settings gear in the Voice HUD.
 2. Enter your Google Gemini API key.
 3. Select your preferred voice persona (`Puck`, `Charon`, `Kore`, `Fenrir`, or `Aoede`).
-4. Choose the endpoint model (defaults to `gemini-2.5-flash-native-audio-preview`).
+4. Choose the endpoint model (defaults to `gemini-3.8-live`).
 5. **Zero-Knowledge Encryption**: Your API key is encrypted directly in your browser using **Web Crypto AES-GCM-256** with an ephemeral salt and saved into IndexedDB (`bassistant_secure_vault`). It is never stored in plaintext `localStorage`, never logged, and never transmitted to any proxy or third-party server.
 
 ### 7.3 Starting a Voice Session & Preflight Audio Check
@@ -197,7 +197,7 @@ The docked Voice HUD keeps you informed without obstructing your workspace:
 - **Status Indicator**: Displays real-time states (`Standby`, `Connecting...`, `Live Listening`, `Thinking...`, `Speaking`).
 - **Live Activity Badge**: When background rendering or searching is underway, an animated badge appears (e.g., `⚡ Drawing Architecture...`).
 - **Ephemeral Captions**: Transcribes incoming model speech in the HUD without polluting your persistent session chat history with transient spoken chitchat.
-- **Task Cache Tracking**: Background operations are tracked in IndexedDB (`bassistant_background_tasks`) so task progress survives transient state changes.
+- **Task Cache Tracking**: Background operations are tracked in `sessionStorage` (`bassistant_background_tasks`, per-tab, capped at 20 records) so task progress survives transient state changes.
 
 ### 7.6 Clean Disconnect & Teardown
 - Click the active microphone button in the HUD to end the call.
@@ -268,7 +268,7 @@ To provide distraction-free usage and safeguard application layout integrity, bA
 - **Scanned images**: bAssistant extracts natural text and XML tokens; scanned image-only PDFs without OCR layers cannot be tokenized by BM25.
 
 ### Q: Where are my documents, voice keys, and chats stored?
-All data stays 100% inside your browser's local **IndexedDB** database (`bassistant_session`, `bassistant_docs`, `bassistant_secure_vault`). No server receives your documents, chat prompts, API keys, or canvas diagrams.
+All data stays 100% inside your browser's local storage: the IndexedDB database **`bAssistantDB`** (documents, chunks, BM25 index, session turns, active session id) and **`bassistant_secure_vault`** (encrypted voice-key material), plus `sessionStorage` for per-tab background task state. No server receives your documents, chat prompts, API keys, or canvas diagrams.
 
 ### Q: How does Web Search work without an API key?
 bAssistant's `search_web` tool leverages keyless Tavily AI extraction as its primary engine, backed by automated DuckDuckGo fallback. You do not need to configure any search credentials.

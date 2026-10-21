@@ -7,43 +7,39 @@ description: Bidirectional Gemini Live voice mode, pluggable model architecture,
 
 bAssistant features a **full-duplex, bidirectional live voice mode** powered by the **Google Gemini Live API** (`@google/genai`), mid-dialogue **WebMCP tool access**, client-side **AES-GCM-256 key encryption**, and a **decoupled two-tier agent topology**.
 
+The topology is two diagrams: the agent tiers, then the audio I/O path they share.
+
 ```mermaid
 flowchart TD
-  subgraph AudioHardware["Audio Hardware Engine"]
-    Mic["Microphone (16 kHz PCM)"]
-    Worklet["AudioWorklet (public/audio-capture-processor.js)"]
-    Player["StreamingAudioPlayer (24 kHz Gapless PCM)"]
-    Speaker["Headphones / Speaker"]
-    Mic --> Worklet
-    Player --> Speaker
-  end
-
-  subgraph Tier1["Tier 1: Live Voice Orchestrator (gemini-3.8-live)"]
-    LiveWS["WebSocket: ai.live.connect()"]
-    Orchestrator["ILiveVoiceProvider (gemini-3.8-live)"]
-    HUD["Voice HUD Controller (Transient Captions Only)"]
-    BargeIn["Zero-Latency Barge-In Handler"]
-
-    Worklet -->|16 kHz PCM| LiveWS
+  subgraph Tier1["Tier 1: Live Voice Orchestrator"]
+    LiveWS["WebSocket ai.live.connect()"]
+    Orchestrator["ILiveVoiceProvider"]
+    HUD["Voice HUD - Transient Captions"]
+    BargeIn["Zero-Latency Barge-In"]
     LiveWS --> Orchestrator
-    Orchestrator -->|24 kHz Audio Chunks| Player
-    Orchestrator -->|Live Transcripts| HUD
-    Orchestrator -->|interrupted: true| BargeIn
-    BargeIn -->|flush queue| Player
+    Orchestrator --> HUD
+    Orchestrator --> BargeIn
   end
-
-  subgraph Tier2["Tier 2: Structured Subagent (gemini-3.5-flash-lite)"]
-    Bridge["VoiceBridge (toolAdapter.ts)"]
-    Subagent["ISubagentProvider (gemini-3.5-flash-lite)"]
-    Canvas["Artistic Canvas Engine (Rough.js)"]
-    Chat["Chat Dialogue & IndexedDB Turns Vault"]
-
-    Orchestrator -->|async toolCall: generate_diagram_and_explanation| Bridge
-    Bridge -->|Immediate dispatch ACK ~50ms| Orchestrator
-    Bridge -.->|Background Generation| Subagent
-    Subagent -->|Structured Shapes JSON| Canvas
-    Subagent -->|Technical Markdown Explanation| Chat
+  subgraph Tier2["Tier 2: Structured Subagent"]
+    Bridge["VoiceBridge"]
+    Subagent["ISubagentProvider"]
+    Canvas["Canvas Engine - Rough.js"]
+    Chat["Chat + Turns Vault"]
+    Bridge --> Subagent
+    Subagent --> Canvas
+    Subagent --> Chat
   end
+  Orchestrator -->|"async toolCall"| Bridge
+  Bridge -.->|"immediate dispatch ACK"| Orchestrator
+```
+
+```mermaid
+flowchart TD
+  Mic["Microphone - 16 kHz PCM"] --> Worklet["AudioWorklet Capture"]
+  Worklet -->|"16 kHz PCM"| LiveWS["Live WebSocket"]
+  LiveWS -->|"24 kHz Audio Chunks"| Player["StreamingAudioPlayer"]
+  Player --> Speaker["Headphones / Speaker"]
+  BargeIn["Barge-In: interrupted true"] -->|"flush queue"| Player
 ```
 
 ---
@@ -73,6 +69,18 @@ Models are completely interfaced to allow swapping between Gemini Live, OpenAI R
 ### Provider Contract (`src/voice/types/provider.ts`)
 
 ```typescript
+export interface LiveSessionCallbacks {
+  onStart?: () => void;
+  onEnd?: () => void;
+  onInterrupted?: () => void;
+  onInputTranscription?: (text: string, isFinal: boolean) => void;
+  onOutputTranscription?: (text: string) => void;
+  onTurnComplete?: () => void;
+  onError?: (err: unknown) => void;
+  onClose?: () => void;
+  onToolCall?: (name: string, args: Record<string, unknown>) => Promise<unknown>;
+}
+
 export interface ILiveVoiceSession {
   sendRealtimeAudio: (base64Pcm16: string) => void;
   close: () => void;
@@ -90,6 +98,11 @@ export interface ISubagentProvider {
   generateText: (prompt: string, systemInstruction?: string) => Promise<string>;
 }
 ```
+
+Providers push session events through `LiveSessionCallbacks`. The lifecycle-relevant ones are
+`onStart` / `onEnd` (audio playback began or drained), `onInterrupted` (barge-in), `onTurnComplete`,
+`onError`, and `onClose` — the last fires when the provider's own socket closes, letting the hook tear
+the session down without waiting for the user.
 
 ### Configured Defaults (`src/voice/config/modelRegistry.ts`)
 - **Default Live Model**: `gemini-3.8-live` (with fallback options: `gemini-2.5-flash-native-audio-preview-12-2025`, `gemini-3.1-flash-live-preview`)
@@ -120,9 +133,39 @@ To prevent API keys stored in the browser from being exfiltrated via third-party
 
 ---
 
-## 6. Centralized Prompts, Temporal Anchoring & WebMCP Tool Suite
+## 6. Session Lifecycle, Standby Guard & Clean Teardown
 
-All system instructions are maintained centrally in [`src/voice/prompts.ts`](file:///C:/codebase/b_aassistant/src/voice/prompts.ts):
+Voice state is owned by the `useVoiceAgent` hook (`src/voice/hooks/useVoiceAgent.ts`), whose `status`
+takes one of the `VoiceStatus` values: `standby | connecting | listening | speaking | executing |
+interrupted | error`.
+
+- **Standby guard (`isSessionActiveRef`)**: a single ref flips to `true` the instant a connect starts
+  and back to `false` in `stopListening`. Every session callback (`onStart`, `onEnd`, `onInterrupted`,
+  transcriptions, `onTurnComplete`, `onToolCall`, `onError`) short-circuits when the ref is `false`, so
+  late events from a socket that is already torn down can never flip the HUD back to
+  `Listening`/`Speaking` after the user has stopped. `onToolCall` returns `{ error: 'Session stopped' }`
+  in that state.
+- **Post-connect re-checks**: after the awaited `provider.connect(...)` and again after the recorder
+  starts, the hook re-reads the ref; if the session was stopped mid-connect it closes the session,
+  stops the recorder, and returns without setting state.
+- **Clean teardown**: `stopListening()` stops the `AudioWorkletRecorder`, closes the session, releases
+  the refs, and resets `status` to `standby`. The provider's `close()` prefers the SDK `session.close()`
+  and otherwise closes the underlying WebSocket with `conn.close(1000, 'Normal Closure')` — and only
+  when `readyState` is `0` (CONNECTING) or `1` (OPEN). Close failures are logged, never thrown. The
+  provider's socket `onclose` also fires `callbacks.onClose?.()`, so a server-side drop tears the hook
+  down on its own.
+- **Toggle is idempotent**: `toggleListening()` stops the session when `isListening` is true, when the
+  session ref is active, or while `status === 'connecting'` — a second click during the connecting
+  window cancels cleanly instead of opening a second socket.
+- **Context-window compression**: the live config enables `contextWindowCompression`
+  (`triggerTokens: '25600'`, `slidingWindow.targetTokens: '12800'`) so long conversations stay within
+  the model's live context budget.
+
+---
+
+## 7. Centralized Prompts, Temporal Anchoring & WebMCP Tool Suite
+
+All system instructions are maintained centrally in `src/voice/prompts.ts`:
 
 ### Real-Time Temporal Anchoring
 Each prompt template includes the anchor:
@@ -145,7 +188,7 @@ To ensure both Tier 1 and Tier 2 agents operate with clean role boundaries:
 
 ---
 
-## 7. Background Task Handling
+## 8. Background Task Handling
 
-Every asynchronous dispatch is tracked by the [`TaskManager`](file:///C:/codebase/b_aassistant/src/voice/tasks/taskManager.ts) in browser `sessionStorage` (`bassistant_background_tasks`, LRU cap of 20, lifecycle `queued` -> `in_progress` -> `completed` / `failed`), with stale-task demotion on reload, serialized dispatch ordering, the `get_background_task_status` voice tool, and the reactive HUD badge. See [Background Task Handling](/background-tasks) for the full contract.
+Every asynchronous dispatch is tracked by the `TaskManager` (`src/voice/tasks/taskManager.ts`) in browser `sessionStorage` (`bassistant_background_tasks`, LRU cap of 20, lifecycle `queued` -> `in_progress` -> `completed` / `failed`), with stale-task demotion on reload, serialized dispatch ordering, the `get_background_task_status` voice tool, and the reactive HUD badge. See [Background Task Handling](/background-tasks) for the full contract.
 

@@ -11,11 +11,11 @@
     "groups": [
       {
         "group": "Overview",
-        "pages": ["index", "indroduction", "architecture"]
+        "pages": ["index", "quickstart", "indroduction", "architecture"]
       },
       {
         "group": "Capabilities",
-        "pages": ["cockpit-ui", "webmcp", "canvas-and-pdf", "document-processing", "research-tools", "tavily-search", "sessions-vault"]
+        "pages": ["cockpit-ui", "webmcp", "agent-guide", "canvas-and-pdf", "document-processing", "research-tools", "tavily-search", "sessions-vault"]
       },
       {
         "group": "Voice Agent",
@@ -26,8 +26,12 @@
         "pages": ["dwell-time-research", "liteparse-research", "learnings"]
       },
       {
-        "group": "Deployment",
-        "pages": ["deployment"]
+        "group": "Operations",
+        "pages": ["source-protection", "deployment"]
+      },
+      {
+        "group": "Legal",
+        "pages": ["license"]
       }
     ]
   }

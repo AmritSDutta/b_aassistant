@@ -13,6 +13,10 @@ flowchart TD
   Provider --> Chat["Chat Stream (40% pane)"]
   Provider --> Canvas["Canvas 2D Engine (60% pane)"]
   Provider --> Data["BM25 Retrieval + Web/ArXiv Tools"]
+  User["User (browser mic)"] --> Voice["Live Voice Agent (Gemini Live)"]
+  Voice -->|toolCall| Bridge["VoiceBridge + TaskManager"]
+  Bridge --> Canvas
+  Bridge --> Chat
   Chat -->|record turns| Sessions[("session_turns / session_meta")]
   Sessions --> Vault["Session Vault (HistoryModal)"]
   Vault -->|restore| Canvas
@@ -26,6 +30,7 @@ flowchart TD
 3. **Lexical Retrieval Engine**: Client-side BM25 index stored in IndexedDB for instant, private text search with query stop-word removal.
 4. **2D Rendering Engine**: Dynamic HTML5 canvas drawing shapes, flowcharts, graphs, and annotations from structured LLM tool arguments with perimeter edge docking — rendered with Rough.js hand-drawn sketching (hachure fills, cubic Bézier connectors) and calibrated per theme — plus interactive pan, wheel-zoom, Fit View, and Reset. See [Canvas2D Scene Graph & PDF Export](/canvas-and-pdf).
 5. **Session Vault & Persistence**: Each deliberation turn (user inquiry, agent reply, canvas snapshot, and serialized scene graph) is written to the `session_turns` store, with the active session tracked in `session_meta`. On reload the app rebuilds the chat stream and restores the latest canvas scene graph, and the vault lets users restore, export, or delete past sessions. See [Session Vault & Local Persistence](/sessions-vault).
-6. **Same-Origin Research Proxy**: Web and academic search reach third-party hosts (which lack CORS headers) through a same-origin `/api` layer — a Vite dev proxy plus middleware in development, and Cloudflare Pages Functions in production. See [Research & Math Tools](/research-tools).
+6. **Live Voice Agent (Two-Tier)**: A full-duplex Gemini Live audio session (Tier 1) delegates heavy visual synthesis to a background subagent (Tier 2) through the `VoiceBridge`, which tracks every dispatch in the `TaskManager`. Voice keys are encrypted client-side with AES-GCM-256 before storage. See [Full-Duplex Live Voice Agent](/voice-agent) and [Background Task Handling](/background-tasks).
+7. **Same-Origin Research Proxy**: Web search (`search_web`, keyless Tavily primary with a DuckDuckGo fallback) and academic search (`search_research`, ArXiv) reach third-party hosts (which lack CORS headers) through a same-origin `/api` layer — a Vite dev proxy plus middleware in development, and Cloudflare Pages Functions in production. See [Research & Math Tools](/research-tools).
 
 The only non-browser code is the thin `/api` proxy described above; everything else — parsing, indexing, rendering, storage, and PDF generation — runs in the browser sandbox.

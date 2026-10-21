@@ -109,7 +109,14 @@ and the canvas, and makes it active — while the previous session remains avail
 | `localStorage` | `b_onboarded` | Onboarding-seen flag |
 | `localStorage` | `b_reference_urls` | Up to 10 cached reference URLs |
 | `localStorage` | `b_font_size` | Chat reader font step (15 / 17 / 19) |
+| `localStorage` | `bassistant_gemini_api_key` | AES-GCM-256-encrypted Gemini API key (`__BASSISTANT_ENC__:v1:<iv>:<ciphertext>`) |
+| `localStorage` | `bassistant_voice_live_model` | Selected Tier 1 live model |
+| `localStorage` | `bassistant_subagent_model` | Selected Tier 2 subagent model |
+| `localStorage` | `bassistant_studio_voice` | Selected voice persona (e.g. `Puck`) |
 | IndexedDB | `bAssistantDB` | Documents, chunks, BM25 index, session turns, active session id |
+| IndexedDB | `bassistant_secure_vault` | Non-extractable device master key (`bassistant_keys` store, `bassistant_device_master_key_v1`) used to encrypt voice credentials |
+| `sessionStorage` | `bassistant_background_tasks` | Background voice task records (per-tab, LRU cap of 20) — see [Background Task Handling](/background-tasks) |
 
-Everything above is client-local: no session data, document text, or canvas content ever leaves the
-machine.
+Everything above is client-local: no session data, document text, canvas content, or API key ever
+leaves the machine. The voice credential keys are migrated from legacy names (`GEMINI_API_KEY`,
+`VOICE_LIVE_MODEL`, `GEMINI_MODEL`, `STUDIO_VOICE`) on load — see [Live Voice Agent](/voice-agent).

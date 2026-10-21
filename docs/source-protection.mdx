@@ -1,0 +1,47 @@
+---
+title: Source & Inspection Protection
+description: Client-side deterrents against the context menu, DevTools shortcuts, and View Source/Save, wired through initSourceProtection.
+---
+
+# Source & Inspection Protection
+
+bAssistant installs a small client-side **inspection deterrent** on mount so casual users are not
+distracted or tempted to disturb the running layout. It is implemented in
+`src/lib/sourceProtection.ts` and attached in `src/App.tsx`.
+
+```typescript
+initSourceProtection({ disableContextMenu: true, disableDevToolsShortcuts: true });
+```
+
+The function returns an unsubscribe cleanup that `App.tsx` calls on unmount, and it accepts an
+optional `onBlocked(action)` callback that fires with `'contextmenu' | 'devtools' | 'viewsource' | 'save'`.
+
+## What It Blocks
+
+| Interaction | Shortcut | Action reported |
+| :--- | :--- | :--- |
+| Right-click context menu | — | `contextmenu` |
+| Developer Tools toggle | `F12` | `devtools` |
+| Inspect element | `Ctrl/Cmd + Shift + I` (or `Cmd + Option + I`) | `devtools` |
+| Console | `Ctrl/Cmd + Shift + J` (or `Cmd + Option + J`) | `devtools` |
+| Element selector | `Ctrl/Cmd + Shift + C` (or `Cmd + Option + C`) | `devtools` |
+| View page source | `Ctrl/Cmd + U` | `viewsource` |
+| Save page | `Ctrl/Cmd + S` | `save` |
+
+Blocked events are cancelled with `preventDefault()` + `stopPropagation()` from **capture-phase**
+`contextmenu` and `keydown` listeners on `window`, so they are intercepted before they reach the app's
+own handlers. `F12` is matched by both `key === 'f12'` and `keyCode === 123`. Every other key passes
+through untouched.
+
+## Scope & Limitations
+
+This is a **layout-and-distraction deterrent, not a security boundary**. It only catches shortcut keys
+and the context menu inside the page:
+
+- It cannot stop DevTools opened from the browser's own menu, a keyboard remap, or a user script.
+- It does not and cannot protect the client bundle — the app is delivered as static assets, and the
+  AGPL-3.0 license (see [License](/license)) is what governs the source, not these handlers.
+
+Real secrets are handled separately: the Gemini voice API key is AES-GCM-256-encrypted before storage
+(see [Full-Duplex Live Voice Agent](/voice-agent)), and no document, chat, or canvas data ever leaves
+the browser.

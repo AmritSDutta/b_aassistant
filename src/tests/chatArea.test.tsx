@@ -115,6 +115,7 @@ describe('WelcomeModal onboarding popup', () => {
     expect(getByText('How to use bAssistant')).toBeTruthy();
     expect(getByText('Connect via WebMCP Inspector or direct tool calls')).toBeTruthy();
     expect(getByText('Ask questions & visualize')).toBeTruthy();
+    expect(getByText('Talk to it live (voice mode)')).toBeTruthy();
     expect(getByText('Add context (Optional)')).toBeTruthy();
     expect(getByText('Export your session')).toBeTruthy();
     expect(getByText('Inspector Tip')).toBeTruthy();

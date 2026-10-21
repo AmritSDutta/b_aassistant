@@ -59,7 +59,7 @@ never re-register (or mid-session abort) the tool set; `updateWebMCPContext()` s
 | `canvas_clear` | `{}` | Clears all drawings from the canvas. |
 | `search_document` | `{ query: string }` | Queries IndexedDB using client-side BM25. Removes stop words and returns the top 3 pages. Recommend passing targeted keywords rather than conversational questions. |
 | `clean_document` | `{}` | Purges IndexedDB tables and resets document UI. |
-| `search_web` | `{ query: string }` | Live DuckDuckGo results via the same-origin `/api/websearch` proxy. Returns `{ results, fetchedAt, source }`; on failure `{ results: [], unavailable: true }` rather than fabricated data. |
+| `search_web` | `{ query: string }` | Keyless Tavily AI search (primary) with automatic DuckDuckGo fallback via the same-origin `/api/websearch` proxy. Returns `{ results, fetchedAt, source }`, where `source` is `'tavily'` or `'duckduckgo'`; on failure `{ results: [], unavailable: true }` rather than fabricated data. |
 | `search_research` | `{ query: string }` | ArXiv papers via the same-origin `/api/arxiv` proxy, with `fetchedAt`/`source` and honest unavailability. |
 | `calculate` | `{ expression: string }` | Evaluates decimal math with floating-point correction. |
 

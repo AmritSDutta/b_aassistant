@@ -17,7 +17,8 @@ description: Zero-backend browser assistant empowering visiting LLMs with local 
 - **Long-Dwell UI & Ergonomics**: Warm paper/ink semantic tokens, full-screen reader view, A-/A+ font scale, reading-progress bar, reference URL cache, and star highlights revisit loop.
 - **Humanized Chat Stream**: Eliminates raw markdown syntax asterisks and noise for an elegant reading experience.
 - **Multilingual Client PDF Reports**: Exports dual-section executive PDFs with HiDPI canvas snapshot and chat transcript, featuring native Bengali (বাংলা) and Hindi (हिन्दी) font shaping and blank content protection.
-- **Free Research & Math Tools**: Live DuckDuckGo web results and ArXiv research lookups served through a same-origin `/api` proxy (dev proxy + Cloudflare Pages Functions), plus reference URL context retrieval and decimal math calculations. See [Research & Math Tools](/research-tools).
+- **Free Research & Math Tools**: Keyless Tavily AI web search with automatic DuckDuckGo fallback, plus ArXiv research lookups, served through a same-origin `/api` proxy (dev proxy + Cloudflare Pages Functions), plus reference URL context retrieval and decimal math calculations. See [Research & Math Tools](/research-tools).
+- **Full-Duplex Live Voice Agent**: A bidirectional Gemini Live audio session with mid-dialogue WebMCP tool access, a decoupled two-tier agent topology (live orchestrator + background subagent), client-side AES-GCM-256 key encryption, and a sessionStorage-backed background task layer. See [Full-Duplex Live Voice Agent](/voice-agent).
 
 ## Codebase Structure
 
@@ -44,10 +45,48 @@ description: Zero-backend browser assistant empowering visiting LLMs with local 
       <Tree.File name="idbStorage.ts" highlight />
       <Tree.File name="liteparseService.ts" />
       <Tree.File name="searchService.ts" />
+      <Tree.File name="tavilySearch.ts" highlight />
       <Tree.File name="ddgSearch.ts" />
       <Tree.File name="symbolHumanizer.ts" />
       <Tree.File name="mathEvaluator.ts" />
+      <Tree.File name="sourceProtection.ts" highlight />
       <Tree.File name="logoBase64.ts" />
+    </Tree.Folder>
+    <Tree.Folder name="voice" defaultOpen>
+      <Tree.File name="index.ts" highlight />
+      <Tree.File name="prompts.ts" />
+      <Tree.Folder name="bridge">
+        <Tree.File name="voiceBridge.ts" highlight />
+        <Tree.File name="toolAdapter.ts" />
+      </Tree.Folder>
+      <Tree.Folder name="tasks">
+        <Tree.File name="taskManager.ts" highlight />
+      </Tree.Folder>
+      <Tree.Folder name="hooks">
+        <Tree.File name="useVoiceAgent.ts" highlight />
+        <Tree.File name="useVoiceSettings.ts" />
+      </Tree.Folder>
+      <Tree.Folder name="providers">
+        <Tree.File name="geminiLiveProvider.ts" highlight />
+        <Tree.File name="geminiSubagentProvider.ts" />
+      </Tree.Folder>
+      <Tree.Folder name="config">
+        <Tree.File name="modelRegistry.ts" />
+        <Tree.File name="cryptoStorage.ts" />
+      </Tree.Folder>
+      <Tree.Folder name="audio">
+        <Tree.File name="recorder.ts" />
+        <Tree.File name="player.ts" />
+      </Tree.Folder>
+      <Tree.Folder name="components">
+        <Tree.File name="VoiceLiveController.tsx" />
+        <Tree.File name="VoiceSettingsModal.tsx" />
+        <Tree.File name="AudioPreflightModal.tsx" />
+      </Tree.Folder>
+      <Tree.Folder name="types">
+        <Tree.File name="provider.ts" />
+        <Tree.File name="audio.ts" />
+      </Tree.Folder>
     </Tree.Folder>
     <Tree.Folder name="types" defaultOpen>
       <Tree.File name="canvas2d.ts" highlight />
@@ -76,8 +115,14 @@ description: Zero-backend browser assistant empowering visiting LLMs with local 
       <Tree.File name="websearch.ts" highlight />
     </Tree.Folder>
   </Tree.Folder>
-  <Tree.Folder name="public">
+  <Tree.Folder name="public" defaultOpen>
     <Tree.File name="_routes.json" highlight />
+    <Tree.File name="audio-capture-processor.js" highlight />
+    <Tree.File name="liteparse_wasm_bg.wasm" highlight />
+    <Tree.File name="bassistant_light.jpg" />
+    <Tree.File name="bassistant_dark.jpg" />
+    <Tree.File name="robots.txt" />
+    <Tree.File name="sitemap.xml" />
   </Tree.Folder>
   <Tree.File name="index.html" />
   <Tree.File name="package.json" />

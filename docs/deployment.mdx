@@ -60,7 +60,7 @@ Functions** in `functions/`:
 | Route | File | Upstream |
 | :--- | :--- | :--- |
 | `/api/arxiv` | `functions/api/arxiv.ts` | `https://export.arxiv.org/api/query` (pass-through Atom XML) |
-| `/api/websearch` | `functions/api/websearch.ts` | DuckDuckGo HTML results, parsed to JSON via `src/lib/ddgSearch.ts` |
+| `/api/websearch` | `functions/api/websearch.ts` | Keyless Tavily AI search (primary) with a DuckDuckGo HTML fallback, normalized via `src/lib/tavilySearch.ts` / `src/lib/ddgSearch.ts` |
 
 `public/_routes.json` scopes Function invocation to `/api/*` (`{ "include": ["/api/*"], "exclude": [] }`),
 so every other path remains a static asset:

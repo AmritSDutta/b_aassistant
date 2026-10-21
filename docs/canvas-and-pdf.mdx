@@ -54,7 +54,7 @@ hand-drawn editorial look rather than rigid vector polygons:
 - **Hachure fills** are the default when a fill color is present (`fillStyle: 'hachure'`, `hachureAngle: -41`, `hachureGap: 6`); `solid`, `zigzag`, and `cross-hatch` are opt-in per shape.
 - **`fillWeight`** is set to `max(strokeWidth, 1)` so hatch strokes stay legible against the dark backdrop instead of fading out.
 - **Fluid connectors**: arrows and lines render as orientation-aware cubic Bézier splines (`ctx.bezierCurveTo`) with tangent-aligned arrowheads; set `curved: false` for a clean straight edge.
-- **Palettes**: curated Risograph/editorial tokens (`terracotta`, `cobalt`, `sage`, `sunflower`, `plum`, …) and archetype tokens (`client`, `gateway`, `db`, `queue`, `logic`) are resolved by `resolveHarmonizedFill()`; harsh primary hex inputs (`#ff0000`, `#0000ff`, …) are softened into print-grade tones.
+- **Palettes**: a named `palette` (`risograph`, `editorial`, `botanical`, `cyberpunk`) resolves its tokens, and archetype tokens (`client`, `gateway`, `db`, `queue`, `logic`) are resolved by `resolveHarmonizedFill()`; harsh primary hex inputs (`#ff0000`, `#0000ff`, …) are softened into print-grade tones.
 - Rough.js is used when `roughness > 0`; `roughness: 0` falls back to the plain rounded-rect / ellipse / polygon path.
 
 ## Geometry Normalization & Total Type Dispatch
@@ -119,9 +119,19 @@ dark, `#334155` in light), and every label resolves to the universal high-contra
 | **Cache / Queue** | `rgba(251,146,60,0.22)` | `queue` |
 | **Decision / Logic** | `rgba(250,204,21,0.20)` | `logic` |
 
-A **Risograph / editorial** palette is also available via `palette` + a token name: `terracotta`
-`rgba(224,109,83,0.22)`, `cobalt` `rgba(59,102,207,0.22)`, `sage` `rgba(78,154,126,0.22)`, `sunflower`
-`rgba(229,169,59,0.22)`, and `plum` `rgba(124,74,115,0.22)`.
+A **Risograph / editorial** palette is also available via the `palette` field plus a token name. Four
+palettes are defined (`EDITORIAL_PALETTES` in `src/lib/canvasHelper.ts`):
+
+| Palette | Tokens |
+| :--- | :--- |
+| `risograph` | `terracotta` `rgba(224,109,83,0.22)`, `cobalt` `rgba(59,102,207,0.22)`, `sage` `rgba(78,154,126,0.22)`, `sunflower` `rgba(229,169,59,0.22)`, `plum` `rgba(124,74,115,0.22)` |
+| `editorial` | `olive` `rgba(85,107,47,0.22)`, `ochre` `rgba(204,119,34,0.22)`, `slate` `rgba(47,53,66,0.22)`, `rose` `rgba(214,109,117,0.22)` |
+| `botanical` | `fern` `rgba(74,124,89,0.22)`, `moss` `rgba(141,153,111,0.22)`, `eucalyptus` `rgba(92,131,116,0.22)`, `bark` `rgba(125,90,80,0.22)` |
+| `cyberpunk` | `cyan` `rgba(6,182,212,0.24)`, `lavender` `rgba(168,85,247,0.24)`, `amber` `rgba(245,158,11,0.24)`, `carbon` `rgba(30,41,59,0.28)` |
+
+The tokens that are also archetype keys (`terracotta`, `cobalt`, `sage`, `sunflower`, `plum`, `olive`,
+`ochre`) can be passed directly as a `fillColor` without setting `palette`; the remaining tokens
+(`fern`, `moss`, `cyan`, `carbon`, …) require the matching `palette` name.
 
 ## Client-Side PDF Generation & Active Session Persistence
 

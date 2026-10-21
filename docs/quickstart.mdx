@@ -1,0 +1,66 @@
+---
+title: Quickstart
+description: Install bAssistant, run it locally, connect a visiting WebMCP agent, and preview this documentation site.
+---
+
+# Quickstart
+
+bAssistant is a pure client-side Vite + React app. There is no backend to provision and no
+environment variables to set — clone it, install, and run.
+
+## Prerequisites
+
+- **Node.js 20+** (the CI matrix runs `20.x` and `22.x`).
+- A modern browser — developed and tested on Chrome.
+
+## Run Locally
+
+```bash
+# 1. Clone and install
+git clone https://github.com/AmritSDutta/b_aassistant.git
+cd b_aassistant
+npm install
+
+# 2. Launch the Vite dev server
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173).
+
+> **Windows:** use `npm.cmd` instead of `npm` to avoid PowerShell execution-policy blocks
+> (`npm.cmd install`, `npm.cmd run dev`).
+
+## Verify the Build
+
+```bash
+# Run the hermetic Vitest suite once (no watch mode)
+npm run test
+
+# Type-check (tsc) and build the production bundle into dist/
+npm run build
+```
+
+`npm run build` is the only lint/type gate — there is no ESLint configuration. See
+[Deployment & Hosting](/deployment) for the CI workflow and Cloudflare Pages setup.
+
+## Connect a Visiting AI Agent
+
+bAssistant registers 17 WebMCP tools that any compatible agent, extension, or inspector can discover.
+Start every new agent session with this single instruction:
+
+> Call `get_tool_usage_prompt` first and follow it exactly — do not answer or draw until you have.
+
+That tool returns the full operating guide — the tool index, the shape `type` contract, the connector
+`startId`/`endId` rules, and the verify-with-`canvas2d_inspect_shapes` step — so your opening message
+never needs to repeat them. See [WebMCP Standard Implementation](/webmcp) and the
+[Agent Operating Guide](/agent-guide).
+
+## Preview This Documentation
+
+```bash
+npx docs7 dev docs
+```
+
+Serves the docs site at [http://localhost:3333](http://localhost:3333) with live reload. The docs7
+CLI has a single command (`dev`) — production builds and the search index are produced by the hosted
+service, so search is intentionally empty in local preview.

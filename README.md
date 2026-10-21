@@ -78,7 +78,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ### Hermetic Verification
 ```bash
-# Run all 106 isolated unit tests (15 Vitest suites, no watch mode)
+# Run all 188 isolated unit tests (29 Vitest suites, no watch mode)
 npm.cmd test -- --run
 
 # Build production bundle (tsc && vite build)
@@ -100,12 +100,15 @@ The guide it returns is the full operating prompt — the tool index, the shape 
 
 Full architectural and developer specifications built with `docs7` are located in `docs/`:
 - `docs/index.mdx` — Overview, key features & codebase tree
+- `docs/quickstart.mdx` — Install, run locally, and connect a visiting agent
+- `docs/indroduction.mdx` — Project story, philosophy, challenges & roadmap
 - `docs/architecture.mdx` — Zero-backend cockpit data flow & core subsystems
 - `docs/cockpit-ui.mdx` — 20/80 analyst cockpit, warm themes, Zen reader & long-dwell ergonomics
 - `docs/webmcp.mdx` — WebMCP provider surfaces & the 17 registered tools
+- `docs/agent-guide.mdx` — The operating contract returned by `get_tool_usage_prompt`
 - `docs/canvas-and-pdf.mdx` — Canvas2D scene graph engine & multilingual PDF export
 - `docs/document-processing.mdx` — Zero-backend LiteParse WASM & BM25 indexing
-- `docs/research-tools.mdx` — DuckDuckGo, ArXiv, and decimal calculator tools
+- `docs/research-tools.mdx` — Tavily/DuckDuckGo web search, ArXiv, and decimal calculator tools
 - `docs/tavily-search.mdx` — Keyless Tavily web search with DuckDuckGo fallback
 - `docs/sessions-vault.mdx` — Session vault, IndexedDB persistence & restore-on-mount
 - `docs/voice-agent.mdx` — Full-duplex Gemini Live voice mode & two-tier agent topology
@@ -113,7 +116,9 @@ Full architectural and developer specifications built with `docs7` are located i
 - `docs/dwell-time-research.mdx` — Evidence-backed long-dwell UI design mechanisms
 - `docs/liteparse-research.mdx` — In-browser document parsing research & benchmarks
 - `docs/learnings.mdx` — Engineering learnings: WebMCP discovery, Indic PDF, WASM isolation
+- `docs/source-protection.mdx` — Client-side inspection-deterrent behaviors
 - `docs/deployment.mdx` — CI workflow & Cloudflare Pages hosting
+- `docs/license.mdx` — AGPL-3.0-or-later licensing terms
 
 To preview documentation locally:
 ```bash

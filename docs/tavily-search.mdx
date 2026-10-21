@@ -9,7 +9,7 @@ bAssistant utilizes **Tavily AI Search** as its primary web intelligence engine,
 
 ```mermaid
 flowchart TD
-  Agent["WebMCP Agent / User"] -->|search_web { query }| WebMCP["WebMCP Provider"]
+  Agent["WebMCP Agent / User"] -->|"search_web { query }"| WebMCP["WebMCP Provider"]
   WebMCP --> Service["searchService.ts"]
   Service --> Endpoint["GET /api/websearch?query=..."]
   

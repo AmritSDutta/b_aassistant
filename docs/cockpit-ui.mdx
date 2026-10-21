@@ -31,7 +31,7 @@ The viewport is divided horizontally into a left sidebar and a primary workspace
 
 ### 1. Left Sidebar (20% Width)
 The sidebar serves as the control and context panel:
-- **Branding & Theme Toggle**: Features the dynamic, transparent, theme-aware bAssistant logo (`bassistant_light.jpg` in dark mode, `bassistant_dark.jpg` in light mode for optimal contrast) and provides instant light/dark mode switching. Also sets the browser tab favicon.
+- **Branding, Voice & Theme Toggle**: Features the dynamic, transparent, theme-aware bAssistant logo (`bassistant_light.jpg` in dark mode, `bassistant_dark.jpg` in light mode for optimal contrast), a `[ tips ]` onboarding shortcut, a `[ 🎙️ voice ]` button that opens the Voice Settings modal, and instant light/dark mode switching. Also sets the browser tab favicon. See [Full-Duplex Live Voice Agent](/voice-agent).
 - **Document Dropzone**: Ingests `.pdf`, `.docx`, or `.doc` files strictly under 2MB. Displays parsing status badges (`Parsing...`, `Indexed`, or error modal) with clear file-type validation.
 - **Reference URLs**: Enboldened **REFERENCE URLS** header with count badge. Manage up to 10 external documentation and resource links. Clicking `+ Add` opens a validation modal that verifies reachability via client-side probes before caching URLs into browser storage. Visiting LLMs access these links via `get_reference_url`.
 - **Session Highlights**: Enboldened **Session Highlights** section. Starred messages from the conversation collect here automatically. Clicking any highlight smoothly scrolls the chat stream directly to that turn.
@@ -40,7 +40,7 @@ The sidebar serves as the control and context panel:
 ### 2. Primary Workspace (80% Width)
 The workspace divides vertically to optimize visual and textual cognitive workflows:
 - **Top 60% — HTML5 Canvas**: Dedicated visual modeling pane where visiting LLMs render architecture components, decision diamonds, containers, and perimeter-docked arrows. A toolbar provides **Fit View** (auto-fit all shapes), **Reset** (scale 1, origin 0,0), **New Session**, **Export PDF**, and **Clear**; users pan by dragging and wheel-zoom about the cursor (scale clamped 0.2–4).
-- **Bottom 40% — Conversation Stream**: Reading-optimized chat pane formatted with **Lora** typography (72-character line measure, 1.75 line-height), math/flow symbol humanization (converting LaTeX `$\rightarrow$` and ASCII arrows to clean `→`), and executive H1–H6 markdown heading parsing without raw hash noise.
+- **Bottom 40% — Conversation Stream**: Reading-optimized chat pane formatted with **Lora** typography (72-character line measure, 1.75 line-height), math/flow symbol humanization (converting LaTeX `$\rightarrow$` and ASCII arrows to clean `→`), and executive H1–H6 markdown heading parsing without raw hash noise. Its toolbar docks the **Voice Live Controller** HUD (mic toggle, live status, caption pill, settings, and the animated background-task badge) alongside the reader controls. See [Full-Duplex Live Voice Agent](/voice-agent).
 
 ---
 
@@ -71,5 +71,11 @@ A subtle 2px violet progress bar mounted above the conversation stream dynamical
 ### Calm Feedback & Micro-Interactions
 - **Thinking Pulse**: A gentle breathing indicator signals when an agent is processing a turn.
 - **Entrance Fades**: Smooth 0.18s message transitions avoid jarring visual pop-in.
-- **First-Load Onboarding**: A 6-step modal introduces key workflows (document upload, canvas drawing, WebMCP agent connectivity, and PDF export) on the first visit.
+- **First-Load Onboarding**: A 7-step modal introduces key workflows (document upload, canvas drawing, live voice mode, WebMCP agent connectivity, and PDF export) on the first visit.
 - **Motion Accessibility**: Full support for `@media (prefers-reduced-motion: reduce)` automatically disables animations for users with vestibular sensitivities.
+
+### Source & Inspection Protection
+On mount, the cockpit installs a lightweight client-side deterrent (`src/lib/sourceProtection.ts`) that
+suppresses the right-click context menu, `F12`, the DevTools inspect/console/selector shortcuts, and
+View Source / Save Page — keeping the running layout undisturbed. It is a distraction deterrent, not a
+security boundary. See [Source & Inspection Protection](/source-protection).

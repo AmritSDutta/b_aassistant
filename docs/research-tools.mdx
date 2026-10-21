@@ -1,14 +1,15 @@
 ---
 title: Research & Math Tools
-description: Same-origin DuckDuckGo and ArXiv search through a dev-proxy / Cloudflare Pages Function layer, plus the decimal calculator.
+description: Keyless Tavily AI web search with DuckDuckGo fallback and ArXiv academic search through a dev-proxy / Cloudflare Pages Function layer, plus the decimal calculator.
 ---
 
 # Research & Math Tools
 
 bAssistant ships free research and calculation tools so visiting agents do not need paid API keys. Web
-search and academic search run through a **same-origin `/api` layer** rather than fetching third-party
-hosts directly from the browser — the browser blocks the direct calls with CORS, so the proxy is what
-makes the tools work at all.
+search (`search_web`, Tavily-first with a DuckDuckGo fallback) and academic search (`search_research`)
+run through a **same-origin `/api` layer** rather than fetching third-party hosts directly from the
+browser — the browser blocks some direct calls with CORS, so the proxy is what makes the tools work at
+all. See [Keyless Tavily Search & Fallback](/tavily-search) for the web-search provider detail.
 
 ## Why a proxy layer
 
@@ -19,7 +20,8 @@ therefore calls relative `/api/*` URLs that resolve identically in both environm
 - **Development** — `vite.config.ts` proxies `/api/arxiv` to `https://export.arxiv.org` and mounts a
   dev middleware (`dev-search-endpoints`) for `/api/websearch`.
 - **Production** — Cloudflare Pages Functions in `functions/api/` serve the same two routes; the
-  shared parser lives in `src/lib/ddgSearch.ts` so dev and prod behave the same.
+  Tavily client (`src/lib/tavilySearch.ts`) and the shared DuckDuckGo parser (`src/lib/ddgSearch.ts`)
+  run identically in dev and prod.
 
 `public/_routes.json` restricts Pages Function invocation to `/api/*`, keeping every other path a
 plain static asset.
@@ -30,18 +32,20 @@ flowchart TD
   Service -->|"GET /api/websearch or /api/arxiv"| Api["Same-origin /api layer"]
   Api --> Dev["Dev: vite.config.ts proxy + middleware"]
   Api --> Prod["Prod: Cloudflare Pages Functions"]
-  Dev --> DDG["DuckDuckGo HTML results"]
+  Dev --> Web["/api/websearch provider chain"]
+  Prod --> Web
+  Web --> Tavily["Tavily keyless (primary)"]
+  Web --> DDG["DuckDuckGo (fallback)"]
   Dev --> Arxiv["export.arxiv.org Atom API"]
-  Prod --> DDG
   Prod --> Arxiv
 ```
 
 ## Available Tools
 
 ### 1. `search_web`
-- **Provider**: DuckDuckGo HTML results, parsed server-side by `searchDuckDuckGo()` in `src/lib/ddgSearch.ts`.
+- **Provider**: Keyless **Tavily AI** search (`searchTavilyKeyless()` in `src/lib/tavilySearch.ts`) is tried first; on error, rate limit (HTTP 429), or an empty result set the proxy falls back to DuckDuckGo HTML results parsed by `searchDuckDuckGo()` in `src/lib/ddgSearch.ts`.
 - **Endpoint**: `GET /api/websearch?query={query}` (dev middleware or `functions/api/websearch.ts`).
-- **Output**: Live top-5 `{ title, snippet, url }` results — real current web results, not encyclopedic abstracts.
+- **Output**: Live top-5 `{ title, snippet, url }` results with `source: 'tavily' | 'duckduckgo'` — real current web results, not encyclopedic abstracts.
 
 ### 2. `search_research`
 - **Provider**: ArXiv public Atom API.
@@ -56,8 +60,8 @@ flowchart TD
 
 Both search functions return a `SearchOutcome` object rather than a bare array:
 
-- Every result carries `fetchedAt` (ISO timestamp) and `source` (`duckduckgo` / `arxiv`) so the agent can
-  judge freshness, verified by unit tests.
+- Every result carries `fetchedAt` (ISO timestamp) and `source` (`tavily` / `duckduckgo` / `arxiv`) so
+  the agent can judge freshness, verified by unit tests.
 - On any fetch failure the outcome is `{ results: [], unavailable: true, error }` — the service **never**
   fabricates a placeholder result. `get_tool_usage_prompt` instructs agents to report unavailability to
   the user instead of inventing answers.

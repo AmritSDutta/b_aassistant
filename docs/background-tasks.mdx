@@ -46,6 +46,8 @@ export interface BackgroundTaskRecord {
 }
 ```
 
+`TaskType` declares three members, but only `diagram_and_explanation` is created today — `document_index` and `pdf_export` are reserved for future background flows.
+
 - **Cache**: browser `sessionStorage` under the key `bassistant_background_tasks` — no IndexedDB, no server. Task history is per-tab and intentionally lightweight.
 - **History cap**: an LRU cap of 20 records; the newest task is always first and the oldest is evicted on `createTask`.
 - **API**: `createTask`, `updateTask`, `getTask`, `getLatestTask(type?)`, `getActiveTasks` (queued + in_progress), `getAllTasks`, `clearTasks`, and `subscribe(listener)` for reactive UI.
@@ -55,10 +57,11 @@ export interface BackgroundTaskRecord {
 
 ## 2. Task Lifecycle
 
-```
-queued ──> in_progress ──> completed
-                │
-                └────────> failed
+```mermaid
+flowchart TD
+  queued --> in_progress
+  in_progress --> completed
+  in_progress --> failed
 ```
 
 | State | Meaning |
