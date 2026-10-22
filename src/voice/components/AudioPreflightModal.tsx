@@ -106,55 +106,66 @@ export const AudioPreflightModal: React.FC<AudioPreflightModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
-        <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-md rounded-xl border p-6 shadow-2xl"
+        style={{ background: 'var(--paper)', borderColor: 'var(--line)', color: 'var(--ink)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between pb-4 border-b" style={{ borderColor: 'var(--line)' }}>
           <div className="flex items-center space-x-2">
             <span className="text-xl">🎙️</span>
-            <h2 className="text-base font-semibold text-zinc-100">Microphone Pre-flight Check</h2>
+            <h2 className="text-base font-semibold" style={{ color: 'var(--ink)' }}>Microphone Pre-flight Check</h2>
           </div>
           <button
             onClick={onClose}
-            className="text-zinc-400 hover:text-zinc-200 text-lg leading-none"
+            className="text-lg leading-none p-1 transition-opacity hover:opacity-80"
+            style={{ color: 'var(--ink-soft)' }}
           >
             &times;
           </button>
         </div>
 
         <div className="mt-4 space-y-4">
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs" style={{ color: 'var(--ink-soft)' }}>
             Verify microphone hardware permission and sound capture level before starting full-duplex live voice.
           </p>
 
-          <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 space-y-3">
+          <div
+            className="rounded-lg border p-4 space-y-3"
+            style={{ background: 'var(--panel)', borderColor: 'var(--line)' }}
+          >
             <div className="flex justify-between items-center text-xs">
-              <span className="text-zinc-300 font-medium">Input Volume Level</span>
-              <span className="font-mono text-zinc-400">{level}%</span>
+              <span className="font-medium" style={{ color: 'var(--ink)' }}>Input Volume Level</span>
+              <span className="font-mono" style={{ color: 'var(--ink-soft)' }}>{level}%</span>
             </div>
 
-            <div className="h-3 w-full rounded-full bg-zinc-800 overflow-hidden">
+            <div
+              className="h-3 w-full rounded-full overflow-hidden"
+              style={{ background: 'var(--card)', border: '1px solid var(--line)' }}
+            >
               <div
                 className={`h-full transition-all duration-75 ${
                   stage === 'failed'
                     ? 'bg-rose-500'
                     : level > 40
-                    ? 'bg-emerald-400'
+                    ? 'bg-emerald-500'
                     : 'bg-indigo-500'
                 }`}
                 style={{ width: `${level}%` }}
               />
             </div>
 
-            <div className="text-xs text-zinc-400">
+            <div className="text-xs" style={{ color: 'var(--ink-soft)' }}>
               {stage === 'idle' && 'Click "Run 1-Second Mic Test" to check signal.'}
               {stage === 'testing' && 'Listening... Please speak into your microphone.'}
               {stage === 'passed' && (
-                <span className="text-emerald-400 font-medium">
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">
                   ✓ Microphone detected and functioning properly.
                 </span>
               )}
               {stage === 'failed' && (
-                <span className="text-rose-400 font-medium">
+                <span className="text-rose-600 dark:text-rose-400 font-medium">
                   ✕ {errorMsg || 'Unable to capture audio.'}
                 </span>
               )}
@@ -167,14 +178,16 @@ export const AudioPreflightModal: React.FC<AudioPreflightModalProps> = ({
             <>
               <button
                 onClick={onClose}
-                className="rounded-lg px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                className="rounded-lg px-3 py-1.5 text-xs border transition-opacity hover:opacity-80"
+                style={{ borderColor: 'var(--line)', color: 'var(--ink-soft)' }}
               >
                 Cancel
               </button>
               <button
                 onClick={startTest}
                 disabled={stage === 'testing'}
-                className="rounded-lg bg-indigo-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+                className="rounded-lg px-4 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                style={{ background: 'var(--accent)' }}
               >
                 {stage === 'testing' ? 'Testing...' : 'Run 1-Second Mic Test'}
               </button>
@@ -185,7 +198,7 @@ export const AudioPreflightModal: React.FC<AudioPreflightModalProps> = ({
                 cleanup();
                 onSuccess();
               }}
-              className="rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-500"
+              className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-1.5 text-xs font-medium text-white transition-opacity"
             >
               Confirm & Start Voice Mode
             </button>

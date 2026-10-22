@@ -143,7 +143,7 @@ The application exposes 17 standard WebMCP tools for visiting LLMs:
 
 ### 6. Long-Dwell Reading Comfort & Session Engagement
 Source: `research.md` (dwell-time mechanisms 1–6).
-- **Warm dual themes:** semantic CSS token layer — light mode is warm paper with navy ink; dark mode uses warm ink surfaces instead of cold blue-black, reducing eye fatigue over long sessions.
+- **Warm dual themes:** semantic CSS token layer — light mode is warm paper with navy ink; dark mode uses warm ink surfaces instead of cold blue-black, reducing eye fatigue over long sessions. All cockpit components, docked toolbars (including the Voice HUD controller), and overlays adhere directly to this semantic token layer.
 - **First-load onboarding popup:** a WelcomeModal explains how to use bAssistant (upload → connect agent → ask → highlight → maximize → export) on first visit; dismissal persists and a sidebar "tips" link re-opens it.
 - **Chat popup maximize:** ⤢ expands the dialogue into a full-screen reader (Escape/✕ closes) with the same stream, input, and font controls — the zen reading mode.
 - **Reading comfort:** A- / A+ font steps (15/17/19px) persisted across sessions; 2px reading-progress bar atop the stream for a sense of investment.
@@ -179,6 +179,9 @@ Source: `research.md` (dwell-time mechanisms 1–6).
   - Synced to browser `sessionStorage` under `bassistant_background_tasks` (LRU cap of 20 tasks).
   - Gemini Live can inspect task status mid-conversation via the `get_background_task_status` tool to answer user inquiries verbally.
   - The Voice HUD (`VoiceLiveController`) reactively renders an animated status badge (`⚡ Drawing Architecture...`) while a task is in progress.
+- **Voice HUD Controller & Dual-Theme Token Harmonization**:
+  - The Voice HUD controller (`VoiceLiveController`), Voice Settings modal (`VoiceSettingsModal`), and Audio Preflight modal (`AudioPreflightModal`) are bound to the semantic CSS design token system (`var(--panel)`, `var(--card)`, `var(--paper)`, `var(--line)`, `var(--ink)`, `var(--ink-soft)`).
+  - Eliminates unadapted hardcoded dark zinc styling in light mode, ensuring the controller docked after `Dialogue` in the chat header seamlessly blends into the warm parchment card header while modal dialogs naturally respect the active surface theme.
 - **Reliable Session Teardown & Lifecycle State Guarantee**:
   - Stopping the live voice agent explicitly terminates the underlying WebSocket connection (`session.conn.close(1000)`).
   - All asynchronous callback events (`onEnd`, `onTurnComplete`, `onStart`, `onToolCall`) are strictly guarded against an active-session cancellation token (`isSessionActiveRef`), preventing trailing server events from flipping the UI back to `Live Listening` once stopped.

@@ -36,48 +36,51 @@ export const VoiceLiveController: React.FC<VoiceLiveControllerProps> = ({
     switch (status) {
       case 'connecting':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400 animate-ping" />
             Connecting
           </span>
         );
       case 'listening':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
             Live Listening
           </span>
         );
       case 'speaking':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" />
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400 animate-bounce" />
             Live Speaking
           </span>
         );
       case 'executing':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-violet-500/10 text-violet-400 border border-violet-500/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-spin" />
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-violet-500 dark:bg-violet-400 animate-spin" />
             Executing Tool
           </span>
         );
       case 'interrupted':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
             Interrupted
           </span>
         );
       case 'error':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
             Voice Error
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-zinc-800 text-zinc-400 border border-zinc-700/50">
-            <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
+          <span
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border"
+            style={{ background: 'var(--card)', borderColor: 'var(--line)', color: 'var(--ink-soft)' }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--ink-soft)' }} />
             Voice Standby
           </span>
         );
@@ -88,7 +91,8 @@ export const VoiceLiveController: React.FC<VoiceLiveControllerProps> = ({
     <div
       data-testid="voice-live-controller"
       title={statusText}
-      className="flex items-center gap-2 bg-zinc-900/90 border border-zinc-800/80 rounded-lg px-2.5 py-1 backdrop-blur-sm"
+      className="flex items-center gap-2 rounded-lg px-2.5 py-1 backdrop-blur-sm border transition-colors"
+      style={{ background: 'var(--panel)', borderColor: 'var(--line)', color: 'var(--ink)' }}
     >
       <button
         type="button"
@@ -97,9 +101,10 @@ export const VoiceLiveController: React.FC<VoiceLiveControllerProps> = ({
         title={isListening ? 'Stop live voice' : 'Start live voice'}
         className={`relative flex items-center justify-center w-7 h-7 rounded-md transition-all ${
           isListening
-            ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40 hover:bg-rose-500/30'
-            : 'bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700 hover:text-white'
+            ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/40 hover:bg-rose-500/30'
+            : 'border hover:opacity-80'
         }`}
+        style={!isListening ? { background: 'var(--card)', borderColor: 'var(--line)', color: 'var(--ink)' } : undefined}
       >
         {isListening ? (
           <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
@@ -118,10 +123,10 @@ export const VoiceLiveController: React.FC<VoiceLiveControllerProps> = ({
       {activeTask && (
         <span
           data-testid="voice-bg-task-badge"
-          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-300 border border-amber-500/30 animate-pulse"
+          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 animate-pulse"
           title={`Background Subagent: ${activeTask.prompt}`}
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400" />
           ⚡ Drawing Architecture...
         </span>
       )}
@@ -129,7 +134,8 @@ export const VoiceLiveController: React.FC<VoiceLiveControllerProps> = ({
       {captionPreview && (
         <div
           data-testid="voice-caption-preview"
-          className="max-w-[220px] sm:max-w-[320px] truncate text-[11px] text-zinc-300 font-sans italic bg-zinc-950/60 border border-zinc-800/60 px-2 py-0.5 rounded"
+          className="max-w-[220px] sm:max-w-[320px] truncate text-[11px] font-sans italic border px-2 py-0.5 rounded"
+          style={{ background: 'var(--card)', borderColor: 'var(--line)', color: 'var(--ink-soft)' }}
           title={captionPreview}
         >
           {captionPreview}
@@ -141,7 +147,8 @@ export const VoiceLiveController: React.FC<VoiceLiveControllerProps> = ({
         data-testid="voice-settings-btn"
         onClick={onOpenSettings}
         title="Voice & Subagent Settings"
-        className="text-zinc-400 hover:text-zinc-200 p-1 rounded hover:bg-zinc-800 transition-colors"
+        className="p-1 rounded transition-opacity hover:opacity-75"
+        style={{ color: 'var(--ink-soft)' }}
       >
         <svg className="w-3.5 h-3.5 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="3" />

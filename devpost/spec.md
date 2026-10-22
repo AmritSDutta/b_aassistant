@@ -177,7 +177,7 @@ Self-contained, decoupled voice package:
 - `providers/geminiSubagentProvider.ts`: `ISubagentProvider` implementation via `@google/genai` (`ai.models.generateContent`).
 - `bridge/voiceBridge.ts`: WebMCP tool translation and subagent task coordination (clears canvas, draws fresh shapes, posts answer to chat, returns voice summary).
 - `hooks/useVoiceAgent.ts`: React voice agent lifecycle hook equipped with an `isSessionActiveRef` cancellation token guarding asynchronous events (`onEnd`, `onTurnComplete`, `onStart`) from mutating state when stopped, guaranteeing reliable `standby` reset.
-- `components/VoiceLiveController.tsx`, `VoiceSettingsModal.tsx`, `AudioPreflightModal.tsx`.
+- `components/VoiceLiveController.tsx`, `VoiceSettingsModal.tsx`, `AudioPreflightModal.tsx`: Voice UI components and modal dialogs styled strictly with the application's semantic CSS design tokens (`var(--panel)`, `var(--card)`, `var(--paper)`, `var(--line)`, `var(--ink)`, `var(--ink-soft)`), fully harmonized for light/dark theme toggling without hardcoded zinc backgrounds.
 
 ## Data Model
 
