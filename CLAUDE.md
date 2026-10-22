@@ -30,9 +30,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - All animation lives in `index.css` keyframes and must respect the `prefers-reduced-motion` kill-switch.
 
 ### State Architecture (critical for any tool/UI change)
-- `App.tsx` owns all React state. WebMCP tools never touch React state directly — they receive a `ToolContext` of closures (`src/webmcp/tools.ts`), and `updateWebMCPContext()` re-binds fresh closures to the provider whenever messages or reference URLs change (`src/App.tsx`). Any new tool capability must flow through `ToolContext`.
+- `App.tsx` acts as the composition root, delegating domain state to three custom hooks in `src/hooks/`:
+  - `useSessionController` (`src/hooks/useSessionController.ts`): manages active session ID, sequential turn records, chat messages, star highlights, session elapsed time, history modal state, IDB turn persistence (`saveSessionTurn`), session restore, and publication-ready PDF exports.
+  - `useDocumentController` (`src/hooks/useDocumentController.ts`): manages file upload validation (< 2MB, PDF/Word), in-browser LiteParse extraction, BM25 indexing, lazy chunk rehydration, and lexical search.
+  - `useVoiceOrchestrator` (`src/hooks/useVoiceOrchestrator.ts`): coordinates Gemini Live audio loop, `VoiceBridge` tool context delegation, settings modal, and hardware preflight check.
+- WebMCP tools never touch React state directly — they receive a `ToolContext` of closures (`src/webmcp/tools.ts`), and `updateWebMCPContext()` re-binds fresh closures across these controllers to the provider whenever messages, documents, or reference URLs change (`src/App.tsx`). Any new tool capability must flow through `ToolContext`.
 - Module-level singletons bridge the React UI and the WebMCP tool layer: `globalCanvasEngine` (`src/lib/canvasEngine.ts`), `globalIDBStorage` (`src/lib/idbStorage.ts`), `globalLiteParseService` (`src/lib/liteparseService.ts`).
-- **Session vault**: `App.tsx` records every deliberation turn to IndexedDB via `globalIDBStorage.saveSessionTurn()` (stores `session_turns` + `session_meta` in `bAssistantDB` version 2) and restores the active session (messages + latest canvas `canvasShapes`) on mount. `HistoryModal.tsx`, opened from the sidebar `sessions` button, lists sessions via `getAllSessionsSummary()` with Restore / PDF / Delete actions handled in `App.tsx`.
+- **Session vault**: `useSessionController` records every deliberation turn to IndexedDB via `globalIDBStorage.saveSessionTurn()` (stores `session_turns` + `session_meta` in `bAssistantDB` version 2) and restores the active session (messages + latest canvas `canvasShapes`) on mount. `HistoryModal.tsx`, opened from the sidebar `sessions` button, lists sessions via `getAllSessionsSummary()` with Restore / PDF / Delete actions handled in `useSessionController`.
 
 ### WebMCP Bridge
 - `src/webmcp/provider.ts` exposes **17 tools** on every discovery surface simultaneously: `document.modelContext`, `navigator.modelContext` + `navigator.modelContextTesting`, `window.webmcp` / `window.modelContext`, hidden DOM `<form toolname=...>` elements, `window.addEventListener('message')` (JSON-RPC 2.0), and `webmcp:ready` / `modelcontext:ready` custom events.
@@ -87,7 +91,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Reference URLs cached in `localStorage['b_reference_urls']`. No external servers, no vector databases.
 
 ### Testing
-- All unit tests live in `src/tests/` (29 Vitest suites, 188 tests) and must remain strictly hermetic and isolated — no network, no real IndexedDB dependencies leaking between tests.
+- All unit tests live in `src/tests/` (30 Vitest suites, 198 tests) and must remain strictly hermetic and isolated — no network, no real IndexedDB dependencies leaking between tests.
 - Vitest is configured inside `vite.config.ts` (`environment: 'jsdom'`, `globals: true`); there is no separate vitest config file.
 - Canvas tests must exercise the real Rough.js path: mock `getContext()` with an object whose `canvas.getContext()` returns itself, or `getRoughCanvas()` returns `null` and Rough never runs (this blind spot previously hid a rectangle regression).
 - If React component tests fail with `act(...) is not supported in production builds of React`, the shell has `NODE_ENV=production`; run `NODE_ENV=test npm test` (`set NODE_ENV=test&& npx vitest run` on Windows cmd) instead.

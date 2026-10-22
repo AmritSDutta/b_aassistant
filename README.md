@@ -78,7 +78,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ### Hermetic Verification
 ```bash
-# Run all 188 isolated unit tests (29 Vitest suites, no watch mode)
+# Run all 198 isolated unit tests (30 Vitest suites, no watch mode)
 npm.cmd test -- --run
 
 # Build production bundle (tsc && vite build)

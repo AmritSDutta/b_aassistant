@@ -76,17 +76,7 @@ bAssistant provides an ergonomic 20/80 cockpit layout engineered for focused, mu
 - **Zero Server Footprint**: 100% of the computation—document parsing, BM25 indexing, canvas rendering, session storage, and PDF report creation—runs locally inside the client browser.
 - **Seamless WebMCP Agent Integration**: External AI agents (or the built-in WebMCP Inspector) can discover, inspect, and invoke all 17 tools out of the box with zero setup.
 - **Robust Multi-Turn Persistence**: Users can reload or close the tab without losing their conversation turns, document index, or canvas diagram scene graph.
-- **Comprehensive Test Suite**: 29 hermetic test suites with 188 passing unit and integration tests covering BM25 indexing, Canvas2D math, LiteParse fallbacks, symbol humanization, voice lifecycle teardown, background tasks, and SEO crawler directives.
-
----
-
-## What we learned
-
-> *"Enough is as good as a feast."* When we constrain the architecture to what is truly essential, the design becomes more elegant, robust, and accessible.
-
-- **Client-Side WASM is Production Ready**: Running WASM-based parsers like LiteParse entirely within the browser sandbox is fast and eliminates privacy concerns regarding document uploads.
-- **Flipped Interaction Elevates Software Design**: Planning first through structured requirements (PRD, Spec, and Scope) prevented architectural drift and kept the codebase focused on a rock-solid proof of concept.
-- **Agents Need Strict Tool Contracts**: Designing clear JSON-RPC tool schemas with detailed parameter descriptions and usage guides drastically improves agent tool-calling precision.
+- **Comprehensive Test Suite**: 30 hermetic test suites with 198 passing unit and integration tests covering BM25 indexing, Canvas2D math, LiteParse fallbacks, symbol humanization, voice lifecycle teardown, background tasks, and SEO crawler directives.
 
 ---
 
@@ -107,4 +97,3 @@ bAssistant provides an ergonomic 20/80 cockpit layout engineered for focused, mu
 bAssistant is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0-or-later)**:
 
 > *Strong copyleft software. If you use, modify, or build on any part of this codebase, the AGPL requires your derivative work to be released as open source under the same license.*
-

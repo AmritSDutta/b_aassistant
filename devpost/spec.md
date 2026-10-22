@@ -71,7 +71,10 @@ Carried forward from `prd.md > Look and Feel` and `scope.md > Inspiration & Iden
 
 ### 1. `App`
 Implements `prd.md > Screens and Layout`.
-Root container orchestrating layout, theme state (Light/Dark), and lifecycle initialization of the `WebMCPBridge`.
+Root composition container orchestrating the 20/80 layout, theme state (Light/Dark), and lifecycle initialization of the `WebMCPBridge`. Delegates domain state and operations to three custom modular controller hooks (`src/hooks/`):
+- **`useSessionController`**: Manages active session ID, sequential turn records, chat messages, star highlights, session elapsed time, history modal state, and publication-ready PDF exports.
+- **`useDocumentController`**: Manages file validation (< 2MB, PDF/Word), in-browser LiteParse extraction, BM25 indexing, lazy chunk rehydration, and lexical search.
+- **`useVoiceOrchestrator`**: Coordinates full-duplex Gemini Live voice interactions, subagent background diagram dispatch via `VoiceBridge`, hardware preflight checks, and encrypted settings.
 
 ### 2. `Sidebar`
 Implements `prd.md > Screens and Layout > Left Sidebar (20% width)`.

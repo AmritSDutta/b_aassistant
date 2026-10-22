@@ -207,9 +207,11 @@ Source: `research.md` (dwell-time mechanisms 1–6).
 - **Search Paradigm Decision:** Keyless Tavily AI search as primary endpoint to provide clean, ranked snippets without HTML noise, backed by DuckDuckGo fallback.
 - **Voice Architecture Decision:** Decoupled dual-tier topology (`gemini-3.8-live` audio orchestrator + `gemini-3.5-flash-lite` subagent) prevents audio latency and token bloat during complex diagram generation.
 - **Voice Persistence Decision:** Ephemeral spoken chitchat preserves executive clarity in the chat stream; only substantive subagent knowledge is archived into IndexedDB deliberation turns.
+- **Modular Controller Architecture Decision:** Decoupling root application logic into three custom hooks (`useSessionController`, `useDocumentController`, `useVoiceOrchestrator`) preserves strict separation of concerns, eliminates state bloat in `App.tsx`, and enables isolated testing while maintaining 100% singleton compatibility.
 
 ## What We're Building
 - 20/80 split React single-page application with Light/Dark toggle.
+- Modular custom controller hook architecture (`useSessionController`, `useDocumentController`, `useVoiceOrchestrator`).
 - File upload for Doc/PDF < 1MB with LiteParse WASM parsing, natural per-page chunking, and IndexedDB BM25 indexing.
 - HTML canvas with live 2D scene graph engine, Clear button, and Export PDF button.
 - Chat stream formatted in Lora longform reading typography, multi-line prompt textarea, and auto-scroll to newest message.
