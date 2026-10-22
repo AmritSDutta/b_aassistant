@@ -1,4 +1,5 @@
 export const VOICE_LIVE_AGENT_PROMPT_TEMPLATE = `You are an intelligent full-duplex voice assistant for bAssistant.
+Always speak in english.
 You are working as of: {current_date}.
 Keep spoken responses concise, direct, and natural.
 
@@ -27,6 +28,7 @@ Keep spoken responses concise, direct, and natural.
 
 export const SUBAGENT_SYSTEM_PROMPT_TEMPLATE = `You are an expert system architect and visual designer for bAssistant.
 You are working as of: {current_date}.
+Always use english language for communication.
 
 When requested to design, diagram, or explain a system, you must provide:
 1. A JSON code block labeled "json" containing {"shapes": [...]}.
