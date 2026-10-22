@@ -19,15 +19,17 @@ Every setting managed by `useVoiceSettings` and the cockpit persists under a ded
 | :--- | :--- | :--- | :--- |
 | `bassistant_gemini_api_key` | `string` | Primary Google Gemini API key used for Tier 1 Live Audio and default Tier 2 Subagent | 🔒 AES-GCM-256 Encrypted |
 | `bassistant_gemini_subagent_key` | `string` | Dedicated Tier 2 Gemini API key override (used when Tier 1 reuse is disabled) | 🔒 AES-GCM-256 Encrypted |
+| `bassistant_openai_api_key` | `string` | OpenAI API key for Tier 2 diagram & explanation subagent | 🔒 AES-GCM-256 Encrypted |
 | `bassistant_mistral_api_key` | `string` | Mistral AI API key for Tier 2 diagram & explanation subagent | 🔒 AES-GCM-256 Encrypted |
 | `bassistant_requesty_api_key` | `string` | Requesty AI API key for Tier 2 diagram & explanation subagent | 🔒 AES-GCM-256 Encrypted |
 | `bassistant_ollama_api_key` | `string` | Ollama Cloud Bearer token for hosted open-source models | 🔒 AES-GCM-256 Encrypted |
-| `bassistant_subagent_provider` | `string` | Active Tier 2 provider: `'gemini'`, `'mistral'`, `'requesty'`, or `'ollama'` | Plain text |
+| `bassistant_subagent_provider` | `string` | Active Tier 2 provider: `'gemini'`, `'openai'`, `'mistral'`, `'requesty'`, or `'ollama'` | Plain text |
 | `bassistant_subagent_model` | `string` | Selected Subagent model ID string (preset or custom identifier) | Plain text |
 | `bassistant_use_tier1_gemini_key` | `string` | Flag (`'true'` / `'false'`) controlling whether Gemini subagent inherits the Tier 1 key | Plain text |
 | `bassistant_voice_live_model` | `string` | Tier 1 Live conversational audio model (default: `'gemini-3.8-live'`) | Plain text |
 | `bassistant_studio_voice` | `string` | Selected studio voice persona (e.g. `'Puck'`, `'Charon'`, `'Kore'`, `'Fenrir'`, `'Aoede'`) | Plain text |
 | `bassistant_ollama_endpoint` | `string` | Cloud API base URL for Ollama Cloud (default: `'https://ollama.com/api'`) | Plain text |
+| `b_user_preferences` | `string[]` | User preferences array (max 10 items, max 120 chars each) for WebMCP & subagent prompt injection | Plain text JSON |
 
 ---
 

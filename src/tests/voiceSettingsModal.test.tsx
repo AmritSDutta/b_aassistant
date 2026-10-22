@@ -220,4 +220,60 @@ describe('VoiceSettingsModal', () => {
       })
     );
   });
+
+  it('switches to OpenAI provider, shows gpt-6-luna default and saves openai settings', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: 'OK' } }],
+      }),
+    });
+
+    const handleSave = vi.fn();
+    const { getByText, getByPlaceholderText } = render(
+      <VoiceSettingsModal
+        isOpen={true}
+        onClose={vi.fn()}
+        apiKey="AIzaSyTier1"
+        liveModel="gemini-3.8-live"
+        studioVoice="Puck"
+        subagentProvider="gemini"
+        subagentModel="gemini-3.5-flash-lite"
+        useTier1GeminiKey={true}
+        openaiKey=""
+        onSave={handleSave}
+      />
+    );
+
+    const providerSelect = document.querySelectorAll('select')[2];
+    fireEvent.change(providerSelect, { target: { value: 'openai' } });
+
+    expect(getByText('GPT-6 Luna (Default)')).toBeTruthy();
+    expect(getByPlaceholderText('sk-...')).toBeTruthy();
+
+    const keyInput = getByPlaceholderText('sk-...');
+    fireEvent.change(keyInput, { target: { value: 'sk-live-openai-key' } });
+
+    const testBtn = getByText('⚡ Run Quick Test');
+    await act(async () => {
+      fireEvent.click(testBtn);
+    });
+
+    await waitFor(() => {
+      expect(getByText(/Connection verified/)).toBeTruthy();
+    });
+
+    const saveBtn = getByText('Save Settings');
+    await act(async () => {
+      fireEvent.click(saveBtn);
+    });
+
+    expect(handleSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        subagentProvider: 'openai',
+        openaiKey: 'sk-live-openai-key',
+        subagentModel: 'gpt-6-luna',
+      })
+    );
+  });
 });

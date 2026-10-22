@@ -11,7 +11,7 @@ export interface VoiceOption {
   tone: string;
 }
 
-export type SubagentProviderType = 'gemini' | 'mistral' | 'requesty' | 'ollama';
+export type SubagentProviderType = 'gemini' | 'openai' | 'mistral' | 'requesty' | 'ollama';
 
 export interface SubagentProviderOption {
   id: SubagentProviderType;
@@ -39,6 +39,18 @@ export const SUBAGENT_PROVIDERS: SubagentProviderOption[] = [
       { id: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash Lite (Recommended)', description: 'Fast, structured payloads' },
       { id: 'gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash Lite', description: 'Compact reasoning' },
       { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', description: 'Balanced performance' },
+    ],
+  },
+  {
+    id: 'openai',
+    name: 'OpenAI',
+    description: 'OpenAI frontier reasoning and compact models',
+    defaultModel: 'gpt-6-luna',
+    defaultEndpoint: 'https://api.openai.com/v1',
+    keyPlaceholder: 'sk-...',
+    presets: [
+      { id: 'gpt-6-luna', label: 'GPT-6 Luna (Default)', description: 'Advanced frontier reasoning & architecture subagent' },
+      { id: 'gpt-5-nano', label: 'GPT-5 Nano', description: 'Fast, lightweight compact subagent' },
     ],
   },
   {

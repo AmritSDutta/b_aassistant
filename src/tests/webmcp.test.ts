@@ -26,8 +26,10 @@ describe('WebMCP Provider & Tools', () => {
     const tools = provider.listTools();
     const names = tools.map((t) => t.name);
 
+    expect(tools).toHaveLength(18);
     expect(names).toContain('get_tool_usage_prompt');
     expect(names).toContain('get_reference_url');
+    expect(names).toContain('get_user_preferences');
     expect(names).toContain('canvas_draw');
     expect(names).toContain('canvas_clear');
     expect(names).toContain('canvas2d_draw_shapes');
@@ -56,6 +58,7 @@ describe('WebMCP Provider & Tools', () => {
     expect(guide).toContain('canvas2d_draw_shapes');
     expect(guide).toContain('chat_post');
     expect(guide).toContain('export_pdf');
+    expect(guide).toContain('get_user_preferences');
   });
 
   it('executes canvas_draw and updates canvas history', async () => {
@@ -220,6 +223,24 @@ describe('WebMCP Provider & Tools', () => {
     const customProvider = new WebMCPProvider(customContext);
     const res = await customProvider.callTool('get_reference_url', {});
     expect(res).toBe('https://example.com/api, https://docs.vite.dev');
+  });
+
+  it('executes get_user_preferences returning empty array when none stored', async () => {
+    const res = await provider.callTool('get_user_preferences', {});
+    expect(res).toEqual([]);
+  });
+
+  it('executes get_user_preferences returning array of preference strings', async () => {
+    const prefs = ['Use pastel colors for database nodes', 'Avoid acronyms in titles'];
+    const customContext: ToolContext = {
+      getMessages: () => [],
+      postMessage: () => {},
+      getUserPreferences: () => prefs,
+    };
+    const customProvider = new WebMCPProvider(customContext);
+    const res = await customProvider.callTool('get_user_preferences', {});
+    expect(res).toEqual(prefs);
+    expect(Array.isArray(res)).toBe(true);
   });
 });
 

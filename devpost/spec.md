@@ -12,10 +12,11 @@ A zero-backend, React-based single-page browser assistant deployed to Cloudflare
 1. The page renders a 20/80 layout: a left sidebar (branding with dynamic transparent logo, light/dark toggle, file upload, Reference URLs manager for up to 10 verified links, and Session Highlights) and an 80% main area split into a top 60% HTML canvas and a bottom 40% chat interface.
 2. If the user uploads a Doc or PDF file (< 1MB), `LiteParse` runs directly inside the browser using WebAssembly (WASM). It extracts text page-by-page, with stream decompressor fallback, hex PDF string token decoding (`<...> Tj` and `[...] TJ`), and in-browser DOCX PKZip `word/document.xml` decompression. A client-side BM25 indexer tokenizes and scores the text, saving the chunks and index into the browser's IndexedDB.
 3. The user types messages into the chat box. Each message is tagged with a `user:` prefix and kept in application state.
-4. The page initializes a **Unified WebMCP Provider** that registers 17 tools onto six discovery surfaces: `document.modelContext`, `navigator.modelContext`, `window.webmcp`, hidden DOM tool forms, ready custom events, and `window.postMessage` for standard JSON-RPC 2.0 MCP commands.
+4. The page initializes a **Unified WebMCP Provider** that registers 18 tools onto six discovery surfaces: `document.modelContext`, `navigator.modelContext`, `window.webmcp`, hidden DOM tool forms, ready custom events, and `window.postMessage` for standard JSON-RPC 2.0 MCP commands.
 5. Any visiting LLM, extension, or WebMCP inspector discovers the exposed tools:
    - `get_tool_usage_prompt`: returns the read-only operating guide for using all other tools (call first).
    - `get_reference_url`: returns comma-separated reference URLs stored in browser cache.
+   - `get_user_preferences`: returns stored user preferences as a string array (`string[]`, up to 10 items, max 120 chars each).
    - `search_document`: queries the local BM25 index in IndexedDB.
    - `clean_document`: wipes the IndexedDB chunks and resets the upload box.
    - `get_chat_history`: retrieves conversation logs including `user:` prompts.
@@ -79,7 +80,7 @@ Root composition container orchestrating the 20/80 layout, theme state (Light/Da
 ### 2. `Sidebar`
 Implements `prd.md > Screens and Layout > Left Sidebar (20% width)`.
 Hosts:
-- `Branding`: App title "bAssistant", transparent theme-aware logo (`bassistant_light.jpg` in dark mode, `bassistant_dark.jpg` in light mode), and theme toggle switch.
+- `Branding`: App title "bAssistant", transparent theme-aware logo (`bassistant_light.jpg` in dark mode, `bassistant_dark.jpg` in light mode), and a 2-tiered right-aligned action cluster with Tier 1 utility buttons (`[voice]`, `[tips]`, `[theme]`) and a Tier 2 long single `⚙️ user preferences` button directly underneath.
 - `FileUpload`: Dropzone and file picker for Doc/PDF files < 2MB. Displays parsing status, page count, and "Indexed" badge. Triggers `NotificationModal` on rejection. Highlights (border + tint) while a file drags over.
 - `ReferenceUrls`: Enboldened `REFERENCE URLS` manager caching up to 10 probe-verified links.
 - `BlankSlot` → **Session Highlights**: Enboldened `Session Highlights` section collecting starred (☆/★) messages with sender badges and snippets; clicking an entry scrolls the dialogue to that message.
@@ -128,10 +129,12 @@ Modal dialog listing all past deliberation sessions stored in IndexedDB:
 
 ### 8. `WebMCPProvider`
 Implements `prd.md > Features and Behavior > 5. WebMCP Tool Suite`.
-Central service registering and dispatching all 16 WebMCP tools:
+Central service registering and dispatching all 18 WebMCP tools:
 - Registers on six discovery surfaces: `document.modelContext`, `navigator.modelContext` (+ `modelContextTesting`), `window.webmcp`, hidden DOM tool forms, `webmcp:ready`/`modelcontext:ready` custom events, and `window.addEventListener('message')` JSON-RPC 2.0. Forwards `readOnlyHint` annotations for read-only tools.
 - Tools exposed:
   - `get_tool_usage_prompt`: Read-only, zero-arg tool returning the agent operating guide (sourced from `webmcp/agentGuide.ts`); agents should call it before other tools.
+  - `get_reference_url`: Read-only, zero-arg tool returning comma-separated reference URLs cached in browser storage.
+  - `get_user_preferences`: Read-only, zero-arg tool returning stored user preferences as `string[]` (max 10 items, max 120 chars each).
   - `search_web`: DuckDuckGo query API.
   - `search_research`: ArXiv API export query.
   - `calculate`: Evaluates decimal math strings.
@@ -175,6 +178,7 @@ Self-contained, decoupled voice package:
 - `audio/player.ts`: `StreamingAudioPlayer` gapless 24 kHz scheduler with instant barge-in `interrupt()`.
 - `providers/geminiLiveProvider.ts`: `ILiveVoiceProvider` implementation via `@google/genai` (`ai.live.connect`). `close()` terminates the active WebSocket via `session.conn.close(1000, 'Normal Closure')` and disposes `StreamingAudioPlayer`.
 - `providers/geminiSubagentProvider.ts`: `ISubagentProvider` implementation via `@google/genai` (`ai.models.generateContent`).
+- `providers/openAISubagentProvider.ts`: `ISubagentProvider` implementation calling OpenAI chat completions with models `gpt-6-luna` (default) and `gpt-5-nano` via same-origin `/api/proxy` with Bearer token authentication.
 - `providers/mistralSubagentProvider.ts`: `ISubagentProvider` implementation calling Mistral AI chat completions with Bearer token authentication.
 - `providers/requestySubagentProvider.ts`: `ISubagentProvider` implementation calling Requesty AI router with native CORS, automatic prefix scrapping, and CSP allowlisting.
 - `providers/ollamaSubagentProvider.ts`: `ISubagentProvider` implementation targeting the Ollama Cloud endpoint (`https://ollama.com/api/chat`) with Bearer token authentication.
@@ -225,6 +229,8 @@ Self-contained, decoupled voice package:
 ### 3. Application State (React State / Local Storage)
 - `theme`: `'dark' | 'light'` (persisted in `localStorage['b_theme']`).
 - `apiKey`: encrypted string `__BASSISTANT_ENC__:v1:<iv>:<cipher>` (persisted in `localStorage['bassistant_gemini_api_key']`).
+- `openaiKey`: encrypted string `__BASSISTANT_ENC__:v1:<iv>:<cipher>` (persisted in `localStorage['bassistant_openai_api_key']`).
+- `userPreferences`: `string[]` max 10 items, max 120 chars each (persisted in `localStorage['b_user_preferences']`).
 - `liveModel`: `'gemini-3.8-live'` (persisted in `localStorage['bassistant_voice_live_model']`).
 - `subagentModel`: `'gemini-3.5-flash-lite'` (persisted in `localStorage['bassistant_subagent_model']`).
 - `studioVoice`: `'Puck'` (persisted in `localStorage['bassistant_studio_voice']`).
@@ -246,10 +252,11 @@ C:/codebase/b_aassistant/
 │   ├── main.tsx                 # React entry point
 │   ├── App.tsx                  # Root cockpit layout & theme provider
 │   ├── components/
-│   │   ├── Branding.tsx         # Title, logo placeholder, theme toggle
+│   │   ├── Branding.tsx         # Title, logo, theme toggle, 2-tier right-aligned prefs action
 │   │   ├── FileUpload.tsx       # Dropzone, LiteParse trigger, status badge
 │   │   ├── BlankSlot.tsx        # Reserved 3rd sidebar section
 │   │   ├── NotificationModal.tsx# Rejection / blank-session error popup
+│   │   ├── UserPreferencesModal.tsx # Stored user preferences modal dialog
 │   │   ├── CanvasArea.tsx       # 60% HTML5 canvas view & toolbar
 │   │   ├── ChatArea.tsx         # 40% chat stream + full-screen reader popup
 │   │   ├── HumanizedMessage.tsx # Markdown-noise cleaner for chat bubbles
@@ -259,6 +266,7 @@ C:/codebase/b_aassistant/
 │   │   ├── pdfExportService.ts  # Multilingual dual-section PDF export engine
 │   │   ├── liteparseService.ts  # LiteParse WASM initialization and parser
 │   │   ├── idbStorage.ts        # IndexedDB connection and document store
+│   │   ├── userPreferences.ts   # User preferences storage and validation
 │   │   ├── bm25.ts              # Client-side BM25 indexer and query scorer
 │   │   ├── searchService.ts     # DDGS search & ArXiv API fetch handlers
 │   │   ├── tavilySearch.ts      # Keyless Tavily search client (primary)
@@ -269,13 +277,13 @@ C:/codebase/b_aassistant/
 │   │   ├── types/               # Provider & audio interfaces (ILiveVoiceProvider, ISubagentProvider)
 │   │   ├── config/              # Crypto storage (AES-GCM-256) & model registry (gemini-3.8-live)
 │   │   ├── audio/               # AudioWorklet recorder (16 kHz) & gapless player (24 kHz)
-│   │   ├── providers/           # GeminiLiveProvider & GeminiSubagentProvider implementations
+│   │   ├── providers/           # Gemini, OpenAI, Mistral, Requesty, Ollama providers
 │   │   ├── bridge/              # Tool adapter & subagent task bridge
 │   │   ├── hooks/               # useVoiceSettings & useVoiceAgent
 │   │   └── components/          # VoiceLiveController, VoiceSettingsModal, AudioPreflightModal
 │   ├── webmcp/
 │   │   ├── types.ts             # WebMCP tool interfaces & JSON-RPC schema
-│   │   ├── tools.ts             # 17 tool declarations (schemas & dispatch)
+│   │   ├── tools.ts             # 18 tool declarations (schemas & dispatch)
 │   │   ├── agentGuide.ts        # Read-only get_tool_usage_prompt guide text
 │   │   └── provider.ts          # Unified bridge (6 discovery surfaces)
 │   └── tests/                   # Hermetic Vitest suites

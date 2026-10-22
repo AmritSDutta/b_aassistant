@@ -18,6 +18,7 @@ export interface VoiceSettingsModalProps {
   subagentModel?: string;
   useTier1GeminiKey?: boolean;
   geminiSubagentKey?: string;
+  openaiKey?: string;
   mistralKey?: string;
   requestyKey?: string;
   ollamaKey?: string;
@@ -31,6 +32,7 @@ export interface VoiceSettingsModalProps {
     subagentModel: string;
     useTier1GeminiKey: boolean;
     geminiSubagentKey: string;
+    openaiKey: string;
     mistralKey: string;
     requestyKey: string;
     ollamaKey: string;
@@ -49,6 +51,7 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
   subagentModel: initialSubagentModel = 'gemini-3.5-flash-lite',
   useTier1GeminiKey: initialUseTier1GeminiKey = true,
   geminiSubagentKey: initialGeminiSubagentKey = '',
+  openaiKey: initialOpenAIKey = '',
   mistralKey: initialMistralKey = '',
   requestyKey: initialRequestyKey = '',
   ollamaKey: initialOllamaKey = '',
@@ -67,6 +70,7 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
 
   const [useTier1GeminiKey, setUseTier1GeminiKey] = useState<boolean>(initialUseTier1GeminiKey);
   const [geminiSubagentKey, setGeminiSubagentKey] = useState(initialGeminiSubagentKey);
+  const [openaiKey, setOpenAIKey] = useState(initialOpenAIKey);
   const [mistralKey, setMistralKey] = useState(initialMistralKey);
   const [requestyKey, setRequestyKey] = useState(initialRequestyKey);
   const [ollamaKey, setOllamaKey] = useState(initialOllamaKey);
@@ -100,6 +104,7 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
 
     setUseTier1GeminiKey(initialUseTier1GeminiKey);
     setGeminiSubagentKey(initialGeminiSubagentKey);
+    setOpenAIKey(initialOpenAIKey);
     setMistralKey(initialMistralKey);
     setRequestyKey(initialRequestyKey);
     setOllamaKey(initialOllamaKey);
@@ -116,6 +121,7 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
     initialSubagentModel,
     initialUseTier1GeminiKey,
     initialGeminiSubagentKey,
+    initialOpenAIKey,
     initialMistralKey,
     initialRequestyKey,
     initialOllamaKey,
@@ -135,6 +141,8 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
     if (subagentProvider === 'gemini') {
       if (useTier1GeminiKey !== initialUseTier1GeminiKey) return true;
       if (!useTier1GeminiKey && geminiSubagentKey !== initialGeminiSubagentKey) return true;
+    } else if (subagentProvider === 'openai') {
+      if (openaiKey !== initialOpenAIKey) return true;
     } else if (subagentProvider === 'mistral') {
       if (mistralKey !== initialMistralKey) return true;
     } else if (subagentProvider === 'requesty') {
@@ -153,6 +161,8 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
     initialUseTier1GeminiKey,
     geminiSubagentKey,
     initialGeminiSubagentKey,
+    openaiKey,
+    initialOpenAIKey,
     mistralKey,
     initialMistralKey,
     requestyKey,
@@ -199,6 +209,8 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
       const activeKey =
         subagentProvider === 'gemini'
           ? (useTier1GeminiKey ? apiKey.trim() : geminiSubagentKey.trim())
+          : subagentProvider === 'openai'
+          ? openaiKey.trim()
           : subagentProvider === 'mistral'
           ? mistralKey.trim()
           : subagentProvider === 'requesty'
@@ -242,6 +254,7 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
         subagentModel: resolvedSubagentModel,
         useTier1GeminiKey,
         geminiSubagentKey: geminiSubagentKey.trim(),
+        openaiKey: openaiKey.trim(),
         mistralKey: mistralKey.trim(),
         requestyKey: requestyKey.trim(),
         ollamaKey: ollamaKey.trim(),
@@ -451,6 +464,8 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
                   value={
                     subagentProvider === 'gemini'
                       ? geminiSubagentKey
+                      : subagentProvider === 'openai'
+                      ? openaiKey
                       : subagentProvider === 'mistral'
                       ? mistralKey
                       : subagentProvider === 'requesty'
@@ -460,6 +475,7 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
                   onChange={(e) => {
                     const val = e.target.value;
                     if (subagentProvider === 'gemini') setGeminiSubagentKey(val);
+                    else if (subagentProvider === 'openai') setOpenAIKey(val);
                     else if (subagentProvider === 'mistral') setMistralKey(val);
                     else if (subagentProvider === 'requesty') setRequestyKey(val);
                     else setOllamaKey(val);

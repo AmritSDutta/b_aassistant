@@ -24,7 +24,7 @@ Source: `scope.md > Inspiration & Identity`.
 
 A responsive, single-page cockpit filling 100% of the viewport, vertically partitioned:
 - **Left Sidebar (20% width):**
-  - **Section 1 (Top) — Branding:** App title "bAssistant", transparent theme-aware logo (`bassistant_light.jpg` in dark mode, `bassistant_dark.jpg` in light mode), and Light/Dark mode toggle.
+  - **Section 1 (Top) — Branding:** App title "bAssistant", transparent theme-aware logo (`bassistant_light.jpg` in dark mode, `bassistant_dark.jpg` in light mode), and a 2-tiered right-aligned action cluster with Tier 1 utility buttons (`[voice]`, `[tips]`, `[theme]`) and a Tier 2 long single `⚙️ user preferences` button directly underneath, keeping the branding area open and uncrowded.
   - **Section 2 (Middle) — File Upload:** Dropzone and file picker for Doc/PDF files strictly under 1MB. Status display showing filename, page count, and "Indexed" badge upon processing.
   - **Section 3 — Reference URLs:** Enboldened `REFERENCE URLS` header with count badge (up to 10 URLs). Click `+ Add` to open a reachability verification modal before caching to browser storage.
   - **Section 4 (Bottom) — Session Highlights:** Enboldened `Session Highlights` section collecting starred dialogue messages for instant revisit.
@@ -32,6 +32,7 @@ A responsive, single-page cockpit filling 100% of the viewport, vertically parti
   - **Top Area (60% height) — HTML Canvas:** Interactive visual display area for programmatic drawing (shapes, lines, graphs, diagrams). Includes UI action buttons (such as "Clear Canvas") that mirror exposed WebMCP tools.
   - **Bottom Area (40% height) — Chat Area:** Scrollable dialogue log displaying `user:` messages and agent responses, formatted with Lora longform reading typography and auto-scrolling to the latest turn, with a bottom text input and send button. The dialogue header bar docks the compact `VoiceLiveController` (animated mic toggle, live status pill, real-time transient caption preview, and quick settings gear).
 - **Modals & Overlays:**
+  - `UserPreferencesModal`: Modal dialog to manage up to 10 stored user preference items (each max 120 characters) saved in browser storage (`localStorage['b_user_preferences']`).
   - `VoiceSettingsModal`: Modal for configuring Gemini API key (AES-GCM-256 encrypted), Live audio model (`gemini-3.8-live` default), Subagent model (`gemini-3.5-flash-lite`), and Prebuilt Studio Voice (Puck, Charon, Kore, Fenrir, Aoede).
   - `AudioPreflightModal`: Quick 1-second microphone permission and volume meter check before connecting to the live audio socket.
 
@@ -124,9 +125,10 @@ Source: `scope.md > The POC Boundary`.
 
 ### 5. WebMCP Tool Suite
 Source: `scope.md > The POC Boundary`.
-The application exposes 17 standard WebMCP tools for visiting LLMs:
+The application exposes 18 standard WebMCP tools for visiting LLMs:
 - `get_tool_usage_prompt`: Read-only, zero-argument tool returning the agent operating guide for using every other tool; marked `readOnlyHint: true` and meant to be called first.
 - `get_reference_url`: Read-only, zero-argument tool returning comma-separated list of up to 10 stored reference URLs cached in browser storage.
+- `get_user_preferences`: Read-only, zero-argument tool returning string array (`string[]`) of up to 10 stored user preference items (max 120 characters each) from browser storage.
 - `search_web`: Executes web search queries using Keyless Tavily AI search as primary with automatic DuckDuckGo fallback.
 - `search_research`: Executes academic literature searches via ArXiv.
 - `calculate`: Evaluates decimal math expressions.
@@ -168,8 +170,9 @@ Source: `research.md` (dwell-time mechanisms 1–6).
   - **Tier 2 (Domain Subagent Engine)**: High-throughput text generator (`gemini-3.5-flash-lite`) invoked when diagrams or in-depth technical analysis are requested via the asynchronous bridge tool (`generate_diagram_and_explanation`). The bridge returns immediately to Tier 1 to prevent voice pauses, while the subagent runs in the background to clear the canvas, draw fresh shapes, and post the substantive technical explanation directly to the chat area and IndexedDB.
 - **Ephemeral Spoken Conversation Policy**: Spoken speech turns and live audio chitchat remain ephemeral in the audio stream and Voice HUD caption pill. They are **not** written to the persistent dialogue history, keeping the reading notes and PDF reports clean and executive.
 - **Multi-Provider Tier 2 Subagent Engine**:
-  - Implements `ISubagentProvider` across **Google Gemini**, **Mistral AI**, **Requesty AI**, and **Ollama Cloud**.
+  - Implements `ISubagentProvider` across **Google Gemini**, **OpenAI**, **Mistral AI**, **Requesty AI**, and **Ollama Cloud**.
   - **Google Gemini**: Integrates `@google/genai` with optional Tier 1 key inheritance or dedicated subagent key.
+  - **OpenAI**: Integrates OpenAI chat completions with models `gpt-6-luna` (default) and `gpt-5-nano`, routed through same-origin `/api/proxy` with Bearer authorization.
   - **Mistral AI**: Calls `POST https://api.mistral.ai/v1/chat/completions` with Bearer authorization.
   - **Requesty AI**: OpenAI-compatible router at `https://router.requesty.ai/v1/chat/completions` with native CORS, automatic prefix scrapping, and CSP allowlisting.
   - **Ollama Cloud**: Fixed cloud endpoint `https://ollama.com/api/chat` authenticated via Bearer token.
@@ -179,7 +182,16 @@ Source: `research.md` (dwell-time mechanisms 1–6).
 - **Centralized Prompts & Dynamic Temporal Anchoring (`src/voice/prompts.ts`)**:
   - System prompt templates for both Tier 1 Live Voice and Tier 2 Subagent are maintained in a dedicated module.
   - Dynamic runtime temporal anchoring replaces `{current_date}` with the real-time calendar date (`YYYY-MM-DD`) at dispatch time.
+  - Dynamically injects active user preferences into system prompts so the subagent aligns directly with user instructions.
   - Prompts clearly differentiate between internal Voice Bridge delegation tools (asynchronous `generate_diagram_and_explanation`, `get_background_task_status` with explicit usage patterns) and client WebMCP tools (`canvas2d_*`, `search_*`, `calculate`, `export_pdf`). The Subagent prompt is purged of circular bridge calls.
+
+### 10. User Preferences Engine (Browser Storage & WebMCP)
+- **Capability**: Allows the user to store up to 10 persistent preference guidelines (each max 120 characters) in browser storage (`localStorage['b_user_preferences']`).
+- **Input & Management**: Controlled via a dedicated right-aligned `⚙️ user preferences` button in the Branding header (Tier 2 underneath the utility buttons) that opens `UserPreferencesModal`.
+- **Validation**: Enforces a strict 120-character ceiling per item with live character counter (`X / 120`) and total cap of 10 preferences (`X / 10`). Auto-trims leading/trailing whitespace and allows duplicate entries under the 10-item cap.
+- **Dual Consumption**:
+  - Injected directly into the Tier 2 Subagent system instruction prompt to guide autonomous diagramming and deliberation.
+  - Exposed via read-only WebMCP tool `get_user_preferences` returning `string[]` to visiting LLMs and inspector extensions.
 - **Background Task Status Tracking in Browser Cache (`src/voice/tasks/taskManager.ts`)**:
   - Background subagent tasks are tracked with `bassistant_task_` IDs and lifecycle states (`queued`, `in_progress`, `completed`, `failed`).
   - Synced to browser `sessionStorage` under `bassistant_background_tasks` (LRU cap of 20 tasks).
@@ -225,9 +237,10 @@ Source: `research.md` (dwell-time mechanisms 1–6).
 - HTML canvas with live 2D scene graph engine, Clear button, and Export PDF button.
 - Chat stream formatted in Lora longform reading typography, multi-line prompt textarea, and auto-scroll to newest message.
 - Keyless Tavily web search with automatic DuckDuckGo fallback.
-- Isolated voice module in `src/voice/` featuring `gemini-3.8-live` full-duplex audio, subagent diagram generation, preflight audio modal, and AES-GCM-256 key encryption.
+- Isolated voice module in `src/voice/` featuring `gemini-3.8-live` full-duplex audio, multi-provider subagents (Google Gemini, OpenAI `gpt-6-luna`/`gpt-5-nano`, Mistral AI, Requesty AI, Ollama Cloud), preflight audio modal, and AES-GCM-256 key encryption.
+- User Preferences manager (`UserPreferencesModal`) storing up to 10 preferences (max 120 chars each) in browser storage.
 - Long-dwell UI layer: warm token dual themes, onboarding WelcomeModal, chat popup maximize, A-/A+ persisted font steps, reading-progress bar, Session Highlights in sidebar Section 3, thinking pulse, copy/star message actions, drag-over dropzone feedback, and session strip.
-- Complete WebMCP tool suite (17 tools).
+- Complete WebMCP tool suite (18 tools including `get_user_preferences`).
 - Cloudflare Pages deployment configuration.
 - Project documentation:
   - Documentation site created via `docs7` skill, updated with `docs/tavily-search.mdx` and dedicated `"Voice Agent"` section with `docs/voice-agent.mdx`.

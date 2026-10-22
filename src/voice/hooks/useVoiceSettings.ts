@@ -16,6 +16,7 @@ const KEY_SUBAGENT_PROVIDER = 'bassistant_subagent_provider';
 const KEY_SUBAGENT_MODEL = 'bassistant_subagent_model';
 const KEY_USE_TIER1_GEMINI_KEY = 'bassistant_use_tier1_gemini_key';
 const KEY_GEMINI_SUBAGENT_KEY = 'bassistant_gemini_subagent_key';
+const KEY_OPENAI_KEY = 'bassistant_openai_api_key';
 const KEY_MISTRAL_KEY = 'bassistant_mistral_api_key';
 const KEY_REQUESTY_KEY = 'bassistant_requesty_api_key';
 const KEY_OLLAMA_KEY = 'bassistant_ollama_api_key';
@@ -65,6 +66,7 @@ export function useVoiceSettings() {
   const [subagentModel, setSubagentModelState] = useState<string>(DEFAULT_SUBAGENT_MODEL);
   const [useTier1GeminiKey, setUseTier1GeminiKeyState] = useState<boolean>(true);
   const [geminiSubagentKey, setGeminiSubagentKeyState] = useState<string>('');
+  const [openaiKey, setOpenAIKeyState] = useState<string>('');
   const [mistralKey, setMistralKeyState] = useState<string>('');
   const [requestyKey, setRequestyKeyState] = useState<string>('');
   const [ollamaKey, setOllamaKeyState] = useState<string>('');
@@ -79,6 +81,7 @@ export function useVoiceSettings() {
       try {
         const loadedGemini = await loadEncryptedKey(KEY_API_KEY, 'GEMINI_API_KEY');
         const loadedGeminiSub = await loadEncryptedKey(KEY_GEMINI_SUBAGENT_KEY);
+        const loadedOpenAI = await loadEncryptedKey(KEY_OPENAI_KEY);
         const loadedMistral = await loadEncryptedKey(KEY_MISTRAL_KEY);
         const loadedRequesty = await loadEncryptedKey(KEY_REQUESTY_KEY);
         const loadedOllama = await loadEncryptedKey(KEY_OLLAMA_KEY);
@@ -87,6 +90,7 @@ export function useVoiceSettings() {
 
         setApiKeyState(loadedGemini);
         setGeminiSubagentKeyState(loadedGeminiSub);
+        setOpenAIKeyState(loadedOpenAI);
         setMistralKeyState(loadedMistral);
         setRequestyKeyState(loadedRequesty);
         setOllamaKeyState(loadedOllama);
@@ -104,7 +108,7 @@ export function useVoiceSettings() {
         localStorage.removeItem('STUDIO_VOICE');
 
         const savedProvider = localStorage.getItem(KEY_SUBAGENT_PROVIDER) as SubagentProviderType;
-        if (savedProvider && ['gemini', 'mistral', 'requesty', 'ollama'].includes(savedProvider)) {
+        if (savedProvider && ['gemini', 'openai', 'mistral', 'requesty', 'ollama'].includes(savedProvider)) {
           setSubagentProviderState(savedProvider);
         }
 
@@ -170,6 +174,12 @@ export function useVoiceSettings() {
     await saveEncryptedKey(KEY_GEMINI_SUBAGENT_KEY, trimmed);
   }, []);
 
+  const setOpenAIKey = useCallback(async (key: string): Promise<void> => {
+    const trimmed = key.trim();
+    setOpenAIKeyState(trimmed);
+    await saveEncryptedKey(KEY_OPENAI_KEY, trimmed);
+  }, []);
+
   const setMistralKey = useCallback(async (key: string): Promise<void> => {
     const trimmed = key.trim();
     setMistralKeyState(trimmed);
@@ -196,6 +206,8 @@ export function useVoiceSettings() {
 
   const getActiveSubagentApiKey = useCallback((): string => {
     switch (subagentProvider) {
+      case 'openai':
+        return openaiKey;
       case 'mistral':
         return mistralKey;
       case 'requesty':
@@ -206,7 +218,7 @@ export function useVoiceSettings() {
       default:
         return useTier1GeminiKey ? apiKey : (geminiSubagentKey || apiKey);
     }
-  }, [subagentProvider, mistralKey, requestyKey, ollamaKey, useTier1GeminiKey, apiKey, geminiSubagentKey]);
+  }, [subagentProvider, openaiKey, mistralKey, requestyKey, ollamaKey, useTier1GeminiKey, apiKey, geminiSubagentKey]);
 
   return {
     apiKey,
@@ -224,6 +236,8 @@ export function useVoiceSettings() {
     setUseTier1GeminiKey,
     geminiSubagentKey,
     setGeminiSubagentKey,
+    openaiKey,
+    setOpenAIKey,
     mistralKey,
     setMistralKey,
     requestyKey,

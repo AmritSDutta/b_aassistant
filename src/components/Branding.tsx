@@ -5,6 +5,7 @@ interface BrandingProps {
   onToggleTheme: () => void;
   onOpenTips?: () => void;
   onOpenVoiceSettings?: () => void;
+  onOpenPreferences?: () => void;
 }
 
 export const Branding: React.FC<BrandingProps> = ({
@@ -12,10 +13,11 @@ export const Branding: React.FC<BrandingProps> = ({
   onToggleTheme,
   onOpenTips,
   onOpenVoiceSettings,
+  onOpenPreferences,
 }) => {
   return (
-    <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--line)' }}>
-      <div className="flex items-center space-x-2">
+    <div className="p-3 border-b flex items-center justify-between gap-2" style={{ borderColor: 'var(--line)' }}>
+      <div className="flex items-center space-x-2 shrink-0">
         <img
           src={
             theme === 'dark'
@@ -35,41 +37,59 @@ export const Branding: React.FC<BrandingProps> = ({
         </div>
       </div>
 
-      {/* Header Actions: Tips + Voice + Theme Toggle */}
-      <div className="flex items-center gap-1.5">
-        {onOpenVoiceSettings && (
+      {/* Header Actions: 2-Tiered Right-Aligned Layout */}
+      <div className="flex flex-col items-end gap-1.5 shrink-0">
+        {/* Tier 1: Existing 3 action buttons */}
+        <div className="flex items-center gap-1.5">
+          {onOpenVoiceSettings && (
+            <button
+              type="button"
+              onClick={onOpenVoiceSettings}
+              aria-label="Voice & Subagent Settings"
+              className="px-2 py-1 rounded-md border transition-colors font-mono text-[10px] font-bold uppercase tracking-[0.06em] hover:opacity-80"
+              style={{ borderColor: 'var(--line)', color: 'var(--accent)', background: 'var(--card)' }}
+              title="Open Voice Live & Subagent settings"
+            >
+              🎙️ voice
+            </button>
+          )}
+          {onOpenTips && (
+            <button
+              type="button"
+              onClick={onOpenTips}
+              aria-label="Show tips and guide"
+              className="px-2 py-1 rounded-md border transition-colors font-mono text-[10px] font-bold uppercase tracking-[0.06em] hover:opacity-80"
+              style={{ borderColor: 'var(--line)', color: 'var(--note)', background: 'var(--card)' }}
+              title="Open onboarding tips & WebMCP guide"
+            >
+              tips
+            </button>
+          )}
           <button
             type="button"
-            onClick={onOpenVoiceSettings}
-            aria-label="Voice & Subagent Settings"
-            className="px-2 py-1 rounded-md border transition-colors font-mono text-[10px] font-bold uppercase tracking-[0.06em] hover:opacity-80"
-            style={{ borderColor: 'var(--line)', color: 'var(--accent)', background: 'var(--card)' }}
-            title="Open Voice Live & Subagent settings"
+            onClick={onToggleTheme}
+            aria-label="Toggle theme"
+            className="px-2 py-1 rounded-md border transition-colors font-mono text-[10px] font-bold uppercase tracking-[0.06em]"
+            style={{ borderColor: 'var(--line)', color: 'var(--ink-soft)' }}
           >
-            🎙️ voice
+            {theme === 'dark' ? '☀ light' : '☾ dark'}
           </button>
-        )}
-        {onOpenTips && (
+        </div>
+
+        {/* Tier 2: Long single button, right-aligned below the 3 buttons */}
+        {onOpenPreferences && (
           <button
             type="button"
-            onClick={onOpenTips}
-            aria-label="Show tips and guide"
-            className="px-2 py-1 rounded-md border transition-colors font-mono text-[10px] font-bold uppercase tracking-[0.06em] hover:opacity-80"
-            style={{ borderColor: 'var(--line)', color: 'var(--note)', background: 'var(--card)' }}
-            title="Open onboarding tips & WebMCP guide"
+            onClick={onOpenPreferences}
+            aria-label="User Preferences"
+            className="w-full flex items-center justify-center gap-1.5 px-2 py-1 rounded-md border transition-colors font-mono text-[10px] font-bold uppercase tracking-[0.06em] hover:opacity-80"
+            style={{ borderColor: 'var(--line)', color: 'var(--you, #10b981)', background: 'var(--card)' }}
+            title="Open custom user preferences dialog"
           >
-            tips
+            <span>⚙️</span>
+            <span>user preferences</span>
           </button>
         )}
-        <button
-          type="button"
-          onClick={onToggleTheme}
-          aria-label="Toggle theme"
-          className="px-2 py-1 rounded-md border transition-colors font-mono text-[10px] font-bold uppercase tracking-[0.06em]"
-          style={{ borderColor: 'var(--line)', color: 'var(--ink-soft)' }}
-        >
-          {theme === 'dark' ? '☀ light' : '☾ dark'}
-        </button>
       </div>
     </div>
   );

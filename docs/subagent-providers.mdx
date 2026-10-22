@@ -1,6 +1,6 @@
 ---
 title: Tier 2 Subagent Providers & Multi-Model Engine
-description: Decoupled background diagramming and structured analysis engine supporting Google Gemini, Mistral AI, Requesty AI, and Ollama Cloud with custom model IDs and interactive quick test verification.
+description: Decoupled background diagramming and structured analysis engine supporting Google Gemini, OpenAI, Mistral AI, Requesty AI, and Ollama Cloud with custom model IDs and interactive quick test verification.
 ---
 
 # Tier 2 Subagent Providers & Multi-Model Engine
@@ -9,6 +9,7 @@ In bAssistant, conversational dialogue and heavy technical synthesis are strictl
 
 bAssistant features a pluggable, interface-driven multi-provider architecture for Tier 2:
 - **Google Gemini** (Native GenAI SDK)
+- **OpenAI** (Frontier reasoning and compact models via `gpt-6-luna` & `gpt-5-nano`)
 - **Mistral AI** (Direct REST with European open/commercial frontier models)
 - **Requesty AI** (High-throughput OpenAI-compatible router with native CORS)
 - **Ollama Cloud** (Cloud-hosted open models via Bearer token authentication)
@@ -24,7 +25,7 @@ All subagent providers implement the uniform `ISubagentProvider` interface, allo
 ```mermaid
 flowchart TD
     subgraph UI ["Voice & Subagent Settings"]
-        PSelect["1. Provider Selector<br/>(Gemini | Mistral | Requesty | Ollama)"]
+        PSelect["1. Provider Selector<br/>(Gemini | OpenAI | Mistral | Requesty | Ollama)"]
         Vault["2. AES-GCM-256 Vault<br/>(Per-Provider Key Isolation)"]
         MSelect["3. Model Presets or Custom ID"]
         QTest["4. ⚡ Quick Test<br/>(Live in-memory ping)"]
@@ -39,15 +40,16 @@ flowchart TD
 
     subgraph Implementations ["ISubagentProvider Implementations"]
         GeminiImpl["GeminiSubagentProvider"]
+        OpenAIImpl["OpenAISubagentProvider"]
         MistralImpl["MistralSubagentProvider"]
         RequestyImpl["RequestySubagentProvider"]
         OllamaImpl["OllamaSubagentProvider"]
-        SPF --> GeminiImpl & MistralImpl & RequestyImpl & OllamaImpl
+        SPF --> GeminiImpl & OpenAIImpl & MistralImpl & RequestyImpl & OllamaImpl
     end
 
     subgraph Dispatch ["VoiceBridge Execution"]
         VB["VoiceBridge.handleDiagramAndExplanation()"]
-        GeminiImpl & MistralImpl & RequestyImpl & OllamaImpl -.->|generateText| VB
+        GeminiImpl & OpenAIImpl & MistralImpl & RequestyImpl & OllamaImpl -.->|generateText| VB
         VB --> Canvas["Canvas2D Engine (Rough.js)"]
         VB --> Chat["ChatArea + Session Turns"]
         VB --> Task["TaskManager (HUD Badge)"]
@@ -75,6 +77,14 @@ export interface ISubagentProvider {
   - `gemini-3.5-flash-lite` (Recommended for high-throughput diagrams)
   - `gemini-3.1-flash-lite`
   - `gemini-2.5-flash`
+
+### OpenAI (`OpenAISubagentProvider`)
+- **Integration**: REST chat completions endpoint `https://api.openai.com/v1/chat/completions`.
+- **CORS Resolution**: Dispatched via same-origin `/api/proxy` (Vite dev middleware & Cloudflare Pages Functions) to eliminate browser CORS blocks.
+- **Authentication**: Bearer token via `Authorization: Bearer <OPENAI_API_KEY>`.
+- **Recommended Presets**:
+  - `gpt-6-luna` (Default frontier reasoning and architectural design subagent)
+  - `gpt-5-nano` (Fast, lightweight compact subagent)
 
 ### Mistral AI (`MistralSubagentProvider`)
 - **Integration**: REST chat completions endpoint `https://api.mistral.ai/v1/chat/completions`.
@@ -140,6 +150,7 @@ All API keys are isolated per provider in client-side encrypted storage:
 - **Keys Stored**:
   - `bassistant_gemini_api_key`: Tier 1 & default Tier 2 Gemini key.
   - `bassistant_gemini_subagent_key`: Dedicated Tier 2 Gemini key override.
+  - `bassistant_openai_api_key`: OpenAI API key.
   - `bassistant_mistral_api_key`: Mistral AI API key.
   - `bassistant_requesty_api_key`: Requesty AI API key.
   - `bassistant_ollama_api_key`: Ollama Cloud API key.

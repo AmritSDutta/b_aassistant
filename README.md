@@ -11,13 +11,13 @@
 ## Why bAssistant?
 
 - 🔒 **100% Private & Local**: Uploaded documents never travel to an external server. Parsing and BM25 search happen directly in browser memory and local IndexedDB.
-- 🎙️ **Full-Duplex Live Voice & Multi-Provider Subagents**: Bidirectional 16kHz conversational audio powered by Gemini Live, paired with an asynchronous Tier 2 subagent suite (Google Gemini, Requesty AI, Mistral AI, Ollama Cloud) specializing in tech product architecture and real-time Canvas2D diagramming.
+- 🎙️ **Full-Duplex Live Voice & Multi-Provider Subagents**: Bidirectional 16kHz conversational audio powered by Gemini Live, paired with an asynchronous Tier 2 subagent suite (Google Gemini, OpenAI, Requesty AI, Mistral AI, Ollama Cloud) specializing in tech product architecture and real-time Canvas2D diagramming.
 - 📐 **60/40 Split Cockpit**: Designed for visual thinkers. The dominant 60% HTML5 Canvas renders architecture diagrams in real time, while the 40% Chat Area maintains a humanized conversational stream.
 - 🎨 **Persistent Canvas Scene Graph**: Visuals are structured entities (rectangles, containers, connectors with perimeter docking, step cards), not ephemeral pixel dumps.
 - 📄 **Multilingual PDF Export**: Export session artifacts into a styled dual-section PDF (HiDPI canvas snapshot + readable discussion transcript) with native font rendering for English, Bengali (বাংলা), and Hindi (हिन्दी) with complete H1–H6 heading hierarchy formatting.
 - 🧹 **Humanized Conversation**: Raw LLM markdown noise (asterisks, stray formatting markers, LaTeX math arrows like `$\rightarrow$`, and `####` to `######` headings) is parsed and formatted automatically into executive typography and clean subheadings.
 - 🛋️ **Built for long sessions**: Warm paper/ink dual themes with real-time DOM contrast synchronization via `MutationObserver`, a first-load how-to-use popup, a full-screen chat reader mode, A-/A+ font steps, reading-progress bar, and star highlights collected in the sidebar — all motion disabled under `prefers-reduced-motion`.
-- 🌐 **WebMCP Standard**: Built on the open WebMCP standard with 17 in-browser tools enabling any compatible AI extension or runtime to read docs, draw diagrams, calculate metrics, and search public research — including a read-only `get_tool_usage_prompt` tool that hands visiting agents the full operating guide.
+- 🌐 **WebMCP Standard**: Built on the open WebMCP standard with 18 in-browser tools enabling any compatible AI extension or runtime to read docs, draw diagrams, calculate metrics, and search public research — including a read-only `get_tool_usage_prompt` tool that hands visiting agents the full operating guide and `get_user_preferences` for accessing user guidelines.
 
 ---
 
@@ -79,7 +79,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ### Hermetic Verification
 ```bash
-# Run all 226 isolated unit tests (32 Vitest suites, no watch mode)
+# Run all 259 isolated unit tests (35 Vitest suites, no watch mode)
 npm.cmd test -- --run
 
 # Build production bundle (tsc && vite build)
@@ -105,7 +105,7 @@ Full architectural and developer specifications built with `docs7` are located i
 - `docs/indroduction.mdx` — Project story, philosophy, challenges & roadmap
 - `docs/architecture.mdx` — Zero-backend cockpit data flow & core subsystems
 - `docs/cockpit-ui.mdx` — 20/80 analyst cockpit, warm themes, Zen reader & long-dwell ergonomics
-- `docs/webmcp.mdx` — WebMCP provider surfaces & the 17 registered tools
+- `docs/webmcp.mdx` — WebMCP provider surfaces & the 18 registered tools
 - `docs/agent-guide.mdx` — The operating contract returned by `get_tool_usage_prompt`
 - `docs/canvas-and-pdf.mdx` — Canvas2D scene graph engine & multilingual PDF export
 - `docs/document-processing.mdx` — Zero-backend LiteParse WASM & BM25 indexing
@@ -113,7 +113,7 @@ Full architectural and developer specifications built with `docs7` are located i
 - `docs/tavily-search.mdx` — Keyless Tavily web search with DuckDuckGo fallback
 - `docs/sessions-vault.mdx` — Session vault, IndexedDB persistence & restore-on-mount
 - `docs/voice-agent.mdx` — Full-duplex Gemini Live voice mode & two-tier agent topology
-- `docs/subagent-providers.mdx` — Multi-provider Tier 2 subagents (Requesty AI, Mistral, Ollama, Gemini)
+- `docs/subagent-providers.mdx` — Multi-provider Tier 2 subagents (Google Gemini, OpenAI, Requesty AI, Mistral, Ollama)
 - `docs/storage-keys.mdx` — Browser storage key registry (LocalStorage & IndexedDB)
 - `docs/background-tasks.mdx` — Asynchronous subagent task dispatch, TaskManager cache & status tool
 - `docs/dwell-time-research.mdx` — Evidence-backed long-dwell UI design mechanisms

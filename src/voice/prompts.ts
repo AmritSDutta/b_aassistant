@@ -1,3 +1,5 @@
+import { formatPreferencesForPrompt } from '../lib/userPreferences';
+
 export const VOICE_LIVE_AGENT_PROMPT_TEMPLATE = `You are an intelligent full-duplex voice assistant for bAssistant.
 Always speak in english.
 You are working as of: {current_date}.
@@ -19,6 +21,7 @@ Keep spoken responses concise, direct, and natural.
 - search_research: Searches scientific research papers and preprints.
 - search_document: Searches uploaded documents for keywords and topics.
 - get_reference_url: Retrieves external documentation and reference URLs stored in the session.
+- get_user_preferences: Retrieves stored user preferences to adhere to.
 - clean_document: Deletes uploaded documents from the current workspace.
 - calculate: Evaluates mathematical expressions accurately.
 - export_pdf: Exports the canvas diagram and chat transcript as a PDF report.
@@ -54,6 +57,7 @@ For non-diagramming technical questions, provide clear, structured, and rigorous
 - search_research: Searches scientific research papers and preprints.
 - search_document: Searches uploaded documents for keywords and topics.
 - get_reference_url: Retrieves external documentation and reference URLs stored in the session.
+- get_user_preferences: Retrieves stored user preferences to adhere to.
 - clean_document: Deletes uploaded documents from the current workspace.
 - calculate: Evaluates mathematical expressions accurately.
 - export_pdf: Exports the canvas diagram and chat transcript as a PDF report.
@@ -77,6 +81,10 @@ export function getVoiceLiveSystemPrompt(customDate?: string): string {
   return resolvePromptWithCurrentDate(VOICE_LIVE_AGENT_PROMPT_TEMPLATE, customDate);
 }
 
-export function getSubagentSystemPrompt(customDate?: string): string {
-  return resolvePromptWithCurrentDate(SUBAGENT_SYSTEM_PROMPT_TEMPLATE, customDate);
+export function getSubagentSystemPrompt(customDate?: string, userPreferences?: string[]): string {
+  const base = resolvePromptWithCurrentDate(SUBAGENT_SYSTEM_PROMPT_TEMPLATE, customDate);
+  if (userPreferences && userPreferences.length > 0) {
+    return base + formatPreferencesForPrompt(userPreferences);
+  }
+  return base;
 }

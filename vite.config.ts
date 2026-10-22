@@ -7,6 +7,8 @@ const ALLOWED_PROXY_HOSTS = new Set([
   'ollama.com',
   'generativelanguage.googleapis.com',
   'api.mistral.ai',
+  'api.openai.com',
+  'openai.com',
   'router.requesty.ai',
   'requesty.ai',
   'api.duckduckgo.com',

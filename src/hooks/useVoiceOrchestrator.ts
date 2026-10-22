@@ -19,6 +19,7 @@ export interface UseVoiceOrchestratorOptions {
   calculate: (expr: string) => any;
   exportPdf: () => any;
   getReferenceUrls: () => string[];
+  getUserPreferences?: () => string[];
 }
 
 export interface VoiceSettingsSavePayload {
@@ -29,6 +30,7 @@ export interface VoiceSettingsSavePayload {
   subagentModel: string;
   useTier1GeminiKey: boolean;
   geminiSubagentKey: string;
+  openaiKey: string;
   mistralKey: string;
   requestyKey: string;
   ollamaKey: string;
@@ -52,6 +54,8 @@ export interface UseVoiceOrchestratorResult {
   setUseTier1GeminiKey: (useTier1: boolean) => void;
   geminiSubagentKey: string;
   setGeminiSubagentKey: (key: string) => Promise<void>;
+  openaiKey: string;
+  setOpenAIKey: (key: string) => Promise<void>;
   mistralKey: string;
   setMistralKey: (key: string) => Promise<void>;
   requestyKey: string;
@@ -84,6 +88,7 @@ export function useVoiceOrchestrator({
   calculate,
   exportPdf,
   getReferenceUrls,
+  getUserPreferences,
 }: UseVoiceOrchestratorOptions): UseVoiceOrchestratorResult {
   const {
     apiKey,
@@ -101,6 +106,8 @@ export function useVoiceOrchestrator({
     setUseTier1GeminiKey,
     geminiSubagentKey,
     setGeminiSubagentKey,
+    openaiKey,
+    setOpenAIKey,
     mistralKey,
     setMistralKey,
     requestyKey,
@@ -139,6 +146,7 @@ export function useVoiceOrchestrator({
         calculate,
         exportPdf,
         getReferenceUrls,
+        getUserPreferences,
       },
     });
   }
@@ -164,6 +172,7 @@ export function useVoiceOrchestrator({
         calculate,
         exportPdf,
         getReferenceUrls,
+        getUserPreferences,
       });
     }
   }, [
@@ -207,6 +216,7 @@ export function useVoiceOrchestrator({
       setSubagentModel(settings.subagentModel);
       setUseTier1GeminiKey(settings.useTier1GeminiKey);
       await setGeminiSubagentKey(settings.geminiSubagentKey);
+      await setOpenAIKey(settings.openaiKey);
       await setMistralKey(settings.mistralKey);
       await setRequestyKey(settings.requestyKey);
       await setOllamaKey(settings.ollamaKey);
@@ -220,6 +230,7 @@ export function useVoiceOrchestrator({
       setSubagentModel,
       setUseTier1GeminiKey,
       setGeminiSubagentKey,
+      setOpenAIKey,
       setMistralKey,
       setRequestyKey,
       setOllamaKey,
@@ -244,6 +255,8 @@ export function useVoiceOrchestrator({
     setUseTier1GeminiKey,
     geminiSubagentKey,
     setGeminiSubagentKey,
+    openaiKey,
+    setOpenAIKey,
     mistralKey,
     setMistralKey,
     requestyKey,

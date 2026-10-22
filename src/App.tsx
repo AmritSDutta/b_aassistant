@@ -8,6 +8,12 @@ import { ChatArea } from './components/ChatArea';
 import { NotificationModal } from './components/NotificationModal';
 import { WelcomeModal } from './components/WelcomeModal';
 import { HistoryModal } from './components/HistoryModal';
+import { UserPreferencesModal } from './components/UserPreferencesModal';
+import {
+  loadUserPreferences,
+  addUserPreference,
+  removeUserPreference,
+} from './lib/userPreferences';
 import { WebMCPProvider } from './webmcp/provider';
 import { ToolContext } from './webmcp/tools';
 import { calculateMath } from './lib/mathEvaluator';
@@ -60,6 +66,12 @@ export const App: React.FC = () => {
   const referenceUrlsRef = useRef<string[]>(referenceUrls);
   referenceUrlsRef.current = referenceUrls;
 
+  const [userPreferences, setUserPreferences] = useState<string[]>(() => loadUserPreferences());
+  const userPreferencesRef = useRef<string[]>(userPreferences);
+  userPreferencesRef.current = userPreferences;
+
+  const [showPreferencesModal, setShowPreferencesModal] = useState<boolean>(false);
+
   const webmcpRef = useRef<WebMCPProvider | null>(null);
 
   // Attach client-side source protection
@@ -99,6 +111,7 @@ export const App: React.FC = () => {
     calculate: (expr: string) => calculateMath(expr),
     exportPdf: session.handleExportPdf,
     getReferenceUrls: () => referenceUrlsRef.current,
+    getUserPreferences: () => userPreferencesRef.current,
   });
 
   // WebMCP context updates
@@ -114,6 +127,7 @@ export const App: React.FC = () => {
         calculate: (expr: string) => calculateMath(expr),
         exportPdf: session.handleExportPdf,
         getReferenceUrls: () => referenceUrlsRef.current,
+        getUserPreferences: () => userPreferencesRef.current,
       });
     }
   }, [
@@ -149,6 +163,7 @@ export const App: React.FC = () => {
       calculate: (expr: string) => calculateMath(expr),
       exportPdf: () => webmcpHandlersRef.current.handleExportPdf(),
       getReferenceUrls: () => referenceUrlsRef.current,
+      getUserPreferences: () => userPreferencesRef.current,
     };
 
     const provider = new WebMCPProvider(context);
@@ -212,6 +227,31 @@ export const App: React.FC = () => {
     [updateWebMCPContext]
   );
 
+  const handleAddUserPreference = useCallback(
+    (preference: string): { success: boolean; error?: string } => {
+      const result = addUserPreference(preference, userPreferencesRef.current);
+      if (result.success) {
+        setUserPreferences(result.preferences);
+        userPreferencesRef.current = result.preferences;
+        updateWebMCPContext();
+      }
+      return { success: result.success, error: result.error };
+    },
+    [updateWebMCPContext]
+  );
+
+  const handleRemoveUserPreference = useCallback(
+    (index: number): void => {
+      const result = removeUserPreference(index, userPreferencesRef.current);
+      if (result.success) {
+        setUserPreferences(result.preferences);
+        userPreferencesRef.current = result.preferences;
+        updateWebMCPContext();
+      }
+    },
+    [updateWebMCPContext]
+  );
+
   return (
     <div
       className="flex h-screen w-screen overflow-hidden font-sans"
@@ -227,6 +267,7 @@ export const App: React.FC = () => {
           onToggleTheme={toggleTheme}
           onOpenTips={() => setShowWelcome(true)}
           onOpenVoiceSettings={() => voice.setShowVoiceSettings(true)}
+          onOpenPreferences={() => setShowPreferencesModal(true)}
         />
         <FileUpload
           activeDoc={doc.activeDoc}
@@ -301,10 +342,20 @@ export const App: React.FC = () => {
         useTier1GeminiKey={voice.useTier1GeminiKey}
         geminiSubagentKey={voice.geminiSubagentKey}
         mistralKey={voice.mistralKey}
+        openaiKey={voice.openaiKey}
         requestyKey={voice.requestyKey}
         ollamaKey={voice.ollamaKey}
         ollamaEndpoint={voice.ollamaEndpoint}
         onSave={voice.handleSaveSettings}
+      />
+
+      {/* User Preferences Modal */}
+      <UserPreferencesModal
+        isOpen={showPreferencesModal}
+        onClose={() => setShowPreferencesModal(false)}
+        preferences={userPreferences}
+        onAddPreference={handleAddUserPreference}
+        onRemovePreference={handleRemoveUserPreference}
       />
 
       {/* Audio Preflight Modal */}

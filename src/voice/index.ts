@@ -7,6 +7,7 @@ export * from './audio/recorder';
 export * from './audio/player';
 export * from './providers/geminiLiveProvider';
 export * from './providers/geminiSubagentProvider';
+export * from './providers/openAISubagentProvider';
 export * from './providers/mistralSubagentProvider';
 export * from './providers/requestySubagentProvider';
 export * from './providers/ollamaSubagentProvider';

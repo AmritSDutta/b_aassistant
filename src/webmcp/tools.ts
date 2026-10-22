@@ -23,6 +23,7 @@ export interface ToolContext {
   calculate?: (expression: string) => number;
   exportPdf?: () => { success: boolean; error?: string } | void;
   getReferenceUrls?: () => string[];
+  getUserPreferences?: () => string[];
 }
 
 export const TOOL_DEFINITIONS: WebMCPTool[] = [
@@ -40,6 +41,16 @@ export const TOOL_DEFINITIONS: WebMCPTool[] = [
     name: 'get_reference_url',
     description:
       'Returns a comma-separated list of reference and resource URLs stored in the browser session. Visiting LLMs use these URLs to fetch or cite external documentation and context.',
+    readOnlyHint: true,
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+  },
+  {
+    name: 'get_user_preferences',
+    description:
+      'Returns the list of stored user preferences (up to 10 items, max 120 characters each) configured in browser storage. Visiting LLMs and agents should call this tool to align their tone, formatting, diagram styles, and deliberation rules with user expectations.',
     readOnlyHint: true,
     inputSchema: {
       type: 'object',
@@ -345,6 +356,11 @@ export async function executeToolCall(
     case 'get_reference_url': {
       const urls = context.getReferenceUrls ? context.getReferenceUrls() : [];
       return urls.length > 0 ? urls.join(', ') : 'No reference URLs stored';
+    }
+
+    case 'get_user_preferences': {
+      const prefs = context.getUserPreferences ? context.getUserPreferences() : [];
+      return Array.isArray(prefs) ? prefs : [];
     }
 
     case 'canvas2d_draw_shapes': {

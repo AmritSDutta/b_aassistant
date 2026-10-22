@@ -65,6 +65,7 @@ export class VoiceBridge {
       calculate: this.toolContext.calculate,
       exportPdf: this.toolContext.exportPdf,
       getReferenceUrls: this.toolContext.getReferenceUrls,
+      getUserPreferences: this.toolContext.getUserPreferences,
     };
 
     return executeToolCall(name, args, fullContext);
@@ -73,7 +74,8 @@ export class VoiceBridge {
   private handleDiagramAndExplanation(args: Record<string, unknown>): Record<string, unknown> {
     const prompt = String(args.prompt || '');
     const clearFirst = args.clearCanvasFirst !== false;
-    const systemInstruction = getSubagentSystemPrompt();
+    const prefs = this.toolContext.getUserPreferences ? this.toolContext.getUserPreferences() : [];
+    const systemInstruction = getSubagentSystemPrompt(undefined, prefs);
 
     const task = this.taskManager.createTask('diagram_and_explanation', prompt);
 

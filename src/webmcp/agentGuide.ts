@@ -22,6 +22,7 @@ This guide explains how to use every other tool correctly. Read it before acting
 | \`search_web\` | \`{ query }\` | Live Tavily AI / DuckDuckGo results (carry a \`fetchedAt\`). |
 | \`search_research\` | \`{ query }\` | ArXiv papers/preprints (carry a \`fetchedAt\`). |
 | \`get_reference_url\` | \`{}\` | Read-only: comma-separated stored reference URLs. |
+| \`get_user_preferences\` | \`{}\` | Read-only: returns string array of stored user preferences (up to 10 items, max 120 chars each). |
 | \`calculate\` | \`{ expression }\` | Decimal-safe math, e.g. "12.5 * 4.2 + 3.1". |
 | \`export_pdf\` | \`{}\` | Build and download the session PDF (canvas snapshot + transcript). |
 | \`canvas_draw\` | \`{ command?, commands? }\` | LEGACY flat drawing (rect/circle/line/text/graph) — prefer \`canvas2d_draw_shapes\`. |
@@ -36,6 +37,7 @@ This guide explains how to use every other tool correctly. Read it before acting
 
 ## Research, Math & Context
 - \`get_reference_url\`: returns a comma-separated list of external reference and documentation URLs added by the user in the sidebar. Use these for external documentation and context.
+- \`get_user_preferences\`: returns string array of custom user guidelines (max 10, max 120 chars each). Always adhere to user preferences during tone selection, formatting, and diagramming.
 - \`search_web\` (keyless Tavily AI search as primary with automatic DuckDuckGo fallback) for general web lookups. Returns live results with a \`fetchedAt\` timestamp and \`source\`.
 - \`search_research\` (ArXiv) for scientific papers and preprints. Returns results with a \`fetchedAt\` timestamp.
 - If a search returns \`unavailable: true\`, the network is unreachable — tell the user you could not retrieve live data and do NOT invent results. Never present search output as fresher than its \`fetchedAt\`.
@@ -84,7 +86,7 @@ VERIFY BEFORE CLAIMING DONE: after drawing, call \`canvas2d_inspect_shapes\` and
   It FAILS on a blank session — draw something on the canvas or ensure chat messages exist first.
 
 ## Conventions
-1. Call this guide tool first in a new session, then \`get_chat_history\` for context.
+1. Call this guide tool first in a new session, then check \`get_user_preferences\` and \`get_chat_history\` for context and active user rules.
 2. Ground answers in \`search_document\` results when a document is loaded; cite page numbers.
 3. Inspect (\`canvas2d_inspect_shapes\`) before you modify; never clear unless asked.
 4. Draw with \`canvas2d_draw_shapes\`: give EVERY shape a \`type\`, label every connector, use the 4-tier column flow with under ~15 nodes, then verify counts with \`canvas2d_inspect_shapes\` before reporting success.

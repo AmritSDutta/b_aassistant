@@ -10,7 +10,7 @@ description: Zero-backend browser assistant empowering visiting LLMs with local 
 ## Key Features
 
 - **Strict 20/80 Layout**: 20% left sidebar for branding, upload, and export; 80% main area split into a 60% HTML5 canvas and 40% chat area.
-- **Unified WebMCP Provider**: Simultaneous support for `document.modelContext`, `navigator.modelContext`, `window.webmcp`, and `postMessage` JSON-RPC 2.0 with 17 registered tools and agent guide.
+- **Unified WebMCP Provider**: Simultaneous support for `document.modelContext`, `navigator.modelContext`, `window.webmcp`, and `postMessage` JSON-RPC 2.0 with 18 registered tools and agent guide.
 - **100% Private Document Ingestion**: Parses Doc/PDF files under 2MB client-side via LiteParse WASM and indexes chunks with BM25 into browser IndexedDB.
 - **Live Artistic Canvas2D Scene Graph**: Visiting LLMs draw and mutate persistent shapes, containers, connectors, and callouts with perimeter docking — rendered with Rough.js hand-drawn sketching and calibrated per theme — while users pan, wheel-zoom, Fit View, and Reset the viewport. See [Canvas2D Scene Graph](/canvas-and-pdf).
 - **Session Vault & Local Persistence**: Every deliberation turn is recorded in IndexedDB; browse, restore, export, or delete past sessions from the vault, and reloads rehydrate the chat stream and canvas scene graph. See [Session Vault](/sessions-vault).
@@ -34,6 +34,7 @@ description: Zero-backend browser assistant empowering visiting LLMs with local 
       <Tree.File name="HumanizedMessage.tsx" highlight />
       <Tree.File name="BlankSlot.tsx" highlight />
       <Tree.File name="HistoryModal.tsx" highlight />
+      <Tree.File name="UserPreferencesModal.tsx" highlight />
       <Tree.File name="WelcomeModal.tsx" />
       <Tree.File name="NotificationModal.tsx" />
     </Tree.Folder>
@@ -47,6 +48,7 @@ description: Zero-backend browser assistant empowering visiting LLMs with local 
       <Tree.File name="canvasEngine.ts" highlight />
       <Tree.File name="canvasHelper.ts" highlight />
       <Tree.File name="pdfExportService.ts" highlight />
+      <Tree.File name="userPreferences.ts" highlight />
       <Tree.File name="bm25.ts" highlight />
       <Tree.File name="idbStorage.ts" highlight />
       <Tree.File name="liteparseService.ts" />
@@ -75,6 +77,7 @@ description: Zero-backend browser assistant empowering visiting LLMs with local 
       <Tree.Folder name="providers">
         <Tree.File name="geminiLiveProvider.ts" highlight />
         <Tree.File name="geminiSubagentProvider.ts" />
+        <Tree.File name="openAISubagentProvider.ts" highlight />
       </Tree.Folder>
       <Tree.Folder name="config">
         <Tree.File name="modelRegistry.ts" />

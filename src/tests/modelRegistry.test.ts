@@ -5,6 +5,7 @@ import {
   DEFAULT_VOICE,
   LIVE_MODEL_OPTIONS,
   SUBAGENT_MODEL_OPTIONS,
+  SUBAGENT_PROVIDERS,
   STUDIO_VOICES,
 } from '../voice/config/modelRegistry';
 
@@ -39,5 +40,13 @@ describe('modelRegistry', () => {
     expect(voiceIds).toContain('Kore');
     expect(voiceIds).toContain('Fenrir');
     expect(voiceIds).toContain('Aoede');
+  });
+
+  it('contains openai in SUBAGENT_PROVIDERS with gpt-6-luna and gpt-5-nano', () => {
+    const openai = SUBAGENT_PROVIDERS.find((p) => p.id === 'openai');
+    expect(openai).toBeDefined();
+    expect(openai?.name).toBe('OpenAI');
+    expect(openai?.defaultModel).toBe('gpt-6-luna');
+    expect(openai?.presets.map((p) => p.id)).toEqual(['gpt-6-luna', 'gpt-5-nano']);
   });
 });

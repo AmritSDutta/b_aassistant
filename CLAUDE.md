@@ -39,9 +39,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Session vault**: `useSessionController` records every deliberation turn to IndexedDB via `globalIDBStorage.saveSessionTurn()` (stores `session_turns` + `session_meta` in `bAssistantDB` version 2) and restores the active session (messages + latest canvas `canvasShapes`) on mount. `HistoryModal.tsx`, opened from the sidebar `sessions` button, lists sessions via `getAllSessionsSummary()` with Restore / PDF / Delete actions handled in `useSessionController`.
 
 ### WebMCP Bridge
-- `src/webmcp/provider.ts` exposes **17 tools** on every discovery surface simultaneously: `document.modelContext`, `navigator.modelContext` + `navigator.modelContextTesting`, `window.webmcp` / `window.modelContext`, hidden DOM `<form toolname=...>` elements, `window.addEventListener('message')` (JSON-RPC 2.0), and `webmcp:ready` / `modelcontext:ready` custom events.
+- `src/webmcp/provider.ts` exposes **18 tools** on every discovery surface simultaneously: `document.modelContext`, `navigator.modelContext` + `navigator.modelContextTesting`, `window.webmcp` / `window.modelContext`, hidden DOM `<form toolname=...>` elements, `window.addEventListener('message')` (JSON-RPC 2.0), and `webmcp:ready` / `modelcontext:ready` custom events.
 - Lifecycle: native `registerTool` returns a promise that rejects on teardown, so `register()` captures and `.catch()`es it and `unregister()` calls `controller.abort('unregister')` — no unhandled `AbortError`. `App.tsx` constructs the provider **once** and proxies handlers through a ref (`updateWebMCPContext()` swaps closures in place), so message/URL changes never re-register or mid-session abort the tool set.
-- Tool registry (definitions + dispatch in `src/webmcp/tools.ts`): `get_tool_usage_prompt` (read-only, zero-arg; returns the agent operating guide from `src/webmcp/agentGuide.ts` — visiting agents should call it first), `get_reference_url` (read-only, zero-arg; returns comma-separated stored reference URLs), `chat_post`, `canvas2d_draw_shapes`, `canvas2d_inspect_shapes`, `canvas2d_modify_shape`, `canvas2d_clear`, `export_pdf`, `canvas_draw`, `draw_diagram`, `canvas_clear`, `get_chat_history`, `search_document`, `clean_document`, `search_web`, `search_research`, `calculate`.
+- Tool registry (definitions + dispatch in `src/webmcp/tools.ts`): `get_tool_usage_prompt` (read-only, zero-arg; returns the agent operating guide from `src/webmcp/agentGuide.ts` — visiting agents should call it first), `get_reference_url` (read-only, zero-arg; returns comma-separated stored reference URLs), `get_user_preferences` (read-only, zero-arg; returns string array of user preferences, max 10 items, max 120 chars each), `chat_post`, `canvas2d_draw_shapes`, `canvas2d_inspect_shapes`, `canvas2d_modify_shape`, `canvas2d_clear`, `export_pdf`, `canvas_draw`, `draw_diagram`, `canvas_clear`, `get_chat_history`, `search_document`, `clean_document`, `search_web`, `search_research`, `calculate`.
 
 ### Canvas2D Scene Graph
 - Shapes are typed in `src/types/canvas2d.ts`: `rectangle`, `ellipse`, `diamond`, `text`, `arrow`, `line`, `freedraw`, `sticker`. State persists as `Canvas2dShape[]` in the engine, not as pixels.
@@ -86,6 +86,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Subagent Role (`src/voice/prompts.ts`)**: General-purpose autonomous agent with deep specialization in tech product architecture, distributed systems, and technical workflows (`SUBAGENT_SYSTEM_PROMPT_TEMPLATE`).
 - **Provider Suite (`src/voice/providers/`)**: Unified under `ISubagentProvider` interface and instantiated via `createSubagentProvider` (`subagentFactory.ts`):
   - `gemini`: Native Google GenAI SDK (`gemini-3.5-flash-lite`, `gemini-3.1-flash-lite`, `gemini-2.5-flash`).
+  - `openai`: OpenAI REST via `/api/proxy` (`gpt-6-luna` [Default], `gpt-5-nano`).
   - `requesty`: OpenAI-compatible router at `https://router.requesty.ai/v1` with presets (`google/gemma-4-31b-it` [Default], `nvidia/muse-glimmer-30b`), direct browser CORS with `/api/proxy` fallback, and Cloudflare Pages CSP in `public/_headers`.
   - `mistral`: European frontier models (`ministral-14b-2512`, `ministral-8b-2512`, `ministral-3b-2512`) routed via `/api/proxy`.
   - `ollama`: Remote cloud endpoint (`https://ollama.com/api`) routed via `/api/proxy` and local daemon (`localhost:11434`).
@@ -100,10 +101,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `bm25_index`: serialized BM25 inverted index
   - `session_turns`: sequential turn-by-turn records (`id`, `sessionId`, `turnNumber`, `userPrompt?`, `agentMessage?`, `canvasSnapshot?`, `timestamp`)
   - `session_meta`: key-value metadata store (`active_session_id`)
-- Reference URLs cached in `localStorage['b_reference_urls']`. Tier 2 subagent keys stored in `localStorage` (`bassistant_requesty_api_key`, `bassistant_mistral_api_key`, `bassistant_ollama_api_key`). No external servers, no vector databases.
+- Reference URLs cached in `localStorage['b_reference_urls']`. User preferences cached in `localStorage['b_user_preferences']`. Tier 2 subagent keys stored in encrypted `localStorage` (`bassistant_openai_api_key`, `bassistant_requesty_api_key`, `bassistant_mistral_api_key`, `bassistant_ollama_api_key`). No external servers, no vector databases.
 
 ### Testing
-- All unit tests live in `src/tests/` (32 Vitest suites, 227 tests) and must remain strictly hermetic and isolated — no network, no real IndexedDB dependencies leaking between tests.
+- All unit tests live in `src/tests/` (35 Vitest suites, 259 tests) and must remain strictly hermetic and isolated — no network, no real IndexedDB dependencies leaking between tests.
 - Vitest is configured inside `vite.config.ts` (`environment: 'jsdom'`, `globals: true`); there is no separate vitest config file.
 - Canvas tests must exercise the real Rough.js path: mock `getContext()` with an object whose `canvas.getContext()` returns itself, or `getRoughCanvas()` returns `null` and Rough never runs (this blind spot previously hid a rectangle regression).
 - If React component tests fail with `act(...) is not supported in production builds of React`, the shell has `NODE_ENV=production`; run `NODE_ENV=test npm test` (`set NODE_ENV=test&& npx vitest run` on Windows cmd) instead.

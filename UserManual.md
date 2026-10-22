@@ -45,7 +45,7 @@ bAssistant is structured as an ergonomic **20/80 dual-zone cockpit**:
 +---------------------+-------------------------------------------------------+
 ```
 
-- **Top-Left Header**: Dynamic theme-aware branding logo, `[ tips ]` onboarding guide button, `[ 🎙️ voice ]` shortcut button, and `[ ☀ light / ☾ dark ]` mode toggle.
+- **Top-Left Header**: Dynamic theme-aware branding logo, and a 2-tiered right-aligned action cluster with Tier 1 utility buttons (`[ tips ]`, `[ 🎙️ voice ]`, `[ ☀ light / ☾ dark ]`) and a Tier 2 long single `[ ⚙️ user preferences ]` button.
 - **Left Sidebar**: Document uploader, external reference links manager, session star repository, and sessions archive footer.
 - **Main Area**: Top 60% HTML5 Canvas2D studio and bottom 40% readable chat area with font sizing, reading progress tracking, and docked Voice Live Controller HUD.
 
@@ -88,11 +88,12 @@ bAssistant automatically registers a multi-standard WebMCP provider on four glob
 3. `window.webmcp`
 4. `postMessage` JSON-RPC 2.0 (for iframes and browser extensions)
 
-### 17 Built-In WebMCP Tools Available to Your Agent
+### 18 Built-In WebMCP Tools Available to Your Agent
 | Tool Name | Category | Purpose |
 | :--- | :--- | :--- |
 | `get_tool_usage_prompt` | Core | Returns operating instructions for visiting AI agents. |
 | `get_reference_url` | Context | Fetches up to 10 stored reference URLs added by the user. |
+| `get_user_preferences` | Context | Fetches up to 10 user preference strings (max 120 chars each) for custom guidelines. |
 | `search_document` | Documents | Queries uploaded PDF/DOCX chunks using client-side BM25. |
 | `clean_document` | Documents | Clears active document chunks from IndexedDB. |
 | `canvas2d_draw_shapes` | Canvas | Appends structured shapes (`rectangle`, `ellipse`, `diamond`, `text`, `sticker`) and perimeter-docked arrows. |
@@ -112,7 +113,7 @@ bAssistant automatically registers a multi-standard WebMCP provider on four glob
 ### Testing via WebMCP Inspector
 1. Install the Chrome **WebMCP Inspector** extension.
 2. Open bAssistant and navigate to the WebMCP Inspector tab in Chrome DevTools.
-3. You will see all 17 tools listed. You can invoke them manually or attach your LLM API key directly in the extension to let your model explore and draw live.
+3. You will see all 18 tools listed. You can invoke them manually or attach your LLM API key directly in the extension to let your model explore and draw live.
 
 ### First Instruction to Give Your Agent (Copy–Paste)
 Paste this as the opening prompt of a new session:
@@ -145,6 +146,16 @@ Ground your visiting AI model with up to 10 live documentation links or referenc
 3. Visiting agents invoke `get_reference_url` to read your stored links and tailor their research.
 4. Click the **×** button beside any link to remove it from your session.
 
+### 5.1 User Preferences Engine
+Define custom stylistic, architectural, and formatting preferences for your AI assistant:
+1. Click the `[ ⚙️ user preferences ]` button in the cockpit header to open the **User Preferences** modal.
+2. Enter any custom instruction (e.g., *"Always format diagram nodes in pastel blue"*, *"Highlight security bottlenecks in red"*).
+3. **Capacity & Length Rules**: Enforces up to **10 preferences**, each capped at **120 characters**, with live character count indicators (`X / 120`) and remaining slot tracking.
+4. **Subagent & WebMCP Integration**:
+   - Injected automatically into Tier 2 subagent system prompts during diagram generation.
+   - Available to visiting external AI models via the read-only WebMCP tool `get_user_preferences` (returns `string[]`).
+5. Persisted securely in client browser storage (`localStorage['b_user_preferences']`).
+
 ---
 
 ## 6. Interactive Canvas2D Diagram Studio
@@ -171,25 +182,28 @@ bAssistant features a real-time, low-latency conversational voice assistant powe
   A versatile autonomous background subagent specialized in architecting tech products, distributed systems, and technical workflows. When you ask for an architecture diagram, flowchart, or deep technical design, Tier 1 delegates the task via `generate_diagram_and_explanation` and immediately acknowledges verbally (*"I'm drawing that architecture on the canvas for you now..."*). Tier 2 renders the Canvas2D shapes, arranges nodes and perimeter-docked connectors, and writes the complete structured breakdown into the dialogue reader.
 
 ### 7.2 Multi-Provider Tier 2 Subagent Suite
-bAssistant decouples the visual diagramming engine from any single vendor. You can choose from four subagent provider backends in Voice Settings:
+bAssistant decouples the visual diagramming engine from any single vendor. You can choose from five subagent provider backends in Voice Settings:
 
 1. **Google Gemini (`gemini`)**:
    - Direct client-side SDK integration via `@google/genai`.
    - Toggle *"Use Tier 1 Gemini API Key"* to reuse your live voice key or supply a dedicated subagent key.
    - Recommended presets: `gemini-3.5-flash-lite` (Recommended), `gemini-3.1-flash-lite`, `gemini-2.5-flash`.
-2. **Requesty AI (`requesty`)**:
+2. **OpenAI (`openai`)**:
+   - Frontier reasoning and compact models routed via same-origin `/api/proxy` to eliminate browser CORS blocks.
+   - Recommended presets: `gpt-6-luna` (Default frontier reasoning subagent), `gpt-5-nano` (Fast compact subagent).
+3. **Requesty AI (`requesty`)**:
    - Unified high-speed AI router with Base URL `https://router.requesty.ai/v1` (auto-mapped to `/chat/completions`).
    - Direct browser CORS enabled with automatic same-origin `/api/proxy` fallback.
    - Cloudflare Pages CSP in `public/_headers` explicitly allows `https://router.requesty.ai` and `https://*.requesty.ai`.
    - Curated presets: `google/gemma-4-31b-it` (Default dense multimodal and structured engine), `nvidia/muse-glimmer-30b` (Superior synthesis & architecture).
-3. **Mistral AI (`mistral`)**:
+4. **Mistral AI (`mistral`)**:
    - Frontier European models with deep coding and system reasoning intelligence.
    - Routed through the same-origin `/api/proxy` to eliminate browser CORS preflight errors.
    - Recommended presets: `ministral-14b-2512` (Default dense subagent), `ministral-8b-2512`, `ministral-3b-2512`.
-4. **Ollama Cloud / Local (`ollama`)**:
+5. **Ollama Cloud / Local (`ollama`)**:
    - Remote cloud API endpoint `https://ollama.com/api` (routed via `/api/proxy`) or local Ollama daemon (`http://localhost:11434/api/chat`).
    - Recommended presets: `gemma4:31b-cloud` (Default), `nemotron-3-super:cloud`, `nemotron-3-nano:30b-cloud`, `beam:cloud`.
-5. **⚙️ Custom Model IDs**:
+6. **⚙️ Custom Model IDs**:
    - Select **⚙️ Custom Model ID...** in the model dropdown to specify any model identifier supported by your chosen provider (e.g., `meta-llama/llama-3.3-70b-instruct`).
 
 ### 7.3 Interactive Connection Preflight (`⚡ Run Quick Test`) & Save Gating
@@ -203,7 +217,7 @@ To prevent runtime diagramming failures due to mistyped keys or endpoint typos, 
 2. Enter your Google Gemini API key for Tier 1.
 3. Select your preferred voice persona (`Puck`, `Charon`, `Kore`, `Fenrir`, or `Aoede`).
 4. Choose your Tier 2 Subagent Provider, model preset, and subagent API key.
-5. **Zero-Knowledge Encryption**: Your Tier 1 Gemini API key is encrypted directly in your browser using **Web Crypto AES-GCM-256** with an ephemeral salt and saved into IndexedDB (`bassistant_secure_vault`). It is never stored in plaintext `localStorage`, never logged, and never transmitted to any proxy. Subagent provider keys are securely stored in local storage (`bassistant_requesty_api_key`, `bassistant_mistral_api_key`, `bassistant_ollama_api_key`).
+5. **Zero-Knowledge Encryption**: Your Tier 1 Gemini API key is encrypted directly in your browser using **Web Crypto AES-GCM-256** with an ephemeral salt and saved into IndexedDB (`bassistant_secure_vault`). It is never stored in plaintext `localStorage`, never logged, and never transmitted to any proxy. Subagent provider keys are securely stored in local storage (`bassistant_openai_api_key`, `bassistant_requesty_api_key`, `bassistant_mistral_api_key`, `bassistant_ollama_api_key`).
 
 ### 7.5 Starting a Voice Session & Preflight Audio Check
 1. Click the microphone icon in the Voice HUD docked in the dialogue reader header (or the header shortcut).
