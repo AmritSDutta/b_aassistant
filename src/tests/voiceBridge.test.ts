@@ -81,14 +81,14 @@ The API gateway terminates incoming HTTPS requests and delegates authentication 
     expect(task?.status).toBe('completed');
     expect(task?.shapesCount).toBe(3);
 
-    // Verify subagent called with date-anchored prompt and WebMCP tools catalog
+    // Verify subagent called with date-anchored prompt
     expect(mockSubagent.generateText).toHaveBeenCalledWith(
       expect.stringContaining('Design an API Gateway with Auth Service'),
       expect.stringContaining('You are working as of:')
     );
     expect(mockSubagent.generateText).toHaveBeenCalledWith(
       expect.any(String),
-      expect.stringContaining('Available WebMCP Tools:')
+      expect.stringContaining('expert system architect and visual designer')
     );
 
     // Verify canvas scene contains the shapes
@@ -221,5 +221,35 @@ The API gateway terminates incoming HTTPS requests and delegates authentication 
     expect(queryResult.found).toBe(true);
     expect(queryResult.status).toBe('completed');
     expect(queryResult.taskId).toBe(dispatch.taskId);
+  });
+
+  it('correctly parses toolcall XML with argvalue tags and strips them from explanation', async () => {
+    const rawXmlOutput = `I'll design an architecture diagram for the event processing pipeline.
+<toolcall>canvas2ddrawshapes<argkey>shapes</argkey><argvalue>{"shapes": [{"type": "rectangle", "id": "event_source", "text": "Event Ingestion", "x": 100, "y": 200, "width": 160, "height": 80, "fillColor": "#4A90D9", "strokeColor": "#2C5AA0"}]}</argvalue></toolcall>
+### Pipeline Overview
+Events arrive via webhook and are buffered for downstream processing.`;
+
+    (mockSubagent.generateText as ReturnType<typeof vi.fn>).mockResolvedValue(rawXmlOutput);
+
+    const bridge = new VoiceBridge({
+      subagent: mockSubagent,
+      postChatMessage: (msg: string) => postedMessages.push(msg),
+    });
+
+    await bridge.handleToolCall('generate_diagram_and_explanation', {
+      prompt: 'Design event pipeline',
+      clearCanvasFirst: true,
+    });
+
+    await bridge.getActiveDiagramTask();
+
+    const shapes = globalCanvasEngine.getShapes();
+    expect(shapes.length).toBe(1);
+    expect(shapes[0].id).toBe('event_source');
+
+    expect(postedMessages.length).toBe(1);
+    expect(postedMessages[0]).toContain('### Pipeline Overview');
+    expect(postedMessages[0]).not.toContain('<toolcall>');
+    expect(postedMessages[0]).not.toContain('</toolcall>');
   });
 });

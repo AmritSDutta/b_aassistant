@@ -51,16 +51,15 @@ the `dist/` output (dashboard drag-and-drop or Wrangler).
 > of `dist/`, so it is served independently of the fingerprinted `dist/assets/` bundle. Any hosting
 > setup must preserve this root path.
 
-## `/api` Search Functions
+## `/api` Proxy & Search Functions
 
-Web search and academic search cannot be fetched directly from the browser (those hosts send no CORS
-headers), so the app calls relative `/api/*` URLs. In production these are served by **Cloudflare Pages
-Functions** in `functions/`:
+Web search, academic search, and certain AI providers (like Ollama Cloud) cannot be fetched directly from the browser due to lack of CORS headers on upstream origins, so the app calls relative `/api/*` URLs. In production these are served by **Cloudflare Pages Functions** in `functions/`:
 
 | Route | File | Upstream |
 | :--- | :--- | :--- |
 | `/api/arxiv` | `functions/api/arxiv.ts` | `https://export.arxiv.org/api/query` (pass-through Atom XML) |
 | `/api/websearch` | `functions/api/websearch.ts` | Keyless Tavily AI search (primary) with a DuckDuckGo HTML fallback, normalized via `src/lib/tavilySearch.ts` / `src/lib/ddgSearch.ts` |
+| `/api/proxy` | `functions/api/proxy.ts` | Secure server-side proxy for CORS-restricted AI endpoints (e.g., `ollama.com`) with strict host allowlisting |
 
 `public/_routes.json` scopes Function invocation to `/api/*` (`{ "include": ["/api/*"], "exclude": [] }`),
 so every other path remains a static asset:

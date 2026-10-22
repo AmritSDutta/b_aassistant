@@ -4,8 +4,9 @@ import { DocumentSearchResult } from './useDocumentController';
 import {
   useVoiceSettings,
   useVoiceAgent,
-  GeminiSubagentProvider,
+  createSubagentProvider,
   VoiceBridge,
+  SubagentProviderType,
 } from '../voice';
 
 export interface UseVoiceOrchestratorOptions {
@@ -20,16 +21,46 @@ export interface UseVoiceOrchestratorOptions {
   getReferenceUrls: () => string[];
 }
 
+export interface VoiceSettingsSavePayload {
+  apiKey: string;
+  liveModel: string;
+  studioVoice: string;
+  subagentProvider: SubagentProviderType;
+  subagentModel: string;
+  useTier1GeminiKey: boolean;
+  geminiSubagentKey: string;
+  mistralKey: string;
+  requestyKey: string;
+  ollamaKey: string;
+  ollamaEndpoint: string;
+}
+
 export interface UseVoiceOrchestratorResult {
   voiceAgent: ReturnType<typeof useVoiceAgent>;
   apiKey: string;
   setApiKey: (key: string) => Promise<void>;
   liveModel: string;
   setLiveModel: (model: string) => void;
-  subagentModel: string;
-  setSubagentModel: (model: string) => void;
   studioVoice: string;
   setStudioVoice: (voice: string) => void;
+
+  subagentProvider: SubagentProviderType;
+  setSubagentProvider: (provider: SubagentProviderType) => void;
+  subagentModel: string;
+  setSubagentModel: (model: string) => void;
+  useTier1GeminiKey: boolean;
+  setUseTier1GeminiKey: (useTier1: boolean) => void;
+  geminiSubagentKey: string;
+  setGeminiSubagentKey: (key: string) => Promise<void>;
+  mistralKey: string;
+  setMistralKey: (key: string) => Promise<void>;
+  requestyKey: string;
+  setRequestyKey: (key: string) => Promise<void>;
+  ollamaKey: string;
+  setOllamaKey: (key: string) => Promise<void>;
+  ollamaEndpoint: string;
+  setOllamaEndpoint: (endpoint: string) => void;
+
   showVoiceSettings: boolean;
   setShowVoiceSettings: React.Dispatch<React.SetStateAction<boolean>>;
   showPreflight: boolean;
@@ -37,12 +68,7 @@ export interface UseVoiceOrchestratorResult {
   isPreflightApproved: boolean;
   setIsPreflightApproved: React.Dispatch<React.SetStateAction<boolean>>;
   handlePreflightSuccess: () => void;
-  handleSaveSettings: (settings: {
-    apiKey: string;
-    liveModel: string;
-    subagentModel: string;
-    studioVoice: string;
-  }) => Promise<void>;
+  handleSaveSettings: (settings: VoiceSettingsSavePayload) => Promise<void>;
 }
 
 /**
@@ -64,20 +90,44 @@ export function useVoiceOrchestrator({
     setApiKey,
     liveModel,
     setLiveModel,
-    subagentModel,
-    setSubagentModel,
     studioVoice,
     setStudioVoice,
+
+    subagentProvider,
+    setSubagentProvider,
+    subagentModel,
+    setSubagentModel,
+    useTier1GeminiKey,
+    setUseTier1GeminiKey,
+    geminiSubagentKey,
+    setGeminiSubagentKey,
+    mistralKey,
+    setMistralKey,
+    requestyKey,
+    setRequestyKey,
+    ollamaKey,
+    setOllamaKey,
+    ollamaEndpoint,
+    setOllamaEndpoint,
+    getActiveSubagentApiKey,
   } = useVoiceSettings();
 
   const [showVoiceSettings, setShowVoiceSettings] = useState<boolean>(false);
   const [showPreflight, setShowPreflight] = useState<boolean>(false);
   const [isPreflightApproved, setIsPreflightApproved] = useState<boolean>(false);
 
+  const activeSubagentKey = getActiveSubagentApiKey();
+  const activeEndpoint = subagentProvider === 'ollama' ? ollamaEndpoint : undefined;
+
   const voiceBridgeRef = useRef<VoiceBridge | null>(null);
   if (!voiceBridgeRef.current) {
     voiceBridgeRef.current = new VoiceBridge({
-      subagent: new GeminiSubagentProvider(apiKey, subagentModel),
+      subagent: createSubagentProvider({
+        provider: subagentProvider,
+        apiKey: activeSubagentKey,
+        model: subagentModel,
+        endpoint: activeEndpoint,
+      }),
       postChatMessage: postMessage,
       toolContext: {
         getMessages,
@@ -95,7 +145,14 @@ export function useVoiceOrchestrator({
 
   useEffect(() => {
     if (voiceBridgeRef.current) {
-      voiceBridgeRef.current.setSubagent(new GeminiSubagentProvider(apiKey, subagentModel));
+      voiceBridgeRef.current.setSubagent(
+        createSubagentProvider({
+          provider: subagentProvider,
+          apiKey: activeSubagentKey,
+          model: subagentModel,
+          endpoint: activeEndpoint,
+        })
+      );
       voiceBridgeRef.current.setPostChatMessage(postMessage);
       voiceBridgeRef.current.setToolContext({
         getMessages,
@@ -110,8 +167,10 @@ export function useVoiceOrchestrator({
       });
     }
   }, [
-    apiKey,
+    subagentProvider,
+    activeSubagentKey,
     subagentModel,
+    activeEndpoint,
     postMessage,
     searchDocument,
     cleanDocument,
@@ -140,18 +199,32 @@ export function useVoiceOrchestrator({
   }, [voiceAgent]);
 
   const handleSaveSettings = useCallback(
-    async (settings: {
-      apiKey: string;
-      liveModel: string;
-      subagentModel: string;
-      studioVoice: string;
-    }): Promise<void> => {
+    async (settings: VoiceSettingsSavePayload): Promise<void> => {
       await setApiKey(settings.apiKey);
       setLiveModel(settings.liveModel);
-      setSubagentModel(settings.subagentModel);
       setStudioVoice(settings.studioVoice);
+      setSubagentProvider(settings.subagentProvider);
+      setSubagentModel(settings.subagentModel);
+      setUseTier1GeminiKey(settings.useTier1GeminiKey);
+      await setGeminiSubagentKey(settings.geminiSubagentKey);
+      await setMistralKey(settings.mistralKey);
+      await setRequestyKey(settings.requestyKey);
+      await setOllamaKey(settings.ollamaKey);
+      setOllamaEndpoint(settings.ollamaEndpoint);
     },
-    [setApiKey, setLiveModel, setSubagentModel, setStudioVoice]
+    [
+      setApiKey,
+      setLiveModel,
+      setStudioVoice,
+      setSubagentProvider,
+      setSubagentModel,
+      setUseTier1GeminiKey,
+      setGeminiSubagentKey,
+      setMistralKey,
+      setRequestyKey,
+      setOllamaKey,
+      setOllamaEndpoint,
+    ]
   );
 
   return {
@@ -160,10 +233,26 @@ export function useVoiceOrchestrator({
     setApiKey,
     liveModel,
     setLiveModel,
-    subagentModel,
-    setSubagentModel,
     studioVoice,
     setStudioVoice,
+
+    subagentProvider,
+    setSubagentProvider,
+    subagentModel,
+    setSubagentModel,
+    useTier1GeminiKey,
+    setUseTier1GeminiKey,
+    geminiSubagentKey,
+    setGeminiSubagentKey,
+    mistralKey,
+    setMistralKey,
+    requestyKey,
+    setRequestyKey,
+    ollamaKey,
+    setOllamaKey,
+    ollamaEndpoint,
+    setOllamaEndpoint,
+
     showVoiceSettings,
     setShowVoiceSettings,
     showPreflight,

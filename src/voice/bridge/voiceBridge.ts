@@ -190,6 +190,21 @@ export class VoiceBridge {
     let shapes: Canvas2dShape[] | null = null;
     let explanation = text;
 
+    const toolCallRegex = /<(?:toolcall|tool_call)>[\s\S]*?<argvalue>([\s\S]*?)<\/argvalue>[\s\S]*?<\/(?:toolcall|tool_call)>/i;
+    const toolCallMatch = text.match(toolCallRegex);
+    if (toolCallMatch) {
+      try {
+        const parsed = JSON.parse(toolCallMatch[1].trim());
+        if (parsed && Array.isArray(parsed.shapes)) {
+          shapes = parsed.shapes as Canvas2dShape[];
+          explanation = text.replace(toolCallMatch[0], '').trim();
+          return { shapes, explanation };
+        }
+      } catch {
+        // Fall back to subsequent strategies
+      }
+    }
+
     const jsonBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/g;
     let match: RegExpExecArray | null;
 

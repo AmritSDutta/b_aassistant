@@ -50,7 +50,7 @@ Real-time audio models (`gemini-3.8-live`, `gemini-2.5-flash-native-audio-previe
 
 To solve this, bAssistant decouples conversational speech from heavy technical synthesis:
 1. **Tier 1 (Audio Orchestrator)**: `gemini-3.8-live` handles real-time conversational banter, microphone audio streaming, and voice personality. When diagrams are requested, it invokes `generate_diagram_and_explanation` as an internal asynchronous bridge tool, immediately receiving confirmation so it can acknowledge to the user with zero awkward pause.
-2. **Tier 2 (Structured Subagent)**: `gemini-3.5-flash-lite` runs in the background to generate dense Canvas2D shapes and comprehensive markdown breakdowns when the user asks for diagrams, system designs, or calculations.
+2. **Tier 2 (Structured Subagent)**: Runs asynchronously in the background to generate dense Canvas2D shapes and comprehensive markdown breakdowns when the user asks for diagrams, system designs, or calculations. Supports Google Gemini, Mistral AI, Requesty AI, and Ollama Cloud (see [Tier 2 Subagent Providers](subagent-providers)).
 
 ---
 
@@ -120,7 +120,7 @@ To prevent API keys stored in the browser from being exfiltrated via third-party
    ```
    __BASSISTANT_ENC__:v1:<base64_iv>:<base64_ciphertext>
    ```
-4. Raw secret key bytes never leave the local browser environment.
+4. Raw secret key bytes never leave the local browser environment. For the complete list of storage keys and envelope schemas, see [Storage Keys & Encrypted Vault Schema](storage-keys).
 
 ---
 

@@ -175,6 +175,10 @@ Self-contained, decoupled voice package:
 - `audio/player.ts`: `StreamingAudioPlayer` gapless 24 kHz scheduler with instant barge-in `interrupt()`.
 - `providers/geminiLiveProvider.ts`: `ILiveVoiceProvider` implementation via `@google/genai` (`ai.live.connect`). `close()` terminates the active WebSocket via `session.conn.close(1000, 'Normal Closure')` and disposes `StreamingAudioPlayer`.
 - `providers/geminiSubagentProvider.ts`: `ISubagentProvider` implementation via `@google/genai` (`ai.models.generateContent`).
+- `providers/mistralSubagentProvider.ts`: `ISubagentProvider` implementation calling Mistral AI chat completions with Bearer token authentication.
+- `providers/requestySubagentProvider.ts`: `ISubagentProvider` implementation calling Requesty AI router with native CORS, automatic prefix scrapping, and CSP allowlisting.
+- `providers/ollamaSubagentProvider.ts`: `ISubagentProvider` implementation targeting the Ollama Cloud endpoint (`https://ollama.com/api/chat`) with Bearer token authentication.
+- `providers/subagentFactory.ts`: Factory resolver (`createSubagentProvider`) instantiating the matching provider class based on active settings.
 - `bridge/voiceBridge.ts`: WebMCP tool translation and subagent task coordination (clears canvas, draws fresh shapes, posts answer to chat, returns voice summary).
 - `hooks/useVoiceAgent.ts`: React voice agent lifecycle hook equipped with an `isSessionActiveRef` cancellation token guarding asynchronous events (`onEnd`, `onTurnComplete`, `onStart`) from mutating state when stopped, guaranteeing reliable `standby` reset.
 - `components/VoiceLiveController.tsx`, `VoiceSettingsModal.tsx`, `AudioPreflightModal.tsx`: Voice UI components and modal dialogs styled strictly with the application's semantic CSS design tokens (`var(--panel)`, `var(--card)`, `var(--paper)`, `var(--line)`, `var(--ink)`, `var(--ink-soft)`), fully harmonized for light/dark theme toggling without hardcoded zinc backgrounds.

@@ -167,9 +167,15 @@ Source: `research.md` (dwell-time mechanisms 1–6).
   - **Tier 1 (Conversational Audio Orchestrator)**: Default `gemini-3.8-live` handling 16 kHz microphone capture via `AudioWorkletProcessor` (`public/audio-capture-processor.js`), 24 kHz gapless PCM output playback, and zero-latency barge-in interruption (audio halts instantly on user speech).
   - **Tier 2 (Domain Subagent Engine)**: High-throughput text generator (`gemini-3.5-flash-lite`) invoked when diagrams or in-depth technical analysis are requested via the asynchronous bridge tool (`generate_diagram_and_explanation`). The bridge returns immediately to Tier 1 to prevent voice pauses, while the subagent runs in the background to clear the canvas, draw fresh shapes, and post the substantive technical explanation directly to the chat area and IndexedDB.
 - **Ephemeral Spoken Conversation Policy**: Spoken speech turns and live audio chitchat remain ephemeral in the audio stream and Voice HUD caption pill. They are **not** written to the persistent dialogue history, keeping the reading notes and PDF reports clean and executive.
-- **Pluggable Provider Contracts**: Abstract interfaces (`ILiveVoiceProvider` and `ISubagentProvider`) decouple the audio pipeline from Google Gemini, allowing OpenAI Realtime, Mistral, or local Ollama models to be plugged in effortlessly.
-- **Hardware Preflight Modal**: Quick 1-second audio check verifying microphone permissions and visual volume meter before initiating the live socket connection.
-- **Client-Side Key Encryption**: Encrypts user API keys with 256-bit AES-GCM via Web Cryptography API (`window.crypto.subtle`) using non-extractable keys in IndexedDB (`bassistant_secure_vault`), saving formatted ciphertext (`__BASSISTANT_ENC__:v1:...`) to `localStorage` under `bassistant_` prefix.
+- **Multi-Provider Tier 2 Subagent Engine**:
+  - Implements `ISubagentProvider` across **Google Gemini**, **Mistral AI**, **Requesty AI**, and **Ollama Cloud**.
+  - **Google Gemini**: Integrates `@google/genai` with optional Tier 1 key inheritance or dedicated subagent key.
+  - **Mistral AI**: Calls `POST https://api.mistral.ai/v1/chat/completions` with Bearer authorization.
+  - **Requesty AI**: OpenAI-compatible router at `https://router.requesty.ai/v1/chat/completions` with native CORS, automatic prefix scrapping, and CSP allowlisting.
+  - **Ollama Cloud**: Fixed cloud endpoint `https://ollama.com/api/chat` authenticated via Bearer token.
+  - **Custom Model IDs**: Allows users to specify arbitrary model strings alongside curated presets for any provider.
+  - **Interactive Quick Test Preflight**: In-memory connection test validates API keys and model availability with live latency feedback before saving; mandatory before saving when Tier 2 settings are changed.
+- **Client-Side Key Encryption**: Encrypts user API keys with 256-bit AES-GCM via Web Cryptography API (`window.crypto.subtle`) using non-extractable keys in IndexedDB (`bassistant_secure_vault`), saving formatted ciphertext (`__BASSISTANT_ENC__:v1:...`) to `localStorage` under `bassistant_` prefix. Preserves separate encrypted key slots per provider.
 - **Centralized Prompts & Dynamic Temporal Anchoring (`src/voice/prompts.ts`)**:
   - System prompt templates for both Tier 1 Live Voice and Tier 2 Subagent are maintained in a dedicated module.
   - Dynamic runtime temporal anchoring replaces `{current_date}` with the real-time calendar date (`YYYY-MM-DD`) at dispatch time.

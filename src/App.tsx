@@ -295,8 +295,15 @@ export const App: React.FC = () => {
         onClose={() => voice.setShowVoiceSettings(false)}
         apiKey={voice.apiKey}
         liveModel={voice.liveModel}
-        subagentModel={voice.subagentModel}
         studioVoice={voice.studioVoice}
+        subagentProvider={voice.subagentProvider}
+        subagentModel={voice.subagentModel}
+        useTier1GeminiKey={voice.useTier1GeminiKey}
+        geminiSubagentKey={voice.geminiSubagentKey}
+        mistralKey={voice.mistralKey}
+        requestyKey={voice.requestyKey}
+        ollamaKey={voice.ollamaKey}
+        ollamaEndpoint={voice.ollamaEndpoint}
         onSave={voice.handleSaveSettings}
       />
 

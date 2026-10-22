@@ -11,9 +11,75 @@ export interface VoiceOption {
   tone: string;
 }
 
+export type SubagentProviderType = 'gemini' | 'mistral' | 'requesty' | 'ollama';
+
+export interface SubagentProviderOption {
+  id: SubagentProviderType;
+  name: string;
+  description: string;
+  defaultModel: string;
+  defaultEndpoint?: string;
+  keyPlaceholder: string;
+  presets: { id: string; label: string; description?: string }[];
+}
+
 export const DEFAULT_LIVE_MODEL = 'gemini-3.8-live';
+export const DEFAULT_SUBAGENT_PROVIDER: SubagentProviderType = 'gemini';
 export const DEFAULT_SUBAGENT_MODEL = 'gemini-3.5-flash-lite';
 export const DEFAULT_VOICE = 'Puck';
+
+export const SUBAGENT_PROVIDERS: SubagentProviderOption[] = [
+  {
+    id: 'gemini',
+    name: 'Google Gemini',
+    description: 'Native Google GenAI model suite with high throughput and direct SDK integration',
+    defaultModel: 'gemini-3.5-flash-lite',
+    keyPlaceholder: 'AIzaSy...',
+    presets: [
+      { id: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash Lite (Recommended)', description: 'Fast, structured payloads' },
+      { id: 'gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash Lite', description: 'Compact reasoning' },
+      { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', description: 'Balanced performance' },
+    ],
+  },
+  {
+    id: 'mistral',
+    name: 'Mistral AI',
+    description: 'Frontier European models with exceptional reasoning and code intelligence',
+    defaultModel: 'ministral-14b-2512',
+    keyPlaceholder: 'mis_...',
+    presets: [
+      { id: 'ministral-14b-2512', label: 'Ministral 14B 2512 (Default)', description: 'High-capability dense subagent' },
+      { id: 'ministral-8b-2512', label: 'Ministral 8B 2512', description: 'Balanced reasoning & synthesis' },
+      { id: 'ministral-3b-2512', label: 'Ministral 3B 2512', description: 'Fast, lightweight edge subagent' },
+    ],
+  },
+  {
+    id: 'requesty',
+    name: 'Requesty AI',
+    description: 'Unified high-speed AI router with cutting-edge frontier and open models',
+    defaultModel: 'google/gemma-4-31b-it',
+    defaultEndpoint: 'https://router.requesty.ai/v1',
+    keyPlaceholder: 'req_...',
+    presets: [
+      { id: 'google/gemma-4-31b-it', label: 'Google Gemma 4 31B IT (Default)', description: 'Dense multimodal and structured payload engine' },
+      { id: 'nvidia/muse-glimmer-30b', label: 'NVIDIA Muse Glimmer 30B', description: 'Superior synthesis & architecture' },
+    ],
+  },
+  {
+    id: 'ollama',
+    name: 'Ollama Cloud',
+    description: 'Hosted Ollama cloud API endpoint with managed frontier models',
+    defaultModel: 'gemma4:31b-cloud',
+    defaultEndpoint: 'https://ollama.com/api',
+    keyPlaceholder: 'ollama_...',
+    presets: [
+      { id: 'gemma4:31b-cloud', label: 'Gemma 4 31B Cloud (Default)', description: 'Balanced high-capability reasoning' },
+      { id: 'nemotron-3-super:cloud', label: 'Nemotron 3 Super Cloud', description: 'Superior architecture & synthesis' },
+      { id: 'nemotron-3-nano:30b-cloud', label: 'Nemotron 3 Nano 30B Cloud', description: 'Compact fast reasoning' },
+      { id: 'beam:cloud', label: 'Beam Cloud', description: 'Optimized inference subagent' },
+    ],
+  },
+];
 
 export const LIVE_MODEL_OPTIONS: ModelOption[] = [
   {
