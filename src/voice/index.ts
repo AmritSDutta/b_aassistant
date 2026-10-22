@@ -20,3 +20,4 @@ export * from './components/AudioPreflightModal';
 export * from './components/VoiceSettingsModal';
 export * from './components/VoiceLiveController';
 export * from './tasks/taskManager';
+export * from './utils/jsonRepair';

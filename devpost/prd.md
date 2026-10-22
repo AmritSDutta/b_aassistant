@@ -12,7 +12,7 @@ Source: `scope.md > The Unique Kernel`, `scope.md > Who It's For`.
 Source: `scope.md > The Core Loop`, `scope.md > What "Working" Looks Like`.
 
 1. **Arrival:** User loads `bAssistant` in their browser. The UI renders the 20/80 layout in their chosen theme (Light/Dark toggle in branding header). Both canvas and chat areas initialize blank.
-2. **Document Ingestion (Optional):** User drags or selects a Doc or PDF file (< 1MB) into the upload area. LiteParse (browser WASM) parses the document pagewise, and a client-side BM25 index is generated in IndexedDB. The upload area updates to display the file name, page count, and an "Indexed" badge. If a file is ≥ 1MB or unsupported, a popup explains why it was rejected.
+2. **Document Ingestion (Optional):** User drags or selects a Doc or PDF file (< 2MB) into the upload area. LiteParse (browser WASM) parses the document pagewise, and a client-side BM25 index is generated in IndexedDB. The upload area updates to display the file name, page count, and an "Indexed" badge. If a file is ≥ 2MB or unsupported, a popup explains why it was rejected.
 3. **User Input:** User enters an inquiry or prompt into the chat text input. The message is displayed in the chat stream with a `user:` prefix.
 4. **Agent Connection & Tool Discovery:** A visiting LLM connects to `bAssistant` using standard browser-native WebMCP, discovering the exposed tools without requiring a specialized in-app inspector UI. The read-only `get_tool_usage_prompt` tool returns the operating guide for every other tool, so the agent learns the intended workflow before acting.
 5. **Tool Execution:** The visiting LLM queries the user's message history, calls `search_document` (BM25), `search_web` (DDGS), `search_research` (ArXiv), or `calculate` as appropriate.
@@ -25,7 +25,7 @@ Source: `scope.md > Inspiration & Identity`.
 A responsive, single-page cockpit filling 100% of the viewport, vertically partitioned:
 - **Left Sidebar (20% width):**
   - **Section 1 (Top) — Branding:** App title "bAssistant", transparent theme-aware logo (`bassistant_light.jpg` in dark mode, `bassistant_dark.jpg` in light mode), and a 2-tiered right-aligned action cluster with Tier 1 utility buttons (`[voice]`, `[tips]`, `[theme]`) and a Tier 2 long single `⚙️ user preferences` button directly underneath, keeping the branding area open and uncrowded.
-  - **Section 2 (Middle) — File Upload:** Dropzone and file picker for Doc/PDF files strictly under 1MB. Status display showing filename, page count, and "Indexed" badge upon processing.
+  - **Section 2 (Middle) — File Upload:** Dropzone and file picker for Doc/PDF files strictly under 2MB. Status display showing filename, page count, and "Indexed" badge upon processing.
   - **Section 3 — Reference URLs:** Enboldened `REFERENCE URLS` header with count badge (up to 10 URLs). Click `+ Add` to open a reachability verification modal before caching to browser storage.
   - **Section 4 (Bottom) — Session Highlights:** Enboldened `Session Highlights` section collecting starred dialogue messages for instant revisit.
 - **Main Workspace (80% width):**
@@ -45,12 +45,12 @@ A responsive, single-page cockpit filling 100% of the viewport, vertically parti
 
 ### 1. Document Upload & In-Browser Indexing
 Source: `scope.md > The POC Boundary`.
-- **Capability:** Ingestion of Doc and PDF files strictly < 1MB.
+- **Capability:** Ingestion of Doc and PDF files strictly < 2MB.
 - **Processing:** Client-side parsing using LiteParse (browser WASM) into page-level chunks, with stream decompressor fallback, hex string decoding (`<...> Tj` and `[...] TJ`), and in-browser DOCX PKZip `word/document.xml` decompression.
 - **Storage:** Chunks and BM25 search index stored directly in IndexedDB.
 - **Feedback:**
   - Valid file: Displays filename, total page count, and "Indexed" confirmation.
-  - Invalid file (≥ 1MB or invalid format): Triggers a clear notification popup explaining the exact rejection reason.
+  - Invalid file (≥ 2MB or invalid format): Triggers a clear notification popup explaining the exact rejection reason.
 
 ### 2. Chat Conversation & History
 Source: `scope.md > The Core Loop`.
@@ -211,7 +211,7 @@ Source: `research.md` (dwell-time mechanisms 1–6).
 - **Onboarding State:** First load (per browser) shows the how-to-use WelcomeModal; dismissing persists the choice, and the sidebar "tips" link re-opens it any time.
 - **Document Loaded State:** Upload box reflects file name, page count, and green "Indexed" badge.
 - **Document Cleaned State:** Triggered by `clean_document` tool or user action; wipes IndexedDB tables and returns upload box to empty.
-- **Error State (File Rejected):** Popup alerts user to size limit (≥ 1MB) or unsupported file type; input resets without crashing.
+- **Error State (File Rejected):** Popup alerts user to size limit (≥ 2MB) or unsupported file type; input resets without crashing.
 - **Error State (Blank Export Blocked):** Modal alerts user when attempting to export an empty session without canvas drawings or chat messages.
 - **Persistence:** Document chunks and BM25 index persist across sessions in IndexedDB until cleared.
 
@@ -233,7 +233,7 @@ Source: `research.md` (dwell-time mechanisms 1–6).
 ## What We're Building
 - 20/80 split React single-page application with Light/Dark toggle.
 - Modular custom controller hook architecture (`useSessionController`, `useDocumentController`, `useVoiceOrchestrator`).
-- File upload for Doc/PDF < 1MB with LiteParse WASM parsing, natural per-page chunking, and IndexedDB BM25 indexing.
+- File upload for Doc/PDF < 2MB with LiteParse WASM parsing, natural per-page chunking, and IndexedDB BM25 indexing.
 - HTML canvas with live 2D scene graph engine, Clear button, and Export PDF button.
 - Chat stream formatted in Lora longform reading typography, multi-line prompt textarea, and auto-scroll to newest message.
 - Keyless Tavily web search with automatic DuckDuckGo fallback.
@@ -250,7 +250,7 @@ Source: `research.md` (dwell-time mechanisms 1–6).
 
 ## Deferred From the POC
 - Sidebar Section 3 features (kept blank for now).
-- Multi-file collections and files ≥ 1MB.
+- Multi-file collections and files ≥ 2MB.
 
 ## Non-Goals
 - Server-side database or cloud file processing.

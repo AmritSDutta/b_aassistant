@@ -4,6 +4,7 @@ import { Canvas2dShape } from '../../types/canvas2d';
 import { executeToolCall, ToolContext } from '../../webmcp/tools';
 import { getSubagentSystemPrompt } from '../prompts';
 import { TaskManager, globalTaskManager } from '../tasks/taskManager';
+import { extractShapesAndExplanationFromJson, stripMarkdownFences } from '../utils/jsonRepair';
 
 export interface VoiceBridgeOptions {
   subagent: ISubagentProvider;
@@ -85,7 +86,7 @@ export class VoiceBridge {
       this.taskManager.updateTask(task.id, { status: 'in_progress' });
       try {
         const subagentResponse = await this.subagent.generateText(
-          `Design and explain the following system architecture on the visual canvas: ${prompt}`,
+          `Design and explain the following system architecture on the visual canvas as a json response (do not wrap explanation in markdown code fences): ${prompt}`,
           systemInstruction
         );
 
@@ -99,7 +100,8 @@ export class VoiceBridge {
           globalCanvasEngine.fitToContent();
         }
 
-        const substantiveMessage = explanation.trim() || subagentResponse.trim();
+        const substantiveMessage =
+          explanation.trim() || stripMarkdownFences(subagentResponse.trim());
         if (substantiveMessage) {
           this.postChatMessage(substantiveMessage);
         }
@@ -189,55 +191,6 @@ export class VoiceBridge {
   }
 
   private extractShapesAndExplanation(text: string): { shapes: Canvas2dShape[] | null; explanation: string } {
-    let shapes: Canvas2dShape[] | null = null;
-    let explanation = text;
-
-    const toolCallRegex = /<(?:toolcall|tool_call)>[\s\S]*?<argvalue>([\s\S]*?)<\/argvalue>[\s\S]*?<\/(?:toolcall|tool_call)>/i;
-    const toolCallMatch = text.match(toolCallRegex);
-    if (toolCallMatch) {
-      try {
-        const parsed = JSON.parse(toolCallMatch[1].trim());
-        if (parsed && Array.isArray(parsed.shapes)) {
-          shapes = parsed.shapes as Canvas2dShape[];
-          explanation = text.replace(toolCallMatch[0], '').trim();
-          return { shapes, explanation };
-        }
-      } catch {
-        // Fall back to subsequent strategies
-      }
-    }
-
-    const jsonBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/g;
-    let match: RegExpExecArray | null;
-
-    while ((match = jsonBlockRegex.exec(text)) !== null) {
-      try {
-        const parsed = JSON.parse(match[1]);
-        if (parsed && Array.isArray(parsed.shapes)) {
-          shapes = parsed.shapes as Canvas2dShape[];
-          explanation = text.replace(match[0], '').trim();
-          break;
-        }
-      } catch {
-        // Not a JSON shapes block, continue looking
-      }
-    }
-
-    if (!shapes) {
-      const inlineJsonMatch = text.match(/\{[\s\r\n]*"shapes"[\s\r\n]*:[\s\S]*?\}(?=[\r\n\s]*$|[#\w])/);
-      if (inlineJsonMatch) {
-        try {
-          const parsed = JSON.parse(inlineJsonMatch[0]);
-          if (parsed && Array.isArray(parsed.shapes)) {
-            shapes = parsed.shapes as Canvas2dShape[];
-            explanation = text.replace(inlineJsonMatch[0], '').trim();
-          }
-        } catch {
-          // Ignore parse errors
-        }
-      }
-    }
-
-    return { shapes, explanation };
+    return extractShapesAndExplanationFromJson(text);
   }
 }

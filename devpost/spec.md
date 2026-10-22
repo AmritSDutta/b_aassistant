@@ -10,7 +10,7 @@ A zero-backend, React-based single-page browser assistant deployed to Cloudflare
 ## How This Works, In Plain Language
 `bAssistant` is a client-side application built with React and Vite. When a user opens it:
 1. The page renders a 20/80 layout: a left sidebar (branding with dynamic transparent logo, light/dark toggle, file upload, Reference URLs manager for up to 10 verified links, and Session Highlights) and an 80% main area split into a top 60% HTML canvas and a bottom 40% chat interface.
-2. If the user uploads a Doc or PDF file (< 1MB), `LiteParse` runs directly inside the browser using WebAssembly (WASM). It extracts text page-by-page, with stream decompressor fallback, hex PDF string token decoding (`<...> Tj` and `[...] TJ`), and in-browser DOCX PKZip `word/document.xml` decompression. A client-side BM25 indexer tokenizes and scores the text, saving the chunks and index into the browser's IndexedDB.
+2. If the user uploads a Doc or PDF file (< 2MB), `LiteParse` runs directly inside the browser using WebAssembly (WASM). It extracts text page-by-page, with stream decompressor fallback, hex PDF string token decoding (`<...> Tj` and `[...] TJ`), and in-browser DOCX PKZip `word/document.xml` decompression. A client-side BM25 indexer tokenizes and scores the text, saving the chunks and index into the browser's IndexedDB.
 3. The user types messages into the chat box. Each message is tagged with a `user:` prefix and kept in application state.
 4. The page initializes a **Unified WebMCP Provider** that registers 18 tools onto six discovery surfaces: `document.modelContext`, `navigator.modelContext`, `window.webmcp`, hidden DOM tool forms, ready custom events, and `window.postMessage` for standard JSON-RPC 2.0 MCP commands.
 5. Any visiting LLM, extension, or WebMCP inspector discovers the exposed tools:
@@ -32,7 +32,7 @@ A zero-backend, React-based single-page browser assistant deployed to Cloudflare
 ## The Core Journey Through the System
 Traces `prd.md > The Core Journey`:
 1. **User loads page:** Browser loads static HTML/JS bundle from Cloudflare Pages. React mounts `App`, reads local theme preference (Light/Dark), and initializes the `WebMCPBridge` service. Canvas and Chat initialize blank.
-2. **File dropped (< 1MB):** `FileUpload` component validates size (< 1MB) and extension (.pdf, .doc, .docx). If valid, passes bytes to `LiteParseService` (WASM / stream / docx zip), extracts pages, passes text to `BM25Indexer`, and stores records in `DocumentStore` (IndexedDB). UI displays file name, page count, and "Indexed" badge. If invalid, `Modal` popup displays error.
+2. **File dropped (< 2MB):** `FileUpload` component validates size (< 2MB) and extension (.pdf, .doc, .docx). If valid, passes bytes to `LiteParseService` (WASM / stream / docx zip), extracts pages, passes text to `BM25Indexer`, and stores records in `DocumentStore` (IndexedDB). UI displays file name, page count, and "Indexed" badge. If invalid, `Modal` popup displays error.
 3. **User submits prompt:** `ChatView` appends `{ sender: 'user', text: input }` to state.
 4. **Visiting Agent accesses WebMCP:** Agent invokes `get_chat_history` via `window.webmcp.callTool` or `postMessage({ method: 'tools/call' })`.
 5. **Agent executes queries & math:** Agent invokes `search_document` (queries IndexedDB BM25), `get_reference_url`, `search_web` (DDGS), `search_research` (ArXiv), or `calculate`.
@@ -113,7 +113,7 @@ Bottom 40% pane of the main workspace, plus a full-screen reader popup:
 
 ### 5. `NotificationModal`
 Implements `prd.md > States and Boundaries > Error State (File Rejected)`.
-Modal popup showing rejection details when a file is ≥ 1MB or unsupported.
+Modal popup showing rejection details when a file is ≥ 2MB or unsupported.
 
 ### 6. `WelcomeModal`
 Implements `prd.md > States and Boundaries > Onboarding State`.
@@ -193,7 +193,7 @@ Self-contained, decoupled voice package:
 - **Store `documents`**:
   - `id`: string (UUID or file hash)
   - `name`: string
-  - `size`: number (< 1MB)
+  - `size`: number (< 2MB)
   - `pageCount`: number
   - `createdAt`: timestamp
 - **Store `chunks`**:
@@ -331,7 +331,7 @@ C:/codebase/b_aassistant/
 - **Cloudflare Pages:** Free static hosting.
 
 ## Important Failure Modes
-- **File ≥ 1MB or Invalid Format:** Caught immediately by file validator in `FileUpload.tsx`. Triggers `NotificationModal` explaining the limit, clears the file selection, and leaves existing state untouched.
+- **File ≥ 2MB or Invalid Format:** Caught immediately by file validator in `FileUpload.tsx`. Triggers `NotificationModal` explaining the limit, clears the file selection, and leaves existing state untouched.
 - **Blank Export Attempt:** Caught immediately by `handleExportPdf` and `pdfExportService`. Triggers `NotificationModal` explaining that the session is blank and returns an error for WebMCP `export_pdf`.
 - **WASM Initialization Delay:** `LiteParseService` loads WASM asynchronously. Upload dropzone shows a subtle loading spinner until the parser is ready.
 - **External Search Network Failure:** If DuckDuckGo or ArXiv is unreachable due to connectivity, the tool returns a clean error object (`{ error: "Search service unavailable" }`) rather than failing silently.
@@ -345,7 +345,7 @@ C:/codebase/b_aassistant/
 - **Learner Decisions:**
   - Build stack: React + Vite SPA.
   - Deployment: Cloudflare Pages.
-  - Ingestion: LiteParse (browser WASM) for pagewise chunking + BM25 index in IndexedDB (< 1MB Doc/PDF).
+  - Ingestion: LiteParse (browser WASM) for pagewise chunking + BM25 index in IndexedDB (< 2MB Doc/PDF).
   - WebMCP standard: Multi-standard support (`document.modelContext`, `navigator.modelContext`, `window.webmcp`, DOM forms, `postMessage`).
   - Documentation: `docs7`, `README.md`, `CLAUDE.md`, `AGENTS.md`.
   - Development Rules: Strict token efficiency, hermetic tests only, no subagents without permission, no reading `.env` / system variables, only `git status` permitted.

@@ -252,4 +252,42 @@ Events arrive via webhook and are buffered for downstream processing.`;
     expect(postedMessages[0]).not.toContain('<toolcall>');
     expect(postedMessages[0]).not.toContain('</toolcall>');
   });
+
+  it('renders shapes and posts explanation from pure structured root JSON', async () => {
+    const pureStructuredJson = JSON.stringify({
+      shapes: [
+        {
+          type: 'rectangle',
+          id: 'structured_node',
+          text: 'Requesty Structured Service',
+          x: 100,
+          y: 150,
+          width: 200,
+          height: 80,
+        },
+      ],
+      explanation: '### Structured Output\nSuccessfully parsed root JSON payload.',
+    });
+
+    (mockSubagent.generateText as ReturnType<typeof vi.fn>).mockResolvedValue(pureStructuredJson);
+
+    const bridge = new VoiceBridge({
+      subagent: mockSubagent,
+      postChatMessage: (msg: string) => postedMessages.push(msg),
+    });
+
+    await bridge.handleToolCall('generate_diagram_and_explanation', {
+      prompt: 'Design structured microservice',
+    });
+
+    await bridge.getActiveDiagramTask();
+
+    const shapes = globalCanvasEngine.getShapes();
+    expect(shapes.length).toBe(1);
+    expect(shapes[0].id).toBe('structured_node');
+    expect(shapes[0].text).toBe('Requesty Structured Service');
+
+    expect(postedMessages.length).toBe(1);
+    expect(postedMessages[0]).toBe('### Structured Output\nSuccessfully parsed root JSON payload.');
+  });
 });
