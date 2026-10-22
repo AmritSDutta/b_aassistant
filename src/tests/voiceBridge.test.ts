@@ -88,7 +88,7 @@ The API gateway terminates incoming HTTPS requests and delegates authentication 
     );
     expect(mockSubagent.generateText).toHaveBeenCalledWith(
       expect.any(String),
-      expect.stringContaining('expert system architect and visual designer')
+      expect.stringContaining('general-purpose autonomous agent')
     );
 
     // Verify canvas scene contains the shapes

@@ -68,6 +68,11 @@ describe('voicePrompts (Centralized & Date-Anchored)', () => {
     expect(SUBAGENT_SYSTEM_PROMPT_TEMPLATE).toContain('arrow');
   });
 
+  it('identifies subagent as general-purpose agent with tech product architecting specialization', () => {
+    expect(SUBAGENT_SYSTEM_PROMPT_TEMPLATE).toContain('general-purpose autonomous agent');
+    expect(SUBAGENT_SYSTEM_PROMPT_TEMPLATE).toContain('architecting tech products');
+  });
+
   it('formats dates in ISO YYYY-MM-DD format', () => {
     const testDate = new Date('2026-10-21T12:00:00Z');
     const formatted = getCurrentDateString(testDate);

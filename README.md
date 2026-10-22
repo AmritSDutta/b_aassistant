@@ -3,14 +3,15 @@
 **bAssistant** is an entirely client-side, zero-backend workspace that transforms your browser into an intelligent Business Analyst workstation. It pairs with modern AI models and browser WebMCP agents to inspect requirements, ingest architecture documents, visually map systems onto a dynamic canvas, and export boardroom-ready reports — without your data ever leaving your machine.
 
 > **Out of Scope for this iteration:**
-> 1. **MCP server endpoint integration** (client operates 100% in-browser via WebMCP protocols without external backend SSE/stdio MCP servers).
-> 2. **Image, audio, or video data integration** (processing is focused exclusively on text documents and web references).
+> 1. **External backend MCP servers** (client operates 100% in-browser via WebMCP protocols without external backend SSE/stdio MCP servers).
+> 2. **Arbitrary video/image file ingestion** (processing focuses on text documents, web references, and real-time live voice audio).
 
 ---
 
 ## Why bAssistant?
 
 - 🔒 **100% Private & Local**: Uploaded documents never travel to an external server. Parsing and BM25 search happen directly in browser memory and local IndexedDB.
+- 🎙️ **Full-Duplex Live Voice & Multi-Provider Subagents**: Bidirectional 16kHz conversational audio powered by Gemini Live, paired with an asynchronous Tier 2 subagent suite (Google Gemini, Requesty AI, Mistral AI, Ollama Cloud) specializing in tech product architecture and real-time Canvas2D diagramming.
 - 📐 **60/40 Split Cockpit**: Designed for visual thinkers. The dominant 60% HTML5 Canvas renders architecture diagrams in real time, while the 40% Chat Area maintains a humanized conversational stream.
 - 🎨 **Persistent Canvas Scene Graph**: Visuals are structured entities (rectangles, containers, connectors with perimeter docking, step cards), not ephemeral pixel dumps.
 - 📄 **Multilingual PDF Export**: Export session artifacts into a styled dual-section PDF (HiDPI canvas snapshot + readable discussion transcript) with native font rendering for English, Bengali (বাংলা), and Hindi (हिन्दी) with complete H1–H6 heading hierarchy formatting.
@@ -78,7 +79,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ### Hermetic Verification
 ```bash
-# Run all 198 isolated unit tests (30 Vitest suites, no watch mode)
+# Run all 226 isolated unit tests (32 Vitest suites, no watch mode)
 npm.cmd test -- --run
 
 # Build production bundle (tsc && vite build)
@@ -112,6 +113,8 @@ Full architectural and developer specifications built with `docs7` are located i
 - `docs/tavily-search.mdx` — Keyless Tavily web search with DuckDuckGo fallback
 - `docs/sessions-vault.mdx` — Session vault, IndexedDB persistence & restore-on-mount
 - `docs/voice-agent.mdx` — Full-duplex Gemini Live voice mode & two-tier agent topology
+- `docs/subagent-providers.mdx` — Multi-provider Tier 2 subagents (Requesty AI, Mistral, Ollama, Gemini)
+- `docs/storage-keys.mdx` — Browser storage key registry (LocalStorage & IndexedDB)
 - `docs/background-tasks.mdx` — Asynchronous subagent task dispatch, TaskManager cache & status tool
 - `docs/dwell-time-research.mdx` — Evidence-backed long-dwell UI design mechanisms
 - `docs/liteparse-research.mdx` — In-browser document parsing research & benchmarks

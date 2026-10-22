@@ -33,7 +33,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `App.tsx` acts as the composition root, delegating domain state to three custom hooks in `src/hooks/`:
   - `useSessionController` (`src/hooks/useSessionController.ts`): manages active session ID, sequential turn records, chat messages, star highlights, session elapsed time, history modal state, IDB turn persistence (`saveSessionTurn`), session restore, and publication-ready PDF exports.
   - `useDocumentController` (`src/hooks/useDocumentController.ts`): manages file upload validation (< 2MB, PDF/Word), in-browser LiteParse extraction, BM25 indexing, lazy chunk rehydration, and lexical search.
-  - `useVoiceOrchestrator` (`src/hooks/useVoiceOrchestrator.ts`): coordinates Gemini Live audio loop, `VoiceBridge` tool context delegation, settings modal, and hardware preflight check.
+  - `useVoiceOrchestrator` (`src/hooks/useVoiceOrchestrator.ts`): coordinates Gemini Live audio loop, `VoiceBridge` subagent delegation (`SUBAGENT_SYSTEM_PROMPT_TEMPLATE`), multi-provider subagent factory (`subagentFactory.ts`), settings modal with preflight quick-tests, and hardware audio calibration.
 - WebMCP tools never touch React state directly — they receive a `ToolContext` of closures (`src/webmcp/tools.ts`), and `updateWebMCPContext()` re-binds fresh closures across these controllers to the provider whenever messages, documents, or reference URLs change (`src/App.tsx`). Any new tool capability must flow through `ToolContext`.
 - Module-level singletons bridge the React UI and the WebMCP tool layer: `globalCanvasEngine` (`src/lib/canvasEngine.ts`), `globalIDBStorage` (`src/lib/idbStorage.ts`), `globalLiteParseService` (`src/lib/liteparseService.ts`).
 - **Session vault**: `useSessionController` records every deliberation turn to IndexedDB via `globalIDBStorage.saveSessionTurn()` (stores `session_turns` + `session_meta` in `bAssistantDB` version 2) and restores the active session (messages + latest canvas `canvasShapes`) on mount. `HistoryModal.tsx`, opened from the sidebar `sessions` button, lists sessions via `getAllSessionsSummary()` with Restore / PDF / Delete actions handled in `useSessionController`.
@@ -81,6 +81,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `src/components/HumanizedMessage.tsx` cleans raw markdown noise and formats H1–H6 headings (`#` to `######`) into clean semantic typography (`h1`–`h4` / `<h6>`) without raw hash tokens.
 - All user messages rendered in chat history must be prefixed with `user:` (agents get `agent:`) — see `src/components/ChatArea.tsx`.
 
+### Voice Agent & Tier 2 Subagent Architecture
+- **Two-Tier Topology**: Tier 1 conversational live voice (`gemini-3.8-live` over WebSockets) delegates computationally heavy visual diagramming and deep product architecture to a Tier 2 background subagent via `generate_diagram_and_explanation`.
+- **Subagent Role (`src/voice/prompts.ts`)**: General-purpose autonomous agent with deep specialization in tech product architecture, distributed systems, and technical workflows (`SUBAGENT_SYSTEM_PROMPT_TEMPLATE`).
+- **Provider Suite (`src/voice/providers/`)**: Unified under `ISubagentProvider` interface and instantiated via `createSubagentProvider` (`subagentFactory.ts`):
+  - `gemini`: Native Google GenAI SDK (`gemini-3.5-flash-lite`, `gemini-3.1-flash-lite`, `gemini-2.5-flash`).
+  - `requesty`: OpenAI-compatible router at `https://router.requesty.ai/v1` with presets (`google/gemma-4-31b-it` [Default], `nvidia/muse-glimmer-30b`), direct browser CORS with `/api/proxy` fallback, and Cloudflare Pages CSP in `public/_headers`.
+  - `mistral`: European frontier models (`ministral-14b-2512`, `ministral-8b-2512`, `ministral-3b-2512`) routed via `/api/proxy`.
+  - `ollama`: Remote cloud endpoint (`https://ollama.com/api`) routed via `/api/proxy` and local daemon (`localhost:11434`).
+- **Universal Voice Bridge Parser (`src/voice/bridge/voiceBridge.ts`)**: Universal extractor parses `{"shapes": [...]}` from XML `<toolcall>`/`<argvalue>` tags, markdown code blocks, or inline JSON.
+- **Voice Settings Modal (`src/voice/components/VoiceSettingsModal.tsx`)**: Manages dirty tracking, custom model IDs (`⚙️ Custom Model ID...`), and enforces an interactive `⚡ Run Quick Test` connection probe before saving dirty API keys.
+- **CORS & Proxy Infrastructure**: Same-origin `/api/proxy` handled via Vite dev proxy in `vite.config.ts` and Cloudflare Pages Function in `functions/api/proxy.ts`. Content Security Policy (`connect-src`) in `public/_headers` explicitly allows required endpoints.
+
 ### Storage
 - Pure IndexedDB database `bAssistantDB` (version 2) with stores:
   - `documents`: uploaded document metadata (< 2MB)
@@ -88,14 +100,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `bm25_index`: serialized BM25 inverted index
   - `session_turns`: sequential turn-by-turn records (`id`, `sessionId`, `turnNumber`, `userPrompt?`, `agentMessage?`, `canvasSnapshot?`, `timestamp`)
   - `session_meta`: key-value metadata store (`active_session_id`)
-- Reference URLs cached in `localStorage['b_reference_urls']`. No external servers, no vector databases.
+- Reference URLs cached in `localStorage['b_reference_urls']`. Tier 2 subagent keys stored in `localStorage` (`bassistant_requesty_api_key`, `bassistant_mistral_api_key`, `bassistant_ollama_api_key`). No external servers, no vector databases.
 
 ### Testing
-- All unit tests live in `src/tests/` (30 Vitest suites, 198 tests) and must remain strictly hermetic and isolated — no network, no real IndexedDB dependencies leaking between tests.
+- All unit tests live in `src/tests/` (32 Vitest suites, 227 tests) and must remain strictly hermetic and isolated — no network, no real IndexedDB dependencies leaking between tests.
 - Vitest is configured inside `vite.config.ts` (`environment: 'jsdom'`, `globals: true`); there is no separate vitest config file.
 - Canvas tests must exercise the real Rough.js path: mock `getContext()` with an object whose `canvas.getContext()` returns itself, or `getRoughCanvas()` returns `null` and Rough never runs (this blind spot previously hid a rectangle regression).
 - If React component tests fail with `act(...) is not supported in production builds of React`, the shell has `NODE_ENV=production`; run `NODE_ENV=test npm test` (`set NODE_ENV=test&& npx vitest run` on Windows cmd) instead.
 
 ## Documentation Reference
 - [README.md](file:///C:/codebase/b_aassistant/README.md) — human-facing quickstart.
-- [docs/docs.json](file:///C:/codebase/b_aassistant/docs/docs.json) — full docs7 component and architecture documentation (`index.mdx`, `quickstart.mdx`, `indroduction.mdx`, `architecture.mdx`, `cockpit-ui.mdx`, `webmcp.mdx`, `agent-guide.mdx`, `canvas-and-pdf.mdx`, `document-processing.mdx`, `research-tools.mdx`, `tavily-search.mdx`, `sessions-vault.mdx`, `voice-agent.mdx`, `background-tasks.mdx`, `dwell-time-research.mdx`, `liteparse-research.mdx`, `learnings.mdx`, `source-protection.mdx`, `deployment.mdx`, `license.mdx`). `docs/custom.css` widens Mermaid frames; every page must be listed in `docs.json` navigation or it renders nowhere.
+- [docs/docs.json](file:///C:/codebase/b_aassistant/docs/docs.json) — full docs7 component and architecture documentation (`index.mdx`, `quickstart.mdx`, `indroduction.mdx`, `architecture.mdx`, `cockpit-ui.mdx`, `webmcp.mdx`, `agent-guide.mdx`, `canvas-and-pdf.mdx`, `document-processing.mdx`, `research-tools.mdx`, `tavily-search.mdx`, `sessions-vault.mdx`, `voice-agent.mdx`, `subagent-providers.mdx`, `storage-keys.mdx`, `background-tasks.mdx`, `dwell-time-research.mdx`, `liteparse-research.mdx`, `learnings.mdx`, `source-protection.mdx`, `deployment.mdx`, `license.mdx`). `docs/custom.css` widens Mermaid frames; every page must be listed in `docs.json` navigation or it renders nowhere.

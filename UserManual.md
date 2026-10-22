@@ -167,17 +167,45 @@ bAssistant features a real-time, low-latency conversational voice assistant powe
 ### 7.1 Two-Tier System Architecture
 - **Tier 1: Conversational Live Agent** (`gemini-3.8-live` by default; fallbacks `gemini-2.5-flash-native-audio-preview-12-2025` or `gemini-3.1-flash-live-preview`)  
   Streams bidirectional 16kHz PCM audio directly to and from your browser microphone and speakers. It listens, reasons, interrupts naturally, and responds with spoken explanations in milliseconds.
-- **Tier 2: Visual Subagent** (`gemini-3.5-flash-lite`)  
-  Executes computationally heavy visual diagramming in the background. When you ask for an architecture diagram or flowchart, Tier 1 delegates the task to Tier 2 via `generate_diagram_and_explanation` and immediately acknowledges verbally (*"I'm drawing that architecture on the canvas for you now..."*). Tier 2 creates the Canvas2D shapes, arranges nodes and connectors, and posts the in-depth technical explanation into the dialogue reader.
+- **Tier 2: General-Purpose Subagent (Specialization: Tech Product Architecture)**  
+  A versatile autonomous background subagent specialized in architecting tech products, distributed systems, and technical workflows. When you ask for an architecture diagram, flowchart, or deep technical design, Tier 1 delegates the task via `generate_diagram_and_explanation` and immediately acknowledges verbally (*"I'm drawing that architecture on the canvas for you now..."*). Tier 2 renders the Canvas2D shapes, arranges nodes and perimeter-docked connectors, and writes the complete structured breakdown into the dialogue reader.
 
-### 7.2 Configuration & Client-Side Encryption
+### 7.2 Multi-Provider Tier 2 Subagent Suite
+bAssistant decouples the visual diagramming engine from any single vendor. You can choose from four subagent provider backends in Voice Settings:
+
+1. **Google Gemini (`gemini`)**:
+   - Direct client-side SDK integration via `@google/genai`.
+   - Toggle *"Use Tier 1 Gemini API Key"* to reuse your live voice key or supply a dedicated subagent key.
+   - Recommended presets: `gemini-3.5-flash-lite` (Recommended), `gemini-3.1-flash-lite`, `gemini-2.5-flash`.
+2. **Requesty AI (`requesty`)**:
+   - Unified high-speed AI router with Base URL `https://router.requesty.ai/v1` (auto-mapped to `/chat/completions`).
+   - Direct browser CORS enabled with automatic same-origin `/api/proxy` fallback.
+   - Cloudflare Pages CSP in `public/_headers` explicitly allows `https://router.requesty.ai` and `https://*.requesty.ai`.
+   - Curated presets: `google/gemma-4-31b-it` (Default dense multimodal and structured engine), `nvidia/muse-glimmer-30b` (Superior synthesis & architecture).
+3. **Mistral AI (`mistral`)**:
+   - Frontier European models with deep coding and system reasoning intelligence.
+   - Routed through the same-origin `/api/proxy` to eliminate browser CORS preflight errors.
+   - Recommended presets: `ministral-14b-2512` (Default dense subagent), `ministral-8b-2512`, `ministral-3b-2512`.
+4. **Ollama Cloud / Local (`ollama`)**:
+   - Remote cloud API endpoint `https://ollama.com/api` (routed via `/api/proxy`) or local Ollama daemon (`http://localhost:11434/api/chat`).
+   - Recommended presets: `gemma4:31b-cloud` (Default), `nemotron-3-super:cloud`, `nemotron-3-nano:30b-cloud`, `beam:cloud`.
+5. **⚙️ Custom Model IDs**:
+   - Select **⚙️ Custom Model ID...** in the model dropdown to specify any model identifier supported by your chosen provider (e.g., `meta-llama/llama-3.3-70b-instruct`).
+
+### 7.3 Interactive Connection Preflight (`⚡ Run Quick Test`) & Save Gating
+To prevent runtime diagramming failures due to mistyped keys or endpoint typos, Voice Settings enforces an interactive preflight protocol:
+1. **Live In-Memory Probe**: When you enter or update an API key, click **⚡ Run Quick Test**.
+2. **Ping Verification**: bAssistant dispatches a lightweight probe to verify authentication, network access, and model availability.
+3. **Save Gating**: If changes are made to API keys or providers, the **Save Settings** button requires a successful quick test before persisting, preventing broken background states.
+
+### 7.4 Configuration & Client-Side Encryption
 1. Click the `[ 🎙️ voice ]` button in the cockpit header or the settings gear in the Voice HUD.
-2. Enter your Google Gemini API key.
+2. Enter your Google Gemini API key for Tier 1.
 3. Select your preferred voice persona (`Puck`, `Charon`, `Kore`, `Fenrir`, or `Aoede`).
-4. Choose the endpoint model (defaults to `gemini-3.8-live`).
-5. **Zero-Knowledge Encryption**: Your API key is encrypted directly in your browser using **Web Crypto AES-GCM-256** with an ephemeral salt and saved into IndexedDB (`bassistant_secure_vault`). It is never stored in plaintext `localStorage`, never logged, and never transmitted to any proxy or third-party server.
+4. Choose your Tier 2 Subagent Provider, model preset, and subagent API key.
+5. **Zero-Knowledge Encryption**: Your Tier 1 Gemini API key is encrypted directly in your browser using **Web Crypto AES-GCM-256** with an ephemeral salt and saved into IndexedDB (`bassistant_secure_vault`). It is never stored in plaintext `localStorage`, never logged, and never transmitted to any proxy. Subagent provider keys are securely stored in local storage (`bassistant_requesty_api_key`, `bassistant_mistral_api_key`, `bassistant_ollama_api_key`).
 
-### 7.3 Starting a Voice Session & Preflight Audio Check
+### 7.5 Starting a Voice Session & Preflight Audio Check
 1. Click the microphone icon in the Voice HUD docked in the dialogue reader header (or the header shortcut).
 2. **Automated Preflight Check**: bAssistant runs a 1-second microphone calibration test:
    - Verifies browser audio permissions.
@@ -185,21 +213,21 @@ bAssistant features a real-time, low-latency conversational voice assistant powe
    - Alerts you immediately if the microphone is muted or disconnected before initiating the WebSocket stream.
 3. Once connected, the HUD status turns green: **Live Listening**.
 
-### 7.4 Spoken Commands & Background Diagram Dispatch
+### 7.6 Spoken Commands & Background Diagram Dispatch
 You can talk to bAssistant conversationally just like a pair programmer:
 - *"Explain the trade-offs between REST and gRPC."* &rarr; Live spoken conversational answer.
 - *"Draw an event-driven architecture with Kafka, order service, payment service, and notification service."* &rarr; Tier 1 issues immediate verbal acknowledgment, while Tier 2 renders the full diagram onto the Canvas2D studio and writes structured notes into chat.
 - *"What is the status of my diagram?"* &rarr; The live model checks active background tasks via `get_background_task_status` and updates you verbally.
 - *"Search the latest docs for Vite 6 features."* &rarr; Tier 1 uses `search_web` (Tavily/DuckDuckGo) and summarizes key insights.
 
-### 7.5 Voice HUD & Background Task Status
+### 7.7 Voice HUD & Background Task Status
 The docked Voice HUD keeps you informed without obstructing your workspace:
 - **Status Indicator**: Displays real-time states (`Standby`, `Connecting...`, `Live Listening`, `Thinking...`, `Speaking`).
 - **Live Activity Badge**: When background rendering or searching is underway, an animated badge appears (e.g., `⚡ Drawing Architecture...`).
 - **Ephemeral Captions**: Transcribes incoming model speech in the HUD without polluting your persistent session chat history with transient spoken chitchat.
 - **Task Cache Tracking**: Background operations are tracked in `sessionStorage` (`bassistant_background_tasks`, per-tab, capped at 20 records) so task progress survives transient state changes.
 
-### 7.6 Clean Disconnect & Teardown
+### 7.8 Clean Disconnect & Teardown
 - Click the active microphone button in the HUD to end the call.
 - The WebSocket connection closes cleanly (status code 1000), microphone audio tracks are released immediately, and the status returns to `Standby`.
 
