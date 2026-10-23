@@ -27,18 +27,19 @@ describe('voicePrompts (Centralized & Date-Anchored)', () => {
       'chat_post',
       'get_chat_history',
       'get_tool_usage_prompt',
+      'canvas2d_inspect_shapes',
     ];
     for (const tool of requiredTools) {
       expect(VOICE_LIVE_AGENT_PROMPT_TEMPLATE).toContain(tool);
     }
-    // Tier 1 never draws shapes itself — visual tools belong to the background subagent
+    // Tier 1 never draws or modifies shapes itself — drawing tools belong to the background subagent
     expect(VOICE_LIVE_AGENT_PROMPT_TEMPLATE).not.toContain('canvas2d_draw_shapes');
-    expect(VOICE_LIVE_AGENT_PROMPT_TEMPLATE).not.toContain('canvas2d_inspect_shapes');
     expect(VOICE_LIVE_AGENT_PROMPT_TEMPLATE).not.toContain('canvas2d_modify_shape');
     expect(VOICE_LIVE_AGENT_PROMPT_TEMPLATE).toContain('Voice Bridge Tools');
     expect(VOICE_LIVE_AGENT_PROMPT_TEMPLATE).toContain('generate_diagram_and_explanation');
     expect(VOICE_LIVE_AGENT_PROMPT_TEMPLATE).toContain('get_background_task_status');
     expect(VOICE_LIVE_AGENT_PROMPT_TEMPLATE).toContain('Usage Pattern:');
+    expect(VOICE_LIVE_AGENT_PROMPT_TEMPLATE).toContain('Session Start Greeting');
   });
 
   it('embeds the complete WebMCP tool suite and Canvas2D schema in the Subagent template, omitting Bridge tools', () => {

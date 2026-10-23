@@ -19,12 +19,13 @@ describe('toolAdapter', () => {
     expect(names).toContain('chat_post');
     expect(names).toContain('get_chat_history');
     expect(names).toContain('get_tool_usage_prompt');
+    expect(names).toContain('canvas2d_inspect_shapes');
+    expect(names).toContain('get_user_preferences');
   });
 
-  it('keeps visual shape tools out of the voice declarations (subagent-only)', () => {
+  it('keeps shape drawing and modification tools out of the voice declarations (subagent-only)', () => {
     const names = getVoiceToolDeclarations().map((t) => t.name);
     expect(names).not.toContain('canvas2d_draw_shapes');
-    expect(names).not.toContain('canvas2d_inspect_shapes');
     expect(names).not.toContain('canvas2d_modify_shape');
   });
 

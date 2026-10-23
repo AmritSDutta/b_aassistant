@@ -116,6 +116,25 @@ export class GeminiLiveProvider implements ILiveVoiceProvider {
       },
     });
 
+    // Prompt the live model to speak its initial welcome greeting once connected
+    try {
+      session.sendClientContent({
+        turns: [
+          {
+            role: 'user',
+            parts: [
+              {
+                text: 'Hello! The voice session has started. Please give your brief welcome greeting to the user now.',
+              },
+            ],
+          },
+        ],
+        turnComplete: true,
+      });
+    } catch (err) {
+      console.warn('Initial live voice greeting kickoff skipped:', err);
+    }
+
     return {
       sendRealtimeAudio: (base64Pcm16: string) => {
         session.sendRealtimeInput({

@@ -138,6 +138,23 @@ export function getVoiceToolDeclarations(): ToolDeclaration[] {
       },
     },
     {
+      name: 'get_user_preferences',
+      description: 'Retrieves stored user preferences to adhere to.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {},
+      },
+    },
+    {
+      name: 'canvas2d_inspect_shapes',
+      description:
+        'Inspects the active Canvas2D scene graph: returns summary metrics, active node objects, and an ASCII topology graph so you can discuss what is on the visual canvas.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {},
+      },
+    },
+    {
       name: 'canvas2d_clear',
       description: 'Clears all drawings, diagrams, and shapes from the visual canvas scene.',
       parameters: {
