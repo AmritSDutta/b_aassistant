@@ -331,4 +331,4 @@ Click the `[ tips ]` button in the top-left cockpit header beside the theme togg
 
 ---
 
-*bAssistant is released under the strong copyleft **GNU Affero General Public License v3.0 (AGPL-3.0)**.*
+*bAssistant is released under the strong copyleft **GNU General Public License v3.0 (GPL-3.0)**.*

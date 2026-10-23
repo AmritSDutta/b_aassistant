@@ -59,7 +59,7 @@ Build mode: fast
   Learner check: Run `npm run preview` to test production build, review docs site and Markdown docs.
   Commit: `Add documentation suite and Cloudflare Pages build configuration`
 
-- [ ] **6. Harden DuckDuckGo fallback parser**
+- [x] **6. Harden DuckDuckGo fallback parser**
   Becomes usable: The free `search_web` DuckDuckGo fallback returns correctly paired, clean results, drops ad/redirect links, and reports a bot-wall/challenge as unavailable instead of a silent empty success — with the HTML parser covered by hermetic tests.
   Why now: The fallback is the reliability backstop for `search_web`; today it can mis-pair snippets, surface ad links, and mask a blocked request as an empty success.
   PRD ref: `prd.md > Features and Behavior > 11. DuckDuckGo Fallback Parser Reliability`

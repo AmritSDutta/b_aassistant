@@ -121,7 +121,7 @@ Full architectural and developer specifications built with `docs7` are located i
 - `docs/learnings.mdx` — Engineering learnings: WebMCP discovery, Indic PDF, WASM isolation
 - `docs/source-protection.mdx` — Client-side inspection-deterrent behaviors
 - `docs/deployment.mdx` — CI workflow & Cloudflare Pages hosting
-- `docs/license.mdx` — AGPL-3.0-or-later licensing terms
+- `docs/license.mdx` — GPL-3.0-or-later licensing terms
 
 To preview documentation locally:
 ```bash
@@ -140,9 +140,9 @@ For an end-to-end operational guide covering cockpit navigation, document upload
 
 ## License
 
-**AGPL-3.0-or-later**
+**GPL-3.0-or-later**
 
-> *Strong copyleft software. If you use, modify, or build on any part of this codebase, the AGPL requires your derivative work to be released as open source under the same license.*
+> *Strong copyleft software. If you use, modify, or build on any part of this codebase, the GPL requires your derivative work to be released as open source under the same license.*
 
 See the [LICENSE](LICENSE) file for complete terms and conditions.
 
