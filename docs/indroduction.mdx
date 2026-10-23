@@ -32,7 +32,7 @@ bAssistant provides an ergonomic 20/80 cockpit layout engineered for focused, mu
 
 - **20% Control Sidebar**: Transparent theme-aware branding, local file uploader for documents under 2MB (PDF/DOCX), a Reference URLs manager (caching up to 10 verified URLs), and a Session Highlights star repository.
 - **80% Main Studio**: Split into a **60% interactive HTML5 Canvas2D studio** on top and a **40% readable chat area** on the bottom.
-- **LLM-Agnostic Context Enrichment (18 Zero-Install WebMCP Tools)**: Visiting AI models—regardless of which provider or local harness you bring—discover browser-native tools via `document.modelContext`, `navigator.modelContext`, `window.webmcp`, and `postMessage` JSON-RPC 2.0. The visiting LLM can programmatically inspect and draw diagrams, search uploaded documents, evaluate math expressions, search ArXiv and the live web (keyless Tavily with automatic DuckDuckGo fallback), and trigger publication-ready PDF exports.
+- **LLM-Agnostic Context Enrichment (19 Zero-Install WebMCP Tools)**: Visiting AI models—regardless of which provider or local harness you bring—discover browser-native tools via `document.modelContext`, `navigator.modelContext`, `window.webmcp`, and `postMessage` JSON-RPC 2.0. The visiting LLM can programmatically inspect and draw diagrams, search uploaded documents, evaluate math expressions, check local time, search ArXiv and the live web (keyless Tavily with automatic DuckDuckGo fallback), and trigger publication-ready PDF exports.
 - **Multi-Source Knowledge Churning in Local Browser**: Ingests arbitrary sources—PDFs, DOCX files, web links, or academic research—and parses them client-side using LiteParse WASM and regex decompressors into an IndexedDB datastore with keyword-ranked BM25 search. Not a single byte of your documents leaves your machine.
 - **Interactive Canvas2D Scene Graph**: Renders structured shapes, containers, and perimeter-docked arrows with drop shadows, pan-and-zoom controls, Fit-to-Content auto-centering, and universal `#d97706` bold top labels for crystal clarity in both light and dark themes.
 - **Session History & Multi-Session Vault**: Automatically saves turn-by-turn dialogue and canvas snapshots to browser IndexedDB, allowing users to switch between past sessions, resume work, or export turn-by-turn reports.
@@ -74,7 +74,7 @@ bAssistant provides an ergonomic 20/80 cockpit layout engineered for focused, mu
 > *"Enough is as good as a feast."* Proving that a zero-server, privacy-preserving browser app can match or exceed the utility of complex cloud suites.
 
 - **Zero Server Footprint**: 100% of the computation—document parsing, BM25 indexing, canvas rendering, session storage, and PDF report creation—runs locally inside the client browser.
-- **Seamless WebMCP Agent Integration**: External AI agents (or the built-in WebMCP Inspector) can discover, inspect, and invoke all 18 tools out of the box with zero setup.
+- **Seamless WebMCP Agent Integration**: External AI agents (or the built-in WebMCP Inspector) can discover, inspect, and invoke all 19 tools out of the box with zero setup.
 - **Robust Multi-Turn Persistence**: Users can reload or close the tab without losing their conversation turns, document index, or canvas diagram scene graph.
 - **Comprehensive Test Suite**: 38 hermetic test suites with 294 passing unit and integration tests covering BM25 indexing, Canvas2D math, LiteParse fallbacks, DuckDuckGo HTML parsing, symbol humanization, voice lifecycle teardown, background tasks, and SEO crawler directives.
 

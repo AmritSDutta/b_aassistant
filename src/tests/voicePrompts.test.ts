@@ -27,6 +27,7 @@ describe('voicePrompts (Centralized & Date-Anchored)', () => {
       'chat_post',
       'get_chat_history',
       'get_tool_usage_prompt',
+      'get_current_time',
       'canvas2d_inspect_shapes',
     ];
     for (const tool of requiredTools) {
@@ -58,6 +59,7 @@ describe('voicePrompts (Centralized & Date-Anchored)', () => {
       'chat_post',
       'get_chat_history',
       'get_tool_usage_prompt',
+      'get_current_time',
     ];
     for (const tool of requiredTools) {
       expect(SUBAGENT_SYSTEM_PROMPT_TEMPLATE).toContain(tool);

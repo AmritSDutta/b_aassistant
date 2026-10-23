@@ -5,7 +5,7 @@ import { globalIDBStorage, StoredDocument, StoredChunk } from '../lib/idbStorage
 import { globalLiteParseService } from '../lib/liteparseService';
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB strictly
-const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
+const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.txt', '.md'];
 
 export interface UseDocumentControllerOptions {
   onError?: (title: string, message: string) => void;
@@ -74,13 +74,13 @@ export function useDocumentController({
         return;
       }
 
-      // 2. Check extension (.pdf, .doc, .docx)
+      // 2. Check extension (.pdf, .doc, .docx, .txt, .md)
       const lowerName = file.name.toLowerCase();
       const isAllowed = ALLOWED_EXTENSIONS.some((ext) => lowerName.endsWith(ext));
       if (!isAllowed) {
         onError?.(
           'Unsupported File Type',
-          `File "${file.name}" is not supported. Please upload a PDF (.pdf) or Word document (.doc, .docx).`
+          `File "${file.name}" is not supported. Please upload a PDF (.pdf), Word document (.doc, .docx), text (.txt), or Markdown file (.md).`
         );
         return;
       }

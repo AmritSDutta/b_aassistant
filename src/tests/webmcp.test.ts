@@ -26,10 +26,11 @@ describe('WebMCP Provider & Tools', () => {
     const tools = provider.listTools();
     const names = tools.map((t) => t.name);
 
-    expect(tools).toHaveLength(18);
+    expect(tools).toHaveLength(19);
     expect(names).toContain('get_tool_usage_prompt');
     expect(names).toContain('get_reference_url');
     expect(names).toContain('get_user_preferences');
+    expect(names).toContain('get_current_time');
     expect(names).toContain('canvas_draw');
     expect(names).toContain('canvas_clear');
     expect(names).toContain('canvas2d_draw_shapes');
@@ -59,6 +60,24 @@ describe('WebMCP Provider & Tools', () => {
     expect(guide).toContain('chat_post');
     expect(guide).toContain('export_pdf');
     expect(guide).toContain('get_user_preferences');
+    expect(guide).toContain('get_current_time');
+  });
+
+  it('returns current local time and timezone via get_current_time', async () => {
+    const res = (await provider.callTool('get_current_time', {})) as {
+      iso: string;
+      formatted: string;
+      timeZone: string;
+      epochMs: number;
+    };
+    expect(res).toBeDefined();
+    expect(typeof res.iso).toBe('string');
+    expect(new Date(res.iso).getTime()).not.toBeNaN();
+    expect(typeof res.formatted).toBe('string');
+    expect(res.formatted.length).toBeGreaterThan(0);
+    expect(typeof res.timeZone).toBe('string');
+    expect(typeof res.epochMs).toBe('number');
+    expect(res.epochMs).toBeGreaterThan(0);
   });
 
   it('executes canvas_draw and updates canvas history', async () => {

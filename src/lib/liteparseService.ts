@@ -344,7 +344,31 @@ export class LiteParseService {
       return [{ pageNumber: 1, text: `Document "${fileName}" contains unextractable binary PDF content.` }];
     }
 
-    const rawParts = raw.split(/\f|\n(?=--- Page \d+ ---)|\n(?=Page \d+ of \d+)/i);
+    let rawParts = raw.split(/\f|\n(?=--- Page \d+ ---)|\n(?=Page \d+ of \d+)/i);
+    if (rawParts.length === 1 && raw.length > 1500) {
+      // For Markdown/text documents, partition on Markdown headings or double newlines
+      const headingParts = raw.split(/\n(?=#{1,3}\s)/);
+      if (headingParts.length > 1) {
+        rawParts = headingParts;
+      } else {
+        const paragraphs = raw.split(/\n\s*\n/);
+        if (paragraphs.length > 1) {
+          const grouped: string[] = [];
+          let current = '';
+          for (const p of paragraphs) {
+            if (current.length + p.length > 1500 && current.trim().length > 0) {
+              grouped.push(current);
+              current = p;
+            } else {
+              current = current ? `${current}\n\n${p}` : p;
+            }
+          }
+          if (current.trim().length > 0) grouped.push(current);
+          if (grouped.length > 1) rawParts = grouped;
+        }
+      }
+    }
+
     const validParts = rawParts
       .map((part) => part.replace(/[^\x20-\x7E\n\r\t\u00A0-\uFFFF]/g, ' ').replace(/\s+/g, ' ').trim())
       .filter((p) => p.length > 0);

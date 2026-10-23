@@ -51,7 +51,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           Document Ingestion
         </label>
         <span className="text-[10px] font-mono" style={{ color: 'var(--ink-soft)' }}>
-          &lt; 2MB Doc/PDF
+          &lt; 2MB Doc/Text
         </span>
       </div>
 
@@ -73,7 +73,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         <input
           ref={fileInputRef}
           type="file"
-          accept=".pdf,.doc,.docx"
+          accept=".pdf,.doc,.docx,.txt,.md"
           onChange={handleFileChange}
           className="hidden"
         />
@@ -81,7 +81,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           <p className="font-medium" style={{ color: dragOver ? 'var(--accent)' : 'var(--ink)' }}>
             {dragOver ? 'Release to ingest' : 'Drop file or browse'}
           </p>
-          <p className="text-[10px] mt-0.5">PDF or Word document (&lt; 2MB)</p>
+          <p className="text-[10px] mt-0.5">PDF, Word, TXT, or MD (&lt; 2MB)</p>
         </div>
       </div>
 

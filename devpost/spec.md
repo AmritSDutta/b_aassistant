@@ -10,13 +10,14 @@ A zero-backend, React-based single-page browser assistant deployed to Cloudflare
 ## How This Works, In Plain Language
 `bAssistant` is a client-side application built with React and Vite. When a user opens it:
 1. The page renders a 20/80 layout: a left sidebar (branding with dynamic transparent logo, light/dark toggle, file upload, Reference URLs manager for up to 10 verified links, and Session Highlights) and an 80% main area split into a top 60% HTML canvas and a bottom 40% chat interface.
-2. If the user uploads a Doc or PDF file (< 2MB), `LiteParse` runs directly inside the browser using WebAssembly (WASM). It extracts text page-by-page, with stream decompressor fallback, hex PDF string token decoding (`<...> Tj` and `[...] TJ`), and in-browser DOCX PKZip `word/document.xml` decompression. A client-side BM25 indexer tokenizes and scores the text, saving the chunks and index into the browser's IndexedDB.
+2. If the user uploads a Doc, PDF, TXT, or Markdown file (< 2MB), `LiteParse` runs directly inside the browser using WebAssembly (WASM) for PDFs and Word docs, with stream decompressor fallback, hex PDF string token decoding (`<...> Tj` and `[...] TJ`), and in-browser DOCX PKZip `word/document.xml` decompression. Plain text and markdown files are parsed and chunked into discrete pages on headings/paragraphs. A client-side BM25 indexer tokenizes and scores the text, saving the chunks and index into the browser's IndexedDB.
 3. The user types messages into the chat box. Each message is tagged with a `user:` prefix and kept in application state.
-4. The page initializes a **Unified WebMCP Provider** that registers 18 tools onto six discovery surfaces: `document.modelContext`, `navigator.modelContext`, `window.webmcp`, hidden DOM tool forms, ready custom events, and `window.postMessage` for standard JSON-RPC 2.0 MCP commands.
+4. The page initializes a **Unified WebMCP Provider** that registers 19 tools onto six discovery surfaces: `document.modelContext`, `navigator.modelContext`, `window.webmcp`, hidden DOM tool forms, ready custom events, and `window.postMessage` for standard JSON-RPC 2.0 MCP commands.
 5. Any visiting LLM, extension, or WebMCP inspector discovers the exposed tools:
    - `get_tool_usage_prompt`: returns the read-only operating guide for using all other tools (call first).
    - `get_reference_url`: returns comma-separated reference URLs stored in browser cache.
    - `get_user_preferences`: returns stored user preferences as a string array (`string[]`, up to 10 items, max 120 chars each).
+   - `get_current_time`: returns the user's current local date, weekday, time, time zone, and ISO timestamp.
    - `search_document`: queries the local BM25 index in IndexedDB.
    - `clean_document`: wipes the IndexedDB chunks and resets the upload box.
    - `get_chat_history`: retrieves conversation logs including `user:` prompts.
@@ -32,10 +33,10 @@ A zero-backend, React-based single-page browser assistant deployed to Cloudflare
 ## The Core Journey Through the System
 Traces `prd.md > The Core Journey`:
 1. **User loads page:** Browser loads static HTML/JS bundle from Cloudflare Pages. React mounts `App`, reads local theme preference (Light/Dark), and initializes the `WebMCPBridge` service. Canvas and Chat initialize blank.
-2. **File dropped (< 2MB):** `FileUpload` component validates size (< 2MB) and extension (.pdf, .doc, .docx). If valid, passes bytes to `LiteParseService` (WASM / stream / docx zip), extracts pages, passes text to `BM25Indexer`, and stores records in `DocumentStore` (IndexedDB). UI displays file name, page count, and "Indexed" badge. If invalid, `Modal` popup displays error.
+2. **File dropped (< 2MB):** `FileUpload` component validates size (< 2MB) and extension (.pdf, .doc, .docx, .txt, .md). If valid, passes bytes to `LiteParseService` (WASM / stream / docx zip / text chunker), extracts pages, passes text to `BM25Indexer`, and stores records in `DocumentStore` (IndexedDB). UI displays file name, page count, and "Indexed" badge. If invalid, `Modal` popup displays error.
 3. **User submits prompt:** `ChatView` appends `{ sender: 'user', text: input }` to state.
 4. **Visiting Agent accesses WebMCP:** Agent invokes `get_chat_history` via `window.webmcp.callTool` or `postMessage({ method: 'tools/call' })`.
-5. **Agent executes queries & math:** Agent invokes `search_document` (queries IndexedDB BM25), `get_reference_url`, `search_web` (DDGS), `search_research` (ArXiv), or `calculate`.
+5. **Agent executes queries & math:** Agent invokes `search_document` (queries IndexedDB BM25), `get_reference_url`, `get_current_time`, `search_web` (DDGS), `search_research` (ArXiv), or `calculate`.
 6. **Agent outputs visually and textually:** Agent calls `chat_post` to append response to `ChatView`, and calls `canvas_draw` to instruct `CanvasEngine` to draw diagram lines, boxes, labels, and graphs.
 7. **Reset / Cleanup:** User clicks "Clear Canvas" (calls `canvas_clear`) or triggers `clean_document` to wipe IndexedDB.
 

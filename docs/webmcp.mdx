@@ -9,7 +9,7 @@ bAssistant implements multi-standard WebMCP support to maximize compatibility wi
 
 ## Registered Standards
 
-On `register()`, `WebMCPProvider` publishes the same **18 tools** across six discovery surfaces at
+On `register()`, `WebMCPProvider` publishes the same **19 tools** across six discovery surfaces at
 once, so any inspector, extension, or script finds them regardless of which protocol it probes:
 
 1. **`document.modelContext`**: The primary Chromium imperative surface. When the native flag
@@ -34,7 +34,7 @@ once, so any inspector, extension, or script finds them regardless of which prot
 **Ready events:** on registration it dispatches both `webmcp:ready` and `modelcontext:ready` custom
 events on `window`, each carrying `detail: { tools }`.
 
-> Only `get_tool_usage_prompt`, `get_reference_url`, and `get_user_preferences` set `readOnlyHint: true`. All other tools leave
+> Only `get_tool_usage_prompt`, `get_reference_url`, `get_user_preferences`, and `get_current_time` set `readOnlyHint: true`. All other tools leave
 > the hint unset (they are not flagged read-only).
 
 **Lifecycle:** the provider is constructed **once** in `App.tsx` and torn down only on unmount. Its
@@ -48,6 +48,7 @@ never re-register (or mid-session abort) the tool set; `updateWebMCPContext()` s
 | `get_tool_usage_prompt` | `{}` | Read-only: returns the official agent operating guide explaining how to use every other bAssistant tool (retrieval, canvas, chat, PDF export, conventions). |
 | `get_reference_url` | `{}` | Read-only: returns a comma-separated list of external reference/documentation URLs cached in the browser session. |
 | `get_user_preferences` | `{}` | Read-only: returns the active user preferences as a string array (e.g. `["Use pastel colors", "Keep explanations concise"]`, max 10 items, max 120 chars each). |
+| `get_current_time` | `{}` | Read-only: returns the user's current local date, weekday, time, time zone, and ISO timestamp directly from the browser environment. |
 | `get_chat_history` | `{}` | Returns recent dialogue history with user messages prefixed by `user:`. |
 | `chat_post` | `{ text: string }` | Posts textual responses, markdown, or status updates to the chat area for the visiting LLM. |
 | `canvas2d_draw_shapes` | `{ shapes: object[] \| string }` | Appends structured Canvas2D shapes (rectangles, ellipses, diamonds, text, stickers) rendered with Rough.js hand-drawn sketching, plus fluid Bézier connectors bound via `startId`/`endId`. Supports optional artistic styling (`roughness`, `fillStyle`, `subtitle`, `palette`). Accepts an array or a JSON string. |
