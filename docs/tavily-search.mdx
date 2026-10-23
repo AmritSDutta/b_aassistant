@@ -77,6 +77,7 @@ Keyless access is free and subject to rate limits. When usage caps are reached o
 2. It immediately executes `searchDuckDuckGo()` as a fallback.
 3. The response metadata clearly identifies the active provider (`source: 'tavily'` or `source: 'duckduckgo'`) along with an ISO `fetchedAt` timestamp.
 4. If both providers fail, the service returns `{ results: [], unavailable: true }` so the model honestly reports network unavailability rather than hallucinating facts.
+5. The DuckDuckGo HTML is parsed by `parseDdgHtml()` (`src/lib/ddgSearch.ts`): each snippet is read from its own result block (never by array position), ad/redirect links and non-`http(s)` URLs are dropped, and a challenge/bot-wall page is treated as a failure — surfacing `unavailable: true` rather than a misleading empty success.
 
 ---
 
@@ -85,3 +86,8 @@ Keyless access is free and subject to rate limits. When usage caps are reached o
 The Tavily search integration is covered by hermetic Vitest suites:
 - `src/tests/tavilySearch.test.ts`: Validates request headers, body payload construction, content mapping, empty query handling, and non-200 status handling.
 - `src/tests/searchService.test.ts`: Verifies dynamic source attribution (`tavily` vs. `duckduckgo`) and failure semantics.
+- `src/tests/ddgSearch.test.ts`: Covers the DuckDuckGo HTML parser — block-scoped snippet pairing, entity decoding, ad/`http(s)` URL filtering, the result limit — and the challenge-page failure path.
+
+---
+
+See [DuckDuckGo Fallback & Parser Nuances](/ddg-search) for the scraping, redirect-unwrapping, ad-filtering, and bot-wall details behind the fallback.

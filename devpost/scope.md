@@ -98,3 +98,17 @@ A test run demonstrates a visiting agent calling these tools, retrieving data, u
 - **Server-side database / backend servers:** Strictly browser-storage only; zero server footprint.
 - **Direct generative image/video AI APIs:** Eliminated by design in favor of fast, free programmatic HTML canvas drawing.
 - **Built-in paid LLM billing/routing:** Visiting LLM connectivity is handled by the user's environment/agent via WebMCP.
+
+## Improvement — Search Fallback Reliability (2026-10-23)
+
+The free DuckDuckGo fallback behind `search_web` should be *correct and trustworthy*, not merely "usually works". Today the fallback parser is untested, can mis-pair snippets with the wrong result, lets ad/redirect links through, and reports a DuckDuckGo bot-wall page as a successful empty result. This improvement tightens the fallback so its output can be trusted and its failures are honest.
+
+- **In now:**
+  - Extract a pure, unit-testable HTML parser (`parseDdgHtml`) out of the fetch wrapper.
+  - Pair each snippet with its **own** result block instead of by array position.
+  - Drop DuckDuckGo ad/redirect anchors from results.
+  - Only surface `http(s)` result URLs; discard anything else after redirect unwrapping.
+  - Treat a challenge/bot-wall page as an **unavailable** failure instead of an empty success.
+  - Harden request headers and expand HTML entity decoding.
+  - Add hermetic tests for the parser and the failure path.
+- **Explicitly cut:** paid search APIs; a third fallback provider; a response cache; de-duplicating the dev/prod fallback orchestration; per-request retry/backoff.

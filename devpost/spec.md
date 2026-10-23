@@ -187,6 +187,13 @@ Self-contained, decoupled voice package:
 - `hooks/useVoiceAgent.ts`: React voice agent lifecycle hook equipped with an `isSessionActiveRef` cancellation token guarding asynchronous events (`onEnd`, `onTurnComplete`, `onStart`) from mutating state when stopped, guaranteeing reliable `standby` reset.
 - `components/VoiceLiveController.tsx`, `VoiceSettingsModal.tsx`, `AudioPreflightModal.tsx`: Voice UI components and modal dialogs styled strictly with the application's semantic CSS design tokens (`var(--panel)`, `var(--card)`, `var(--paper)`, `var(--line)`, `var(--ink)`, `var(--ink-soft)`), fully harmonized for light/dark theme toggling without hardcoded zinc backgrounds.
 
+### 12. `ddgSearch` (DuckDuckGo fallback parser)
+Implements `prd.md > Features and Behavior > 11. DuckDuckGo Fallback Parser Reliability`.
+Standalone module (`src/lib/ddgSearch.ts`) that scrapes `https://html.duckduckgo.com/html/` and returns `RawSearchResult[]` (`{ title, snippet, url }`). Split into two layers so the fragile part is testable without a network:
+- `parseDdgHtml(html, limit = 5): RawSearchResult[]` — **pure, exported**. Splits the returned HTML into per-result blocks on the DuckDuckGo result container class, then reads the link anchor and the snippet **from the same block** (no positional pairing). Skips ad/redirect anchors (`.../y.js`). Unwraps the DuckDuckGo redirect (`uddg`) and returns only `http(s)` URLs. Strips tags and decodes named + numeric HTML entities.
+- `searchDuckDuckGo(query, limit = 5): Promise<RawSearchResult[]>` — thin `fetch` wrapper. Sends `User-Agent`, `Accept`, `Referer`, and `Accept-Language`; returns `[]` for a blank query without fetching; calls `parseDdgHtml` on the body. Throws when the response is non-OK **or** the body is a challenge/bot-wall page (no result blocks plus bot-wall markers), so the `/api/websearch` handler reports `unavailable: true` (HTTP 502) rather than an empty success.
+Consumed by `functions/api/websearch.ts` (production) and the `dev-api-endpoints` middleware in `vite.config.ts` (development) as the fallback after keyless Tavily.
+
 ## Data Model
 
 ### 1. `IndexedDB` (`bAssistantDB`)
@@ -270,6 +277,7 @@ C:/codebase/b_aassistant/
 │   │   ├── bm25.ts              # Client-side BM25 indexer and query scorer
 │   │   ├── searchService.ts     # DDGS search & ArXiv API fetch handlers
 │   │   ├── tavilySearch.ts      # Keyless Tavily search client (primary)
+│   │   ├── ddgSearch.ts         # DuckDuckGo HTML fallback scraper & pure parser
 │   │   ├── symbolHumanizer.ts   # LaTeX symbol & arrow normalizer (UI & PDF)
 │   │   └── mathEvaluator.ts     # Decimal math calculator
 │   ├── voice/                   # Isolated Voice Live & Pluggable Model Package
@@ -298,6 +306,7 @@ C:/codebase/b_aassistant/
 │       ├── documentProcessing.test.ts# LiteParse parsing pipeline
 │       ├── searchService.test.ts# Web/research fallbacks
 │       ├── tavilySearch.test.ts # Keyless Tavily search & mapping
+│       ├── ddgSearch.test.ts    # DuckDuckGo HTML parsing & failure path
 │       ├── cryptoStorage.test.ts# AES-GCM-256 key encryption
 │       ├── modelRegistry.test.ts# Voice model provider registry
 │       ├── audioUtils.test.ts   # Audio scheduler and interrupt
@@ -325,7 +334,7 @@ C:/codebase/b_aassistant/
 
 ## External Services and Dependencies
 - **Tavily Search API:** Keyless AI search endpoint (`POST https://api.tavily.com/search`, `X-Tavily-Access-Mode: keyless`). Free, zero auth.
-- **DuckDuckGo API:** Public CORS-accessible endpoint for web search summaries (`https://api.duckduckgo.com/?q={query}&format=json`). Free, zero auth.
+- **DuckDuckGo HTML search:** Server-side scrape of `https://html.duckduckgo.com/html/?q={query}` (GET) from the Vite dev middleware or Cloudflare Pages Function (never directly from the browser, so no CORS dependency). Sends `User-Agent`, `Accept: text/html`, `Referer`, and `Accept-Language`. Returns HTML parsed to `{ title, snippet, url }[]`. Free, zero auth; aggressively rate-limited from datacenter IPs, which is why it is the fallback and not the primary.
 - **ArXiv API:** Public export search endpoint (`https://export.arxiv.org/api/query?search_query=all:{query}&max_results=5`). Free, zero auth.
 - **Gemini Live WebSocket API (`@google/genai`):** Direct client-side WebSocket communication for bidirectional duplex audio (`ai.live.connect`).
 - **Cloudflare Pages:** Free static hosting.
@@ -335,6 +344,7 @@ C:/codebase/b_aassistant/
 - **Blank Export Attempt:** Caught immediately by `handleExportPdf` and `pdfExportService`. Triggers `NotificationModal` explaining that the session is blank and returns an error for WebMCP `export_pdf`.
 - **WASM Initialization Delay:** `LiteParseService` loads WASM asynchronously. Upload dropzone shows a subtle loading spinner until the parser is ready.
 - **External Search Network Failure:** If DuckDuckGo or ArXiv is unreachable due to connectivity, the tool returns a clean error object (`{ error: "Search service unavailable" }`) rather than failing silently.
+- **DuckDuckGo Challenge / Bot-Wall:** `searchDuckDuckGo` detects a challenge/anomaly page (no result blocks plus bot-wall markers) or a non-OK status and throws; `functions/api/websearch.ts` and the dev middleware convert that into HTTP 502 with `{ results: [], unavailable: true, error }`, so a blocked fallback is reported as unavailable rather than as a successful empty result.
 
 ## What Was Simplified and Why
 - **BM25 In-Browser Lexical Search** instead of cloud vector embeddings: keeps user documents 100% private in browser storage, avoids API keys and token costs, and runs instantly in IndexedDB.

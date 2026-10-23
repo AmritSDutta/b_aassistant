@@ -20,122 +20,36 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      padding: 2rem 1rem;
+      background: var(--bg); color: var(--text); line-height: 1.6; padding: 2rem 1rem;
     }
-    .container {
-      max-width: 960px;
-      margin: 0 auto;
-    }
-    header {
-      margin-bottom: 2rem;
-      border-bottom: 1px solid var(--card-border);
-      padding-bottom: 1.5rem;
-    }
+    .container { max-width: 960px; margin: 0 auto; }
+    header { margin-bottom: 2rem; border-bottom: 1px solid var(--card-border); padding-bottom: 1.5rem; }
     .badge {
-      display: inline-block;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      padding: 0.25rem 0.6rem;
-      border-radius: 9999px;
-      background: var(--accent-glow);
-      color: var(--accent);
-      border: 1px solid var(--accent);
-      margin-bottom: 0.75rem;
+      display: inline-block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; padding: 0.25rem 0.6rem; border-radius: 9999px;
+      background: var(--accent-glow); color: var(--accent); border: 1px solid var(--accent); margin-bottom: 0.75rem;
     }
     h1 { font-size: 2.25rem; font-weight: 800; margin-bottom: 0.5rem; }
     .tagline { color: var(--text-muted); font-size: 1.1rem; }
-    
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 0.75rem;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
+    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1.5rem; }
     h2 { font-size: 1.35rem; margin-bottom: 1rem; color: var(--accent); }
-    
-    .diagram-container {
-      background: #090d16;
-      border: 1px solid var(--card-border);
-      border-radius: 0.5rem;
-      padding: 1rem;
-      margin: 1.25rem 0;
-      display: flex;
-      justify-content: center;
-    }
+    h3 { font-size: 1.05rem; margin: 1.1rem 0 0.5rem; color: var(--text); }
+    .diagram-container { background: #090d16; border: 1px solid var(--card-border); border-radius: 0.5rem; padding: 1rem; margin: 1.25rem 0; display: flex; justify-content: center; }
     svg text { font-family: inherit; }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-    @media (max-width: 720px) {
-      .grid-2 { grid-template-columns: 1fr; }
-    }
-
-    /* Interactive reveals */
-    details {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid var(--card-border);
-      border-radius: 0.5rem;
-      padding: 0.85rem 1.2rem;
-      margin-bottom: 0.75rem;
-      cursor: pointer;
-    }
-    details summary {
-      font-weight: 600;
-      color: var(--text);
-      outline: none;
-      user-select: none;
-    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+    details { background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border); border-radius: 0.5rem; padding: 0.85rem 1.2rem; margin-bottom: 0.75rem; cursor: pointer; }
+    details summary { font-weight: 600; color: var(--text); outline: none; user-select: none; }
     details[open] { border-color: var(--accent); }
-    details p, details ul { margin-top: 0.75rem; color: var(--text-muted); font-size: 0.95rem; }
-    ul { padding-left: 1.25rem; }
-    li { margin-bottom: 0.4rem; }
-
-    .step-badge {
-      display: inline-block;
-      background: #38bdf8;
-      color: #0f172a;
-      font-weight: bold;
-      border-radius: 50%;
-      width: 22px;
-      height: 22px;
-      text-align: center;
-      line-height: 22px;
-      font-size: 0.8rem;
-      margin-right: 0.5rem;
-    }
-
-    .tool-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 0.75rem;
-      margin-top: 1rem;
-    }
-    .tool-card {
-      background: #0f172a;
-      border: 1px solid var(--card-border);
-      border-radius: 0.5rem;
-      padding: 0.75rem 1rem;
-    }
-    .tool-name {
-      font-family: monospace;
-      color: #38bdf8;
-      font-weight: bold;
-      font-size: 0.95rem;
-    }
-    .tool-desc {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-top: 0.25rem;
-    }
+    details p, details ul, details ol { margin-top: 0.75rem; color: var(--text-muted); font-size: 0.95rem; }
+    ul, ol { padding-left: 1.25rem; }
+    li { margin-bottom: 0.4rem; color: var(--text-muted); }
+    .step-badge { display: inline-block; background: #38bdf8; color: #0f172a; font-weight: bold; border-radius: 50%; width: 22px; height: 22px; text-align: center; line-height: 22px; font-size: 0.8rem; margin-right: 0.5rem; }
+    .tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; margin-top: 1rem; }
+    .tool-card { background: #0f172a; border: 1px solid var(--card-border); border-radius: 0.5rem; padding: 0.75rem 1rem; }
+    .tool-name { font-family: monospace; color: #38bdf8; font-weight: bold; font-size: 0.95rem; }
+    .tool-desc { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; }
+    code { font-family: monospace; color: #7dd3fc; }
   </style>
 </head>
 <body>
@@ -143,216 +57,298 @@
     <header>
       <span class="badge" style="border-color: var(--green); color: var(--green); background: rgba(52, 211, 153, 0.15);">Product Requirements Companion — Status: Approved</span>
       <h1>bAssistant</h1>
-      <p class="tagline">Zero-backend React SPA deployed to Cloudflare Pages. Empowers visiting LLMs via WebMCP with live canvas diagramming, in-browser LiteParse + BM25 local doc querying, and free research tools.</p>
+      <p class="tagline">Zero-backend React SPA on Cloudflare Pages. Empowers visiting LLMs via WebMCP with live canvas diagramming, in-browser LiteParse + BM25 local doc querying, decoupled live voice, and free research tools.</p>
     </header>
 
     <div class="card">
-      <h2>The Core User &amp; Agent Journey</h2>
+      <h2>The Core Journey</h2>
       <div class="diagram-container">
-        <svg viewBox="0 0 800 280" width="100%" height="auto">
-          <!-- Step 1 -->
-          <rect x="20" y="30" width="130" height="90" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
-          <text x="85" y="55" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">1. Arrival</text>
-          <text x="85" y="75" fill="#94a3b8" font-size="9" text-anchor="middle">Loads SPA in</text>
-          <text x="85" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Light/Dark Mode</text>
-          <text x="85" y="105" fill="#64748b" font-size="8" text-anchor="middle">Canvas/Chat blank</text>
+        <svg viewBox="0 0 800 190" width="100%" height="auto">
+          <rect x="10" y="30" width="120" height="90" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="70" y="55" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">1. Arrival</text>
+          <text x="70" y="78" fill="#94a3b8" font-size="9" text-anchor="middle">20/80 layout</text>
+          <text x="70" y="92" fill="#94a3b8" font-size="9" text-anchor="middle">Light/Dark</text>
+          <text x="70" y="106" fill="#64748b" font-size="8" text-anchor="middle">Canvas/Chat blank</text>
 
-          <!-- Arrow 1-2 -->
-          <line x1="150" y1="75" x2="175" y2="75" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+          <rect x="146" y="30" width="120" height="90" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="206" y="55" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">2. File Ingest</text>
+          <text x="206" y="78" fill="#94a3b8" font-size="9" text-anchor="middle">Doc/PDF &lt;2MB</text>
+          <text x="206" y="92" fill="#94a3b8" font-size="9" text-anchor="middle">LiteParse WASM</text>
+          <text x="206" y="106" fill="#34d399" font-size="8" text-anchor="middle">Indexed in IndexedDB</text>
 
-          <!-- Step 2 -->
-          <rect x="180" y="30" width="130" height="90" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
-          <text x="245" y="55" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">2. File Ingest</text>
-          <text x="245" y="75" fill="#94a3b8" font-size="9" text-anchor="middle">Doc/PDF &lt;1MB</text>
-          <text x="245" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">LiteParse WASM</text>
-          <text x="245" y="105" fill="#34d399" font-size="8" text-anchor="middle">Indexed in IndexedDB</text>
+          <rect x="282" y="30" width="120" height="90" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="342" y="55" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">3. User Input</text>
+          <text x="342" y="78" fill="#94a3b8" font-size="9" text-anchor="middle">Types into chat</text>
+          <text x="342" y="92" fill="#fbbf24" font-size="9" font-family="monospace" text-anchor="middle">"user:" prefix</text>
 
-          <!-- Arrow 2-3 -->
-          <line x1="310" y1="75" x2="335" y2="75" stroke="#475569" stroke-width="2"/>
+          <rect x="418" y="30" width="130" height="90" rx="6" fill="#1e293b" stroke="#a855f7" stroke-width="1.5"/>
+          <text x="483" y="55" fill="#c084fc" font-size="11" font-weight="bold" text-anchor="middle">4. WebMCP Visit</text>
+          <text x="483" y="78" fill="#94a3b8" font-size="9" text-anchor="middle">Discovers tools</text>
+          <text x="483" y="92" fill="#94a3b8" font-size="9" text-anchor="middle">get_tool_usage_prompt</text>
+          <text x="483" y="106" fill="#94a3b8" font-size="9" text-anchor="middle">get_chat_history</text>
 
-          <!-- Step 3 -->
-          <rect x="340" y="30" width="130" height="90" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
-          <text x="405" y="55" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">3. User Prompt</text>
-          <text x="405" y="75" fill="#94a3b8" font-size="9" text-anchor="middle">Types into input</text>
-          <text x="405" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Stored with</text>
-          <text x="405" y="105" fill="#fbbf24" font-size="9" font-family="monospace" text-anchor="middle">"user:" prefix</text>
+          <rect x="564" y="30" width="130" height="90" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="629" y="55" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">5. Tool Execution</text>
+          <text x="629" y="78" fill="#94a3b8" font-size="9" text-anchor="middle">search_document</text>
+          <text x="629" y="92" fill="#94a3b8" font-size="9" text-anchor="middle">search_web / research</text>
+          <text x="629" y="106" fill="#94a3b8" font-size="9" text-anchor="middle">calculate</text>
 
-          <!-- Arrow 3-4 -->
-          <line x1="470" y1="75" x2="495" y2="75" stroke="#475569" stroke-width="2"/>
+          <rect x="710" y="30" width="80" height="90" rx="6" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+          <text x="750" y="55" fill="#34d399" font-size="10" font-weight="bold" text-anchor="middle">6. Output</text>
+          <text x="750" y="78" fill="#94a3b8" font-size="9" text-anchor="middle">Canvas 60%</text>
+          <text x="750" y="92" fill="#94a3b8" font-size="9" text-anchor="middle">Chat 40%</text>
 
-          <!-- Step 4 -->
-          <rect x="500" y="30" width="130" height="90" rx="6" fill="#1e293b" stroke="#a855f7" stroke-width="1.5"/>
-          <text x="565" y="55" fill="#c084fc" font-size="11" font-weight="bold" text-anchor="middle">4. WebMCP Visit</text>
-          <text x="565" y="75" fill="#94a3b8" font-size="9" text-anchor="middle">Visiting LLM connects</text>
-          <text x="565" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Reads guide + history</text>
-          <text x="565" y="105" fill="#94a3b8" font-size="9" text-anchor="middle">Calls search/math</text>
-
-          <!-- Arrow 4-5 -->
-          <line x1="630" y1="75" x2="655" y2="75" stroke="#475569" stroke-width="2"/>
-
-          <!-- Step 5 -->
-          <rect x="660" y="30" width="120" height="90" rx="6" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
-          <text x="720" y="55" fill="#34d399" font-size="11" font-weight="bold" text-anchor="middle">5. Live Output</text>
-          <text x="720" y="75" fill="#94a3b8" font-size="9" text-anchor="middle">Canvas (Top 60%)</text>
-          <text x="720" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Chat Stream (40%)</text>
-          <text x="720" y="105" fill="#64748b" font-size="8" text-anchor="middle">Multimodal answer</text>
-
-          <!-- Bottom Summary Box -->
-          <rect x="20" y="150" width="760" height="100" rx="6" fill="#0f172a" stroke="#334155"/>
-          <text x="400" y="180" fill="#f8fafc" font-size="12" font-weight="bold" text-anchor="middle">Zero-Backend Architecture</text>
-          <text x="400" y="205" fill="#94a3b8" font-size="11" text-anchor="middle">Standard browser-native WebMCP endpoints &bull; IndexedDB BM25 store &bull; LiteParse WASM &bull; Cloudflare Pages</text>
-          <text x="400" y="225" fill="#64748b" font-size="10" text-anchor="middle">Canvas controls callable both from UI buttons and WebMCP tool invocations</text>
+          <rect x="10" y="140" width="780" height="34" rx="6" fill="#0f172a" stroke="#334155"/>
+          <text x="400" y="161" fill="#94a3b8" font-size="10" text-anchor="middle">7. Canvas &amp; storage control — Clear Canvas / New Session / Export PDF, or clean_document to wipe IndexedDB</text>
         </svg>
       </div>
+      <ol>
+        <li><strong>Arrival:</strong> the UI renders the 20/80 layout in the chosen theme; canvas and chat start blank.</li>
+        <li><strong>Document ingestion (optional):</strong> a Doc/PDF &lt; 2MB is parsed pagewise by LiteParse (WASM) and indexed into a client-side BM25 index in IndexedDB; the upload area shows file name, page count, and an "Indexed" badge. Files ≥ 2MB or unsupported trigger a rejection popup.</li>
+        <li><strong>User input:</strong> messages typed into the chat are shown with a <code>user:</code> prefix.</li>
+        <li><strong>Agent connection &amp; tool discovery:</strong> a visiting LLM connects via browser-native WebMCP and calls <code>get_tool_usage_prompt</code> first to learn the intended workflow.</li>
+        <li><strong>Tool execution:</strong> the LLM queries history and calls <code>search_document</code> (BM25), <code>search_web</code> (Tavily-first), <code>search_research</code> (ArXiv), or <code>calculate</code>.</li>
+        <li><strong>Multimodal output:</strong> the LLM streams its explanation into the 40% chat area and renders live diagrams on the top 60% canvas.</li>
+        <li><strong>Canvas &amp; storage control:</strong> clear the canvas via UI button or tool; run <code>clean_document</code> to wipe stored chunks and reset the upload area.</li>
+      </ol>
     </div>
 
     <div class="card">
-      <h2>WebMCP Exposed Tool Suite</h2>
-      <div class="tool-grid">
-        <div class="tool-card">
-          <div class="tool-name">search_web</div>
-          <div class="tool-desc">DuckDuckGo search (via DDGS) returning relevant web summaries.</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">search_research</div>
-          <div class="tool-desc">ArXiv paper search returning title, authors, and abstracts.</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">calculate</div>
-          <div class="tool-desc">Evaluates decimal math expressions accurately.</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">search_document</div>
-          <div class="tool-desc">Queries uploaded document chunks in IndexedDB using BM25.</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">clean_document</div>
-          <div class="tool-desc">Purges stored document chunks from IndexedDB and resets upload box.</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">get_chat_history</div>
-          <div class="tool-desc">Returns dialogue stream containing user messages prefixed with "user:".</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">canvas_draw</div>
-          <div class="tool-desc">Renders shapes, lines, text, flowcharts, and diagrams on the HTML canvas.</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">canvas_clear</div>
-          <div class="tool-desc">Wipes the canvas clean (also accessible via UI Clear Canvas button).</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">chat_post</div>
-          <div class="tool-desc">Appends or streams agent responses into the 40% chat area.</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">get_tool_usage_prompt</div>
-          <div class="tool-desc">Read-only, zero-arg: returns the agent operating guide explaining how to use every other tool. Agents call it first.</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">canvas2d_draw_shapes</div>
-          <div class="tool-desc">Appends structured scene-graph shapes (rectangles, ellipses, diamonds, text, stickers) with arrows that stay attached to nodes.</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">canvas2d_inspect_shapes</div>
-          <div class="tool-desc">Returns the active scene graph and an ASCII topology graph so agents can inspect layout before modifying.</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">canvas2d_modify_shape</div>
-          <div class="tool-desc">Targeted in-place edits (label, colors, position) by nodeId, keeping connected arrows attached.</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">canvas2d_clear</div>
-          <div class="tool-desc">Resets all shapes from the Canvas2D scene graph.</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">draw_diagram</div>
-          <div class="tool-desc">Draws a connected flowchart or architecture graph with labeled edges.</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">export_pdf</div>
-          <div class="tool-desc">Generates the multilingual session PDF: canvas snapshot + humanized chat transcript. Blank sessions are rejected with a popup.</div>
-        </div>
-      </div>
+      <h2>Screens and Layout</h2>
+      <p style="color: var(--text-muted);">A responsive single-page cockpit filling 100% of the viewport:</p>
+      <h3>Left Sidebar (20% width)</h3>
+      <ul>
+        <li><strong>Section 1 (Top) — Branding:</strong> title "bAssistant", transparent theme-aware logo, and a 2-tiered right-aligned action cluster (Tier 1 <code>[voice]</code>, <code>[tips]</code>, <code>[theme]</code>; Tier 2 <code>⚙️ user preferences</code>).</li>
+        <li><strong>Section 2 — File Upload:</strong> dropzone + picker for Doc/PDF strictly under 2MB; shows filename, page count, and "Indexed" badge.</li>
+        <li><strong>Section 3 — Reference URLs:</strong> enboldened <code>REFERENCE URLS</code> header with count badge (up to 10); <code>+ Add</code> opens a reachability-verification modal before caching.</li>
+        <li><strong>Section 4 (Bottom) — Session Highlights:</strong> collects starred dialogue messages for instant revisit.</li>
+      </ul>
+      <h3>Main Workspace (80% width)</h3>
+      <ul>
+        <li><strong>Top 60% — HTML Canvas:</strong> interactive drawing surface with toolbar buttons ("Clear Canvas", etc.) that mirror exposed WebMCP tools.</li>
+        <li><strong>Bottom 40% — Chat Area:</strong> scrollable dialogue in Lora longform reading typography with auto-scroll, a bottom text input, and a header bar docking the compact <code>VoiceLiveController</code> (mic toggle, live status pill, transient caption preview, settings gear).</li>
+      </ul>
+      <h3>Modals &amp; Overlays</h3>
+      <ul>
+        <li><code>UserPreferencesModal</code> — manage up to 10 preferences (max 120 chars each) in <code>localStorage['b_user_preferences']</code>.</li>
+        <li><code>VoiceSettingsModal</code> — configure the Gemini key (AES-GCM-256 encrypted), Live audio model (<code>gemini-3.8-live</code> default), Subagent model (<code>gemini-3.5-flash-lite</code>), and Studio Voice (Puck, Charon, Kore, Fenrir, Aoede).</li>
+        <li><code>AudioPreflightModal</code> — 1-second mic permission + volume meter check before connecting.</li>
+      </ul>
     </div>
 
     <div class="card">
-      <h2>Key States and Boundaries</h2>
+      <h2>Look and Feel</h2>
+      <ul>
+        <li><strong>Theme:</strong> dual-mode (Light/Dark) switched from the branding header.</li>
+        <li><strong>Style:</strong> clean, utilitarian cockpit feel — precise panel dividers, high contrast, readable monospaced/sans typography for code and chat, responsive proportions.</li>
+        <li><strong>Initial visual state:</strong> canvas and chat list start completely blank on load.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Features and Behavior</h2>
+
+      <details>
+        <summary>1. Document Upload &amp; In-Browser Indexing</summary>
+        <ul>
+          <li><strong>Capability:</strong> ingestion of Doc/PDF strictly &lt; 2MB.</li>
+          <li><strong>Processing:</strong> client-side LiteParse (WASM) page chunking, with stream decompressor fallback, hex string decoding (<code>&lt;...&gt; Tj</code>, <code>[...] TJ</code>), and in-browser DOCX PKZip <code>word/document.xml</code> decompression.</li>
+          <li><strong>Storage:</strong> chunks + BM25 index in IndexedDB.</li>
+          <li><strong>Feedback:</strong> valid → filename, page count, "Indexed"; invalid (≥ 2MB or unsupported) → notification popup with the exact reason.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>2. Chat Conversation &amp; History</summary>
+        <ul>
+          <li><strong>Input:</strong> bottom text input + send button; user messages rendered with a <code>user:</code> prefix.</li>
+          <li><strong>Humanized rendering:</strong> headings (H1–H6), lists, fenced code blocks, blockquotes, and inline tokens (<code>**bold**</code>, <code>*italic*</code>, <code>`code`</code>, links) render as styled elements without raw markdown syntax.</li>
+          <li><strong>Symbol humanization (<code>symbolHumanizer.ts</code>):</strong> LaTeX arrows/operators → clean Unicode (<code>→</code>, <code>⇒</code>, <code>≤</code>, <code>≠</code>, <code>×</code>); currency (<code>$100</code>, <code>$50M</code>) preserved; multi-line sequence flows kept on separate lines.</li>
+          <li><strong>Retrieval &amp; posting:</strong> agent reads context via <code>get_chat_history</code> and appends text via <code>chat_post</code>.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>3. Live HTML Canvas Rendering &amp; Scene Graph</summary>
+        <ul>
+          <li>Structured Canvas2D shapes (<code>rectangle</code>, <code>ellipse</code>, <code>diamond</code>, <code>text</code>, <code>sticker</code>) + perimeter-docked connectors (<code>arrow</code>, <code>line</code>) rendered with Rough.js hand-drawn sketching.</li>
+          <li>Fluid cubic Bézier connectors with tangent-aligned arrowheads; tactile paper backdrop; Risograph color harmonies (terracotta, warm cobalt, sage mint, sunflower gold, plum).</li>
+          <li>Edge-to-edge perimeter docking; <code>fitToContent</code> auto-centering; drag-to-pan + cursor-pinned wheel zoom.</li>
+          <li>Universal <strong>medium dark yellow</strong> (<code>#d97706</code>) <strong>bold labels</strong> at <code>topCenter</code> and on connector pills for dual-theme contrast; live theme sync via <code>MutationObserver</code>.</li>
+          <li>Toolbar: New Session, Fit View, Reset View, Clear Canvas, Export PDF — also callable as WebMCP tools.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>4. Client-Side PDF Generation &amp; Session History</summary>
+        <ul>
+          <li>Active session persisted in <code>bAssistantDB</code> (<code>session_turns</code>, <code>session_meta</code>) across reloads; Session History Modal to browse/restore/export/delete past sessions; "New Session" restart.</li>
+          <li>Sequential turn-by-turn A4 export (<code>exportSessionPdf</code>): branding logo, session title/ID/timestamp, <code>TURN X [HH:MM]</code> badge, <code>USER INQUIRY</code>, canvas snapshot (aspect preserved), <code>AI DELIBERATION</code>.</li>
+          <li>Blank-session validation blocks export and alerts the user.</li>
+          <li>Markdown humanization for LLM content; <strong>Bengali &amp; Hindi</strong> complex-script rendering via Canvas2D shaping into jsPDF; 10mm multipage buffer; mandatory centered AI disclaimer footer <code>AI generated analysis, verify before applying.</code> with <code>Page X of Y</code>.</li>
+        </ul>
+      </details>
 
       <details open>
-        <summary><span class="step-badge">1</span> Initial &amp; Blank State</summary>
-        <p>Both the HTML canvas (top 60%) and chat area (bottom 40%) start completely blank. File upload dropzone is empty. Theme applies based on Light/Dark toggle in branding header.</p>
+        <summary>5. WebMCP Tool Suite (18 tools)</summary>
+        <div class="tool-grid">
+          <div class="tool-card"><div class="tool-name">get_tool_usage_prompt</div><div class="tool-desc">Read-only, zero-arg: the agent operating guide. Call first.</div></div>
+          <div class="tool-card"><div class="tool-name">get_reference_url</div><div class="tool-desc">Read-only, zero-arg: comma-separated stored reference URLs (up to 10).</div></div>
+          <div class="tool-card"><div class="tool-name">get_user_preferences</div><div class="tool-desc">Read-only, zero-arg: stored user preferences as <code>string[]</code> (max 10 × 120 chars).</div></div>
+          <div class="tool-card"><div class="tool-name">search_web</div><div class="tool-desc">Keyless Tavily AI (primary) with automatic DuckDuckGo fallback.</div></div>
+          <div class="tool-card"><div class="tool-name">search_research</div><div class="tool-desc">ArXiv academic literature search.</div></div>
+          <div class="tool-card"><div class="tool-name">calculate</div><div class="tool-desc">Decimal math evaluation.</div></div>
+          <div class="tool-card"><div class="tool-name">search_document</div><div class="tool-desc">BM25 query over IndexedDB chunks (stop-word removal, top 3 pages).</div></div>
+          <div class="tool-card"><div class="tool-name">clean_document</div><div class="tool-desc">Purges stored chunks and resets the upload section.</div></div>
+          <div class="tool-card"><div class="tool-name">get_chat_history</div><div class="tool-desc">Chat messages including <code>user:</code> prompts.</div></div>
+          <div class="tool-card"><div class="tool-name">canvas2d_draw_shapes</div><div class="tool-desc">Append scene-graph shapes and perimeter-docked arrows.</div></div>
+          <div class="tool-card"><div class="tool-name">canvas2d_inspect_shapes</div><div class="tool-desc">Scene shapes + ASCII topology graph for self-inspection.</div></div>
+          <div class="tool-card"><div class="tool-name">canvas2d_modify_shape</div><div class="tool-desc">In-place edit of label, position, or colors.</div></div>
+          <div class="tool-card"><div class="tool-name">canvas2d_clear</div><div class="tool-desc">Clears the Canvas2D scene graph (mirrors the UI button).</div></div>
+          <div class="tool-card"><div class="tool-name">export_pdf</div><div class="tool-desc">Generates and downloads the session PDF report.</div></div>
+          <div class="tool-card"><div class="tool-name">chat_post</div><div class="tool-desc">Appends/streams text into the chat stream.</div></div>
+          <div class="tool-card"><div class="tool-name">canvas_draw · draw_diagram · canvas_clear</div><div class="tool-desc">Legacy canvas tools for quick commands and node/edge graphs.</div></div>
+        </div>
       </details>
 
       <details>
-        <summary><span class="step-badge">2</span> File Upload Processing &amp; Success</summary>
-        <p>When user selects/drops Doc or PDF &lt; 1MB: LiteParse WASM parses pages client-side, builds BM25 index in IndexedDB, and UI updates with filename, total page count, and an "Indexed" badge.</p>
+        <summary>6. Long-Dwell Reading Comfort &amp; Session Engagement</summary>
+        <ul>
+          <li>Warm dual themes via a semantic CSS token layer (light = paper &amp; navy ink; dark = warm ink surfaces); all cockpit components adhere to it.</li>
+          <li>First-load onboarding <code>WelcomeModal</code> (upload → connect agent → ask → highlight → maximize → export); dismissal persists; sidebar "tips" re-opens.</li>
+          <li>Chat popup maximize (⤢) into a full-screen reader; A-/A+ font steps (15/17/19px) persisted; 2px reading-progress bar.</li>
+          <li>Session Highlights (☆/★) collected in the sidebar; click scrolls the dialogue to it.</li>
+          <li>Alive-but-calm feedback: thinking pulse, 0.18s entrance fades, per-message copy, drag-over highlight, session strip — all motion disabled under <code>prefers-reduced-motion</code>.</li>
+        </ul>
       </details>
 
       <details>
-        <summary><span class="step-badge">3</span> File Upload Rejection (Error State)</summary>
-        <p>If user selects a file &ge; 1MB or unsupported format: A notification popup explains the exact rejection reason. The upload input resets cleanly without error.</p>
+        <summary>7. SEO, Crawler Discoverability &amp; Indexing</summary>
+        <ul>
+          <li><code>&lt;meta name="description"&gt;</code>, Open Graph + Twitter cards, theme-color, and JSON-LD <code>WebApplication</code> schema.</li>
+          <li>Semantic <code>&lt;noscript&gt;</code> outline for non-JS crawlers.</li>
+          <li>Static plain-text <code>public/robots.txt</code> (prevents SPA fallback syntax errors) and <code>public/sitemap.xml</code>.</li>
+        </ul>
       </details>
 
       <details>
-        <summary><span class="step-badge">4</span> Storage Reset (clean_document)</summary>
-        <p>When <code>clean_document</code> is invoked by agent or user: IndexedDB tables are cleared and the file upload UI immediately returns to its empty initial state.</p>
+        <summary>8. Keyless Tavily Web Search with Automatic DuckDuckGo Fallback</summary>
+        <ul>
+          <li>Primary: Tavily Search API (<code>POST https://api.tavily.com/search</code>, <code>X-Tavily-Access-Mode: keyless</code>) for clean, ranked, scored snippets.</li>
+          <li>Two-tier proxy fallback in the same-origin <code>/api/websearch</code> layer (dev middleware + Cloudflare Functions); on error/429 it falls back to DuckDuckGo HTML scraping.</li>
+          <li>Honest metadata: every outcome carries <code>source: 'tavily' | 'duckduckgo'</code> and an ISO <code>fetchedAt</code>.</li>
+        </ul>
       </details>
 
       <details>
-        <summary><span class="step-badge">5</span> Chat Flow &amp; User Prefix</summary>
-        <p>User types in the bottom text input. Sent messages appear in chat with <code>user:</code> prefix and are made available to visiting LLMs via <code>get_chat_history</code>. Agent responses are humanized (raw markdown asterisk noise stripped) for executive readability.</p>
+        <summary>9. Bidirectional Full-Duplex Live Voice Mode &amp; Pluggable Architecture</summary>
+        <ul>
+          <li><strong>Tier 1</strong> (<code>gemini-3.8-live</code>): 16 kHz AudioWorklet capture, 24 kHz gapless PCM playback, zero-latency barge-in.</li>
+          <li><strong>Tier 2</strong> (<code>gemini-3.5-flash-lite</code>): background subagent invoked via the async <code>generate_diagram_and_explanation</code> bridge tool; the bridge returns immediately while the subagent clears/draws the canvas and posts the explanation to chat + IndexedDB.</li>
+          <li><strong>Ephemeral spoken chitchat:</strong> live speech stays in the stream and HUD captions, never in the persisted dialogue or PDFs.</li>
+          <li><strong>Multi-provider subagents</strong> (<code>ISubagentProvider</code>): Google Gemini, OpenAI (<code>gpt-6-luna</code>, <code>gpt-5-nano</code>), Mistral AI, Requesty AI, Ollama Cloud — plus custom model IDs, per-provider AES-GCM-256 encrypted slots, and a mandatory in-memory Quick Test before saving Tier 2 changes.</li>
+          <li><strong>Encryption:</strong> 256-bit AES-GCM via <code>window.crypto.subtle</code>, non-extractable keys in IndexedDB (<code>bassistant_secure_vault</code>), ciphertext <code>__BASSISTANT_ENC__:v1:...</code> in <code>localStorage</code>.</li>
+          <li><strong>Prompts (<code>src/voice/prompts.ts</code>):</strong> templates for both tiers, runtime temporal anchoring (<code>{current_date}</code>), user-preference injection, and clear separation of bridge tools vs client WebMCP tools.</li>
+        </ul>
       </details>
 
       <details>
-        <summary><span class="step-badge">6</span> PDF Export &amp; Blank Session Protection</summary>
-        <p>When <code>export_pdf</code> is invoked (sidebar button or tool): if the session is blank (no canvas content and no chat messages), a notification popup blocks the export. Otherwise a dual-section PDF downloads with the canvas snapshot on top and the chat transcript beneath, including native Bengali and Hindi complex-script rendering.</p>
+        <summary>10. User Preferences Engine (Browser Storage &amp; WebMCP)</summary>
+        <ul>
+          <li>Up to 10 preferences (max 120 chars each) in <code>localStorage['b_user_preferences']</code>, managed via <code>UserPreferencesModal</code> (live <code>X / 120</code> and <code>X / 10</code> counters).</li>
+          <li>Dual consumption: injected into the Tier 2 subagent prompt and exposed via <code>get_user_preferences</code>.</li>
+          <li>Background task tracking (<code>src/voice/tasks/taskManager.ts</code>): <code>bassistant_task_</code> IDs, lifecycle <code>queued → in_progress → completed/failed</code>, sessionStorage (<code>bassistant_background_tasks</code>, LRU 20), the <code>get_background_task_status</code> voice tool, and a reactive Voice HUD badge.</li>
+          <li>Voice HUD modals bound to the semantic token layer; reliable teardown — <code>session.conn.close(1000)</code> plus an <code>isSessionActiveRef</code> guard so trailing events never flip the UI back to "Live Listening".</li>
+        </ul>
       </details>
 
-      <details>
-        <summary><span class="step-badge">7</span> Onboarding &amp; Long-Dwell Comfort</summary>
-        <p>First load shows a how-to-use WelcomeModal (dismissal persists; a sidebar "tips" link re-opens it). Warm token dual themes (paper/ink light, warm-ink dark) reduce eye fatigue; the chat maximizes into a full-screen reader popup with A-/A+ persisted font steps and a reading-progress bar; starred messages collect under Session Highlights in sidebar Section 3; an "agent is thinking" pulse, per-message copy, and drag-over dropzone feedback keep the interface alive but calm (motion disabled under <code>prefers-reduced-motion</code>).</p>
+      <details open>
+        <summary>11. DuckDuckGo Fallback Parser Reliability</summary>
+        <ul>
+          <li><strong>Correct pairing:</strong> each result's snippet is read from the same block as its title/link — never by array position.</li>
+          <li><strong>Clean results:</strong> ad/redirect anchors excluded; only <code>http(s)</code> URLs after <code>uddg</code> unwrapping.</li>
+          <li><strong>Honest failure:</strong> a challenge/bot-wall or non-OK response surfaces as <code>unavailable: true</code>, never an empty success. A genuinely empty page may still return an empty list.</li>
+          <li><strong>Plain text:</strong> titles/snippets are tag-stripped and entity-decoded (named + numeric). No change to the result shape or the Tavily path.</li>
+        </ul>
+        <p>Acceptance criteria:</p>
+        <ul>
+          <li>Challenge/anomaly response yields <code>unavailable: true</code> (never empty success).</li>
+          <li>Each snippet belongs to its own block (regression covers skipped anchors / count mismatch).</li>
+          <li>Ad/redirect URLs never appear; non-<code>http(s)</code> decoded URLs dropped.</li>
+          <li>An empty query returns <code>[]</code> without a network request.</li>
+        </ul>
       </details>
     </div>
 
     <div class="card">
-      <h2>Long-Dwell Reading Comfort &amp; Engagement</h2>
-      <div class="tool-grid">
-        <div class="tool-card">
-          <div class="tool-name">Warm dual themes</div>
-          <div class="tool-desc">Semantic CSS tokens: light = warm paper &amp; navy ink; dark = warm ink surfaces (never cold blue-black) for long sessions.</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">WelcomeModal</div>
-          <div class="tool-desc">First-load how-to-use popup (upload → connect agent → ask → star → maximize → export); re-openable via sidebar "tips".</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">Chat popup maximize</div>
-          <div class="tool-desc">⤢ expands the dialogue into a full-screen Lora reader (Escape/✕ closes) — the zen reading mode.</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">A- / A+ font steps</div>
-          <div class="tool-desc">15/17/19px reading sizes persisted in localStorage; 2px reading-progress bar tracks scroll investment.</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">Session Highlights</div>
-          <div class="tool-desc">☆/★ any message; starred answers collect in sidebar Section 3 and clicking one scrolls the dialogue to it.</div>
-        </div>
-        <div class="tool-card">
-          <div class="tool-name">Alive-but-calm feedback</div>
-          <div class="tool-desc">"Agent is thinking" pulse, entrance fades, copy buttons, drag-over highlight, session strip; reduced-motion respected.</div>
-        </div>
+      <h2>States and Boundaries</h2>
+      <ul>
+        <li><strong>Initial State:</strong> canvas blank; chat blank; empty dropzone; theme from the selected mode.</li>
+        <li><strong>Onboarding State:</strong> first load shows the WelcomeModal; dismissal persists; "tips" re-opens it.</li>
+        <li><strong>Document Loaded State:</strong> upload box shows file name, page count, green "Indexed" badge.</li>
+        <li><strong>Document Cleaned State:</strong> <code>clean_document</code> wipes IndexedDB and resets the upload box.</li>
+        <li><strong>Error State (File Rejected):</strong> popup for ≥ 2MB or unsupported type; input resets cleanly.</li>
+        <li><strong>Error State (Blank Export Blocked):</strong> modal when exporting an empty session.</li>
+        <li><strong>Persistence:</strong> document chunks and BM25 index persist in IndexedDB until cleared.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Product Decisions</h2>
+      <ul>
+        <li><strong>Framework:</strong> React SPA on Cloudflare Pages — fast, zero-backend, client-side hosting.</li>
+        <li><strong>Parser:</strong> LiteParse (WASM / stream decompressor) with natural 1:1 per-page chunking.</li>
+        <li><strong>Search paradigm:</strong> BM25 lexical index in IndexedDB (stop-word removal, keyword guidance, top-3 retrieval) instead of remote vector embeddings — private and low-overhead.</li>
+        <li><strong>Canvas:</strong> persistent Canvas2D scene graph, perimeter docking, multi-tier palette, ASCII topology inspection.</li>
+        <li><strong>Reporting:</strong> client-side <code>jspdf</code> packaging canvas diagrams + formatted dialogue.</li>
+        <li><strong>WebMCP:</strong> standard browser-native implementation; no custom in-page inspector UI.</li>
+        <li><strong>Chat protocol:</strong> <code>user:</code>-prefixed prompts exposed to visiting models via WebMCP.</li>
+        <li><strong>Reading typography:</strong> Lora serif (17px, 1.75 line-height, ~72ch measure) with auto-scroll.</li>
+        <li><strong>Search:</strong> keyless Tavily AI primary, DuckDuckGo fallback.</li>
+        <li><strong>Voice:</strong> decoupled dual-tier topology (<code>gemini-3.8-live</code> + <code>gemini-3.5-flash-lite</code>) to avoid audio latency and token bloat.</li>
+        <li><strong>Voice persistence:</strong> ephemeral chitchat keeps chat/PDFs executive; only substantive subagent knowledge is archived.</li>
+        <li><strong>Controllers:</strong> three custom hooks (<code>useSessionController</code>, <code>useDocumentController</code>, <code>useVoiceOrchestrator</code>) keep <code>App.tsx</code> a clean composition root.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>What We're Building</h2>
+      <ul>
+        <li>20/80 React SPA with Light/Dark toggle and modular controller hooks.</li>
+        <li>Doc/PDF &lt; 2MB upload with LiteParse WASM parsing, per-page chunking, and IndexedDB BM25 indexing.</li>
+        <li>HTML canvas with the live 2D scene-graph engine, Clear, and Export PDF.</li>
+        <li>Lora chat stream with a multi-line prompt textarea and auto-scroll.</li>
+        <li>Keyless Tavily web search with automatic DuckDuckGo fallback.</li>
+        <li>Isolated <code>src/voice/</code> module: <code>gemini-3.8-live</code> full-duplex audio, multi-provider subagents (Google Gemini, OpenAI, Mistral AI, Requesty AI, Ollama Cloud), preflight audio modal, AES-GCM-256 key encryption.</li>
+        <li>User Preferences manager (<code>UserPreferencesModal</code>, 10 × 120 chars).</li>
+        <li>Long-dwell UI layer (warm themes, onboarding, reader popup, A-/A+, progress bar, highlights, thinking pulse, copy/star, drag-over, session strip).</li>
+        <li>Complete WebMCP suite (18 tools).</li>
+        <li>Cloudflare Pages deployment config.</li>
+        <li>Documentation: <code>docs7</code> site, <code>README.md</code>, <code>CLAUDE.md</code>, <code>AGENTS.md</code> (referencing CLAUDE.md + README.md only).</li>
+      </ul>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>Deferred From the POC</h2>
+        <ul>
+          <li>Sidebar Section 3 features (currently blank).</li>
+          <li>Multi-file collections and files ≥ 2MB.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>Non-Goals</h2>
+        <ul>
+          <li>Server-side database or cloud file processing.</li>
+          <li>Direct generative image/video AI APIs (DALL·E, Midjourney, …).</li>
+          <li>Embedded API-key billing or LLM proxy servers (the visiting agent drives interactions).</li>
+        </ul>
       </div>
     </div>
 
     <div class="card">
-      <h2>Documentation Deliverables</h2>
-      <ul>
-        <li><strong>Docs Site:</strong> Built using the <code>docs7</code> skill.</li>
-        <li><strong>README.md:</strong> User documentation tailored for humans.</li>
-        <li><strong>CLAUDE.md:</strong> Guidelines and instructions for AI agents.</li>
-        <li><strong>AGENTS.md:</strong> References <code>CLAUDE.md</code> and <code>README.md</code> (and nothing else).</li>
-      </ul>
+      <h2>Open Questions</h2>
+      <p style="color: var(--text-muted);">None blocking specification. Ready to transition into the technical spec.</p>
     </div>
   </div>
 </body>

@@ -43,7 +43,7 @@ flowchart TD
 ## Available Tools
 
 ### 1. `search_web`
-- **Provider**: Keyless **Tavily AI** search (`searchTavilyKeyless()` in `src/lib/tavilySearch.ts`) is tried first; on error, rate limit (HTTP 429), or an empty result set the proxy falls back to DuckDuckGo HTML results parsed by `searchDuckDuckGo()` in `src/lib/ddgSearch.ts`.
+- **Provider**: Keyless **Tavily AI** search (`searchTavilyKeyless()` in `src/lib/tavilySearch.ts`) is tried first; on error, rate limit (HTTP 429), or an empty result set the proxy falls back to DuckDuckGo HTML results parsed by `searchDuckDuckGo()` in `src/lib/ddgSearch.ts`. The parser (`parseDdgHtml`) reads each snippet from its own result block, drops ad/redirect links and non-`http(s)` URLs, and treats a bot-challenge page as an `unavailable` failure rather than an empty success. See [DuckDuckGo Fallback & Parser Nuances](/ddg-search).
 - **Endpoint**: `GET /api/websearch?query={query}` (dev middleware or `functions/api/websearch.ts`).
 - **Output**: Live top-5 `{ title, snippet, url }` results with `source: 'tavily' | 'duckduckgo'` — real current web results, not encyclopedic abstracts.
 

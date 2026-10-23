@@ -59,6 +59,16 @@ Build mode: fast
   Learner check: Run `npm run preview` to test production build, review docs site and Markdown docs.
   Commit: `Add documentation suite and Cloudflare Pages build configuration`
 
+- [ ] **6. Harden DuckDuckGo fallback parser**
+  Becomes usable: The free `search_web` DuckDuckGo fallback returns correctly paired, clean results, drops ad/redirect links, and reports a bot-wall/challenge as unavailable instead of a silent empty success — with the HTML parser covered by hermetic tests.
+  Why now: The fallback is the reliability backstop for `search_web`; today it can mis-pair snippets, surface ad links, and mask a blocked request as an empty success.
+  PRD ref: `prd.md > Features and Behavior > 11. DuckDuckGo Fallback Parser Reliability`
+  Spec ref: `spec.md > Components > 12. ddgSearch`
+  Build: Extract a pure exported `parseDdgHtml(html, limit)` in `src/lib/ddgSearch.ts` (block-scoped anchor+snippet matching, ad/redirect filtering, `http(s)`-only URLs, named+numeric entity decoding); keep `searchDuckDuckGo` as a fetch wrapper with `Referer`/`Accept-Language` headers and challenge-page detection that throws; add `src/tests/ddgSearch.test.ts`.
+  Verify (mechanical): `npm test` (new hermetic `ddgSearch.test.ts` green, existing suites unchanged) and `npm run build` (tsc strict + vite).
+  Learner check: Call `search_web` via WebMCP (or hit `/api/websearch?query=...` in `npm run dev`) and confirm results carry matching snippets; no ad links appear.
+  Commit: `Harden DuckDuckGo fallback parser with pure, tested HTML parsing`
+
 ## Hands-on Checkpoints
 
 - [x] Early usable behavior explored — Slice 2 (Layout, Canvas engine, Chat, and WebMCP provider active)
@@ -81,4 +91,6 @@ Reflection: Reusable browser-first architecture pattern pairing WebMCP with WebA
 Activity mode: fast build mode completed
 
 ## Revisions
+
+- **Search fallback hardening (2026-10-23):** Slice 6 added. The DuckDuckGo fallback parser was refactored into a pure, exported `parseDdgHtml` and hardened (block-scoped snippet pairing, ad/redirect filtering, `http(s)`-only URLs, challenge detection). Recorded because the original inline parser could mis-pair snippets and reported a bot-wall page as a successful empty result; see `prd.md > Features and Behavior > 11` and `spec.md > Components > 12`.
 

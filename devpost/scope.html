@@ -25,94 +25,41 @@
       line-height: 1.6;
       padding: 2rem 1rem;
     }
-    .container {
-      max-width: 960px;
-      margin: 0 auto;
-    }
-    header {
-      margin-bottom: 2.5rem;
-      border-bottom: 1px solid var(--card-border);
-      padding-bottom: 1.5rem;
-    }
+    .container { max-width: 960px; margin: 0 auto; }
+    header { margin-bottom: 2.5rem; border-bottom: 1px solid var(--card-border); padding-bottom: 1.5rem; }
     .badge {
-      display: inline-block;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      padding: 0.25rem 0.6rem;
-      border-radius: 9999px;
-      background: var(--accent-glow);
-      color: var(--accent);
-      border: 1px solid var(--accent);
-      margin-bottom: 0.75rem;
+      display: inline-block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; padding: 0.25rem 0.6rem; border-radius: 9999px;
+      background: var(--accent-glow); color: var(--accent); border: 1px solid var(--accent); margin-bottom: 0.75rem;
     }
     h1 { font-size: 2.25rem; font-weight: 800; margin-bottom: 0.5rem; }
     .tagline { color: var(--text-muted); font-size: 1.15rem; }
-    
     .card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 0.75rem;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1.5rem;
     }
     h2 { font-size: 1.35rem; margin-bottom: 1rem; color: var(--accent); display: flex; align-items: center; gap: 0.5rem; }
-    
+    h3 { font-size: 1.05rem; margin: 1rem 0 0.5rem; color: var(--text); }
     .diagram-container {
-      background: #090d16;
-      border: 1px solid var(--card-border);
-      border-radius: 0.5rem;
-      padding: 1rem;
-      margin: 1.25rem 0;
-      display: flex;
-      justify-content: center;
+      background: #090d16; border: 1px solid var(--card-border); border-radius: 0.5rem;
+      padding: 1rem; margin: 1.25rem 0; display: flex; justify-content: center;
     }
     svg text { font-family: inherit; }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-    @media (max-width: 720px) {
-      .grid-2 { grid-template-columns: 1fr; }
-    }
-
-    /* Reveals / Details */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
     details {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid var(--card-border);
-      border-radius: 0.5rem;
-      padding: 0.85rem 1.2rem;
-      margin-bottom: 0.75rem;
-      cursor: pointer;
+      background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border);
+      border-radius: 0.5rem; padding: 0.85rem 1.2rem; margin-bottom: 0.75rem; cursor: pointer;
     }
-    details summary {
-      font-weight: 600;
-      color: var(--text);
-      outline: none;
-      user-select: none;
-    }
+    details summary { font-weight: 600; color: var(--text); outline: none; user-select: none; }
     details[open] { border-color: var(--accent); }
-    details p, details ul { margin-top: 0.75rem; color: var(--text-muted); font-size: 0.95rem; }
-    ul { padding-left: 1.25rem; }
-    li { margin-bottom: 0.4rem; }
-
+    details p, details ul, details ol { margin-top: 0.75rem; color: var(--text-muted); font-size: 0.95rem; }
+    ul, ol { padding-left: 1.25rem; }
+    li { margin-bottom: 0.4rem; color: var(--text-muted); }
     .tag-now { color: var(--green); font-weight: bold; }
     .tag-later { color: var(--amber); font-weight: bold; }
     .tag-cut { color: var(--rose); font-weight: bold; }
-
-    .pill-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
-    .pill {
-      background: #1e293b;
-      border: 1px solid var(--card-border);
-      border-radius: 0.35rem;
-      padding: 0.35rem 0.75rem;
-      font-size: 0.85rem;
-      font-family: monospace;
-      color: #38bdf8;
-    }
+    code { font-family: monospace; color: #7dd3fc; }
   </style>
 </head>
 <body>
@@ -120,115 +67,178 @@
     <header>
       <span class="badge" style="border-color: var(--green); color: var(--green); background: rgba(52, 211, 153, 0.15);">Scope Plan Companion — Status: Approved</span>
       <h1>WebMCP Browser Assistant</h1>
-      <p class="tagline">A zero-backend single-page workspace empowering visiting LLMs with WebMCP tools for live canvas diagramming, local document querying, and free-tier research.</p>
+      <p class="tagline">A zero-backend, single-page browser environment that empowers visiting LLMs with free WebMCP tools for live HTML canvas diagramming, local document querying, and free-tier web/academic research.</p>
     </header>
-
-    <div class="card">
-      <h2>The Core Architecture &amp; Loop</h2>
-      <div class="diagram-container">
-        <svg viewBox="0 0 800 300" width="100%" height="auto">
-          <!-- Entire Browser Window (100%) -->
-          <rect x="20" y="20" width="760" height="260" rx="8" fill="#0f172a" stroke="#334155" stroke-width="2"/>
-          <text x="35" y="40" fill="#64748b" font-size="11" font-weight="bold">BROWSER WINDOW (100% WIDTH)</text>
-
-          <!-- Left 20% Division -->
-          <rect x="35" y="55" width="145" height="210" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
-          <text x="107" y="75" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">LEFT (20%)</text>
-          
-          <rect x="45" y="85" width="125" height="30" rx="4" fill="#090d16" stroke="#475569"/>
-          <text x="107" y="104" fill="#94a3b8" font-size="10" text-anchor="middle">1. Branding</text>
-          
-          <rect x="45" y="122" width="125" height="42" rx="4" fill="#090d16" stroke="#475569"/>
-          <text x="107" y="139" fill="#94a3b8" font-size="10" text-anchor="middle">2. File Upload</text>
-          <text x="107" y="153" fill="#64748b" font-size="8" text-anchor="middle">Doc/PDF &lt;1MB (BM25 Index)</text>
-          
-          <rect x="45" y="172" width="125" height="80" rx="4" fill="#090d16" stroke="#334155" stroke-dasharray="3,3"/>
-          <text x="107" y="210" fill="#64748b" font-size="10" text-anchor="middle">3. Session</text>
-          <text x="107" y="224" fill="#64748b" font-size="10" text-anchor="middle">Highlights</text>
-
-          <!-- Right 80% Division -->
-          <rect x="195" y="55" width="580" height="210" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
-          <text x="485" y="75" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">RIGHT (80%)</text>
-
-          <!-- Top 60% Canvas -->
-          <rect x="210" y="85" width="550" height="100" rx="4" fill="#090d16" stroke="#34d399" stroke-width="1.5"/>
-          <text x="485" y="120" fill="#34d399" font-size="12" font-weight="bold" text-anchor="middle">HTML Canvas (Top 60%)</text>
-          <text x="485" y="140" fill="#94a3b8" font-size="10" text-anchor="middle">Diagrams, graphs, and images drawn live via WebMCP canvas tools</text>
-
-          <!-- Bottom 40% Chat -->
-          <rect x="210" y="192" width="550" height="60" rx="4" fill="#090d16" stroke="#475569" stroke-width="1.5"/>
-          <text x="485" y="218" fill="#f8fafc" font-size="12" font-weight="bold" text-anchor="middle">Textual Chat Area (Bottom 40%)</text>
-          <text x="485" y="238" fill="#94a3b8" font-size="10" text-anchor="middle">Where visiting agent fills and streams textual responses</text>
-        </svg>
-      </div>
-      <p style="color: var(--text-muted); font-size: 0.95rem;">
-        The single-page application is split strictly 20% (left sidebar: branding, &lt;1MB file upload with pagewise BM25 indexing, blank slot) and 80% (right main area: 60% top canvas, 40% bottom chat). Visiting agents interact with the page purely through exposed WebMCP tools.
-      </p>
-    </div>
 
     <div class="grid-2">
       <div class="card">
         <h2>The Unique Kernel</h2>
         <p style="color: var(--text-muted);">
-          Replaces costly generative image/video models with fast, free programmatic HTML canvas drawing tools. Provides zero-backend local document privacy (pagewise BM25 index) and free-tier web/academic tools for any visiting model.
+          Instead of paying for expensive multimodal generative models or backend infrastructure, this single-page app acts as a browser-native tool provider via WebMCP and an AI cockpit. Any visiting LLM can immediately draw interactive diagrams live on an HTML canvas, search free external knowledge sources with keyless Tavily AI search (falling back to DuckDuckGo), query user documents kept strictly in local browser storage, and conduct bidirectional full-duplex voice interactions using Gemini Live with a pluggable provider architecture.
         </p>
       </div>
       <div class="card">
-        <h2>What "Working" Looks Like</h2>
+        <h2>Who It's For</h2>
         <p style="color: var(--text-muted);">
-          A user opens the single page, uploads a doc/PDF (&lt; 1MB) which is pagewise-chunked and indexed via BM25, and activates WebMCP Inspector testing mode. The inspector verifies exposed tools, and a test run showcases live diagram drawing and synchronized chat output.
+          Anyone who wants to learn, research, and explore any topic with AI in a cost-efficient, visually rich manner using their own affordable LLM — without sacrificing privacy or paying for high-tier generative image services.
         </p>
       </div>
     </div>
 
     <div class="card">
+      <h2>The Core Loop</h2>
+      <ol>
+        <li>The user opens the single page to investigate any topic (and optionally uploads a Doc or PDF &lt; 2MB, pagewise-chunked in-browser using LiteParse and indexed with a client-side BM25 index in local storage).</li>
+        <li>The user connects with the assistant via standard text prompts, visiting WebMCP agents, or bidirectional full-duplex voice mode (Tier 1 <code>gemini-3.8-live</code> audio orchestrator).</li>
+        <li>The LLM calls free research tools — primary keyless Tavily AI search with automatic DuckDuckGo fallback, ArXiv search — and local document tools (querying the BM25 index) to gather information.</li>
+        <li>Spoken dialogue is processed live with transient HUD captions (ephemeral, not cluttering dialogue notes), while substantive diagramming and detailed technical breakdowns are generated by the Tier 2 subagent (<code>gemini-3.5-flash-lite</code>). The subagent clears and draws fresh diagrams on the top 60% canvas and posts structured markdown explanations into the bottom 40% chat area (persisted to IndexedDB turns).</li>
+        <li>The user absorbs the text and visuals together and continues the dialogue.</li>
+      </ol>
+
+      <div class="diagram-container">
+        <svg viewBox="0 0 800 300" width="100%" height="auto">
+          <rect x="20" y="20" width="760" height="260" rx="8" fill="#0f172a" stroke="#334155" stroke-width="2"/>
+          <text x="35" y="40" fill="#64748b" font-size="11" font-weight="bold">BROWSER WINDOW (100% WIDTH)</text>
+
+          <rect x="35" y="55" width="145" height="210" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="107" y="75" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">LEFT (20%)</text>
+
+          <rect x="45" y="85" width="125" height="30" rx="4" fill="#090d16" stroke="#475569"/>
+          <text x="107" y="104" fill="#94a3b8" font-size="10" text-anchor="middle">1. Branding</text>
+
+          <rect x="45" y="120" width="125" height="34" rx="4" fill="#090d16" stroke="#475569"/>
+          <text x="107" y="136" fill="#94a3b8" font-size="10" text-anchor="middle">2. File Upload</text>
+          <text x="107" y="148" fill="#64748b" font-size="8" text-anchor="middle">Doc/PDF &lt;2MB (BM25)</text>
+
+          <rect x="45" y="159" width="125" height="28" rx="4" fill="#090d16" stroke="#475569"/>
+          <text x="107" y="177" fill="#94a3b8" font-size="10" text-anchor="middle">3. Reference URLs</text>
+
+          <rect x="45" y="192" width="125" height="60" rx="4" fill="#090d16" stroke="#334155" stroke-dasharray="3,3"/>
+          <text x="107" y="216" fill="#64748b" font-size="10" text-anchor="middle">4. Session</text>
+          <text x="107" y="230" fill="#64748b" font-size="10" text-anchor="middle">Highlights</text>
+
+          <rect x="195" y="55" width="580" height="210" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="485" y="75" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">RIGHT (80%)</text>
+
+          <rect x="210" y="85" width="550" height="100" rx="4" fill="#090d16" stroke="#34d399" stroke-width="1.5"/>
+          <text x="485" y="120" fill="#34d399" font-size="12" font-weight="bold" text-anchor="middle">HTML Canvas (Top 60%)</text>
+          <text x="485" y="140" fill="#94a3b8" font-size="10" text-anchor="middle">Rough.js scene graph, Bézier connectors, pan/zoom — drawn live via WebMCP</text>
+
+          <rect x="210" y="192" width="550" height="60" rx="4" fill="#090d16" stroke="#475569" stroke-width="1.5"/>
+          <text x="485" y="218" fill="#f8fafc" font-size="12" font-weight="bold" text-anchor="middle">Textual Chat Area (Bottom 40%) + Voice HUD</text>
+          <text x="485" y="238" fill="#94a3b8" font-size="10" text-anchor="middle">Lora reading typography, humanized markdown, auto-scroll</text>
+        </svg>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">
+        Split strictly 20% (left sidebar) / 80% (right workspace: 60% canvas, 40% chat). Visiting agents interact with the page purely through the exposed WebMCP tools.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Inspiration &amp; Identity</h2>
+      <ul>
+        <li><strong>Mood / Feel:</strong> Clean, utilitarian, responsive split-screen cockpit for AI-augmented research and visual thinking — featuring an artistic editorial illustration canvas engine rather than rigid flowchart software.</li>
+        <li><strong>Visual Structure:</strong> Left 20% branding / file upload / reference URLs / session highlights; right 80% artistic HTML canvas (top 60%, Rough.js hand-drawn sketching, fluid Bézier connectors, paper textures, Risograph color harmonies) and Lora-typography chat (bottom 40%).</li>
+        <li><strong>Warm dual themes:</strong> light = warm paper &amp; navy ink; dark = warm ink surfaces (never cold blue-black), driven by a semantic CSS token layer for comfortable long sessions.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Why This Matters to the Learner</h2>
+      <p style="color: var(--text-muted);">
+        Enables a practical, genuinely beneficial tool for the community that proves WebMCP's potential in the browser: running multimodal interactions on cheap models, keeping all user data strictly local, and using free-tier tools rather than costly subscriptions.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>What "Working" Looks Like</h2>
+      <p style="color: var(--text-muted);">
+        A user opens the single page and activates WebMCP Inspector testing mode. The inspector shows the exposed tools registered and operational:
+      </p>
+      <ul>
+        <li><code>get_tool_usage_prompt</code> — read-only, zero-arg: returns the agent operating guide (agents call it first).</li>
+        <li><code>get_reference_url</code> — read-only, zero-arg: comma-separated stored reference URLs (up to 10 verified).</li>
+        <li><code>get_user_preferences</code> — read-only, zero-arg: stored user preferences as a string array (up to 10 items, max 120 chars each).</li>
+        <li><code>search_web</code> — Tavily AI keyless search (primary) with automatic DuckDuckGo fallback.</li>
+        <li><code>search_research</code> — ArXiv search.</li>
+        <li><code>calculate</code> — decimal math calculations.</li>
+        <li><code>search_document</code> — searches uploaded doc content in IndexedDB via the BM25 index.</li>
+        <li><code>clean_document</code> — removes stored content from IndexedDB.</li>
+        <li><code>canvas2d_draw_shapes</code> / <code>canvas2d_inspect_shapes</code> / <code>canvas2d_modify_shape</code> / <code>canvas2d_clear</code> — structured scene-graph drawing, inspection, and editing.</li>
+        <li><code>export_pdf</code> — downloadable publication-quality PDF combining logo, canvas diagram, multipage dialogue, and a mandatory AI disclaimer footer.</li>
+        <li><code>canvas_draw</code> / <code>draw_diagram</code> / <code>canvas_clear</code> — legacy drawing tools.</li>
+        <li><code>chat_post</code> / <code>get_chat_history</code> — stream text into the chat area and read dialogue context.</li>
+      </ul>
+      <p style="color: var(--text-muted);">A test run demonstrates a visiting agent calling these tools, retrieving data, updating chat, and drawing on the canvas live.</p>
+    </div>
+
+    <div class="card">
       <h2>Proof of Concept Boundary</h2>
-      
+
       <details open>
         <summary><span class="tag-now">NOW (In Scope for PoC)</span></summary>
         <ul>
-          <li>React-based single-page application with responsive layout (20/80 vertical division).</li>
-          <li>Left sidebar: Branding, File upload (Doc/PDF &lt; 1MB only), Blank 3rd section.</li>
-          <li>Right main view: Top 60% HTML Canvas with structured scene-graph drawing engine, Bottom 40% Chat display.</li>
-          <li>Post-upload processing: In-browser pagewise chunking using LiteParse (browser WASM) and client-side BM25 searchable index in IndexedDB for files &lt; 1MB.</li>
-          <li>WebMCP Tool Suite (16 tools):
-            <ul>
-              <li><code>get_tool_usage_prompt</code> (read-only, zero-arg: returns the agent operating guide for using all other tools — call first)</li>
-              <li><code>search_web</code> (DuckDuckGo / DDGS)</li>
-              <li><code>search_research</code> (ArXiv search)</li>
-              <li><code>calculate</code> (decimal math)</li>
-              <li><code>search_document</code> (IndexedDB BM25 content search)</li>
-              <li><code>clean_document</code> (removes stored content from IndexedDB)</li>
-              <li>Canvas2D scene-graph tools: <code>canvas2d_draw_shapes</code>, <code>canvas2d_inspect_shapes</code>, <code>canvas2d_modify_shape</code>, <code>canvas2d_clear</code></li>
-              <li>Legacy canvas tools: <code>canvas_draw</code>, <code>draw_diagram</code>, <code>canvas_clear</code></li>
-              <li>Chat tools: <code>chat_post</code>, <code>get_chat_history</code> (bottom 40% chat)</li>
-              <li><code>export_pdf</code> (multilingual canvas + transcript PDF report)</li>
-            </ul>
-          </li>
-          <li>Multilingual PDF export (canvas snapshot + humanized chat transcript, native Bengali/Hindi complex-script rendering, blank-session protection).</li>
-          <li>Long-dwell UI enrichment (see <code>research.md</code>): warm token dual themes, first-load onboarding popup, chat full-screen reader popup, A-/A+ font steps, reading-progress bar, Session Highlights in sidebar Section 3, thinking pulse, copy/star message actions, drag-over feedback, session strip, reduced-motion support.</li>
-          <li>WebMCP Inspector testing mode for live validation and tool calling.</li>
-          <li>Deployment: Deployed to Cloudflare Pages.</li>
+          <li>React single-page app, responsive 20/80 layout: 20% sidebar (dynamic transparent branding logo, Doc/PDF &lt; 2MB uploader, enboldened Reference URLs manager for up to 10 probe-verified links, enboldened Session Highlights); 80% main area (60% HTML canvas, 40% chat).</li>
+          <li>Post-upload processing: in-browser natural per-page extraction via LiteParse (browser WASM / PDF decompressor stream with hex token decoding <code>&lt;...&gt; Tj</code> / <code>[...] TJ</code>, and in-browser DOCX PKZip <code>word/document.xml</code> decompression) and client-side BM25 index in IndexedDB for files &lt; 2MB only.</li>
+          <li>Artistic HTML Canvas2D engine: Rough.js procedural sketching, fluid cubic Bézier connectors, warm paper grain backdrop, Risograph color harmonies, 2.5D diffusion shadows, <code>fitToContent</code> auto-centering, drag-to-pan, cursor-pinned wheel zoom, universal medium dark yellow (<code>#d97706</code>) bold labels anchored at <code>topCenter</code> and on connector pills for dual-theme contrast, and HiDPI resolution.</li>
+          <li>Active session persistence &amp; multi-session history in IndexedDB (<code>session_turns</code> &amp; <code>session_meta</code>): preserves dialogue + canvas snapshots across reloads, with a Session History Modal to browse/restore/export/delete past sessions and a "New Session" restart.</li>
+          <li>Client-side sequential PDF export (<code>exportSessionPdf</code>): blank-session validation, top-left branding logo, turn-by-turn reporting (turn badges, user questions, canvas snapshots, AI responses), Markdown humanization, Indic script rendering (Bengali বাংলা, Hindi हिन्दी), 10mm multipage buffer, and a mandatory AI disclaimer footer on every page.</li>
+          <li>WebMCP tool provider layer exposing 18 tools (see "What Working Looks Like").</li>
+          <li>Keyless Tavily web search (primary, <code>src/lib/tavilySearch.ts</code>) with automatic DuckDuckGo fallback via the same-origin <code>/api/websearch</code> layer.</li>
+          <li>Modular live voice mode &amp; pluggable architecture (<code>src/voice/</code>): full-duplex Tier 1 <code>gemini-3.8-live</code> audio (16 kHz AudioWorklet capture, 24 kHz gapless PCM playback, zero-latency barge-in), delegation to a Tier 2 subagent (<code>gemini-3.5-flash-lite</code>), ephemeral spoken-chitchat policy, and a multi-provider subagent engine across Google Gemini, OpenAI, Mistral AI, Requesty AI, and Ollama Cloud with custom model IDs, per-provider AES-GCM-256 encrypted credentials, and interactive pre-save quick test.</li>
+          <li>User Preferences manager: a Tier 2 <code>⚙️ user preferences</code> button opening a modal storing up to 10 preferences (max 120 chars each) in <code>localStorage['b_user_preferences']</code>, injected into Tier 2 system prompts and exposed via <code>get_user_preferences</code>.</li>
+          <li>Pre-flight audio test modal (1-second mic permission + volume meter), client-side AES-GCM-256 encrypted key vault in IndexedDB (<code>SecureVault</code>), and a Voice HUD controller docked in the chat header with clean session teardown.</li>
+          <li>Centralized prompt architecture (<code>src/voice/prompts.ts</code>) with real-time temporal anchoring (<code>{current_date}</code>) and embedded WebMCP tool catalogs.</li>
+          <li>Modular custom controller hooks (<code>useSessionController</code>, <code>useDocumentController</code>, <code>useVoiceOrchestrator</code>) keeping <code>App.tsx</code> a clean composition root.</li>
+          <li>Long-dwell UI enrichment (see <code>research.md</code>): warm token dual themes, first-load onboarding popup, chat full-screen reader popup, A-/A+ font steps, reading-progress bar, Session Highlights, thinking pulse, copy/star actions, dropzone drag-over highlight, session strip, reduced-motion support.</li>
+          <li>Dedicated symbol humanization (<code>symbolHumanizer.ts</code>): LaTeX arrows/operators → clean Unicode in chat and clean ASCII in PDF, preserving multiline sequence flows.</li>
+          <li>SEO &amp; crawler standards: static <code>public/robots.txt</code>, <code>public/sitemap.xml</code>, <code>&lt;meta name="description"&gt;</code>, Open Graph / Twitter cards, JSON-LD <code>WebApplication</code> schema, and a crawler-friendly <code>&lt;noscript&gt;</code> outline.</li>
+          <li>Deployment: Cloudflare Pages.</li>
         </ul>
       </details>
 
       <details>
         <summary><span class="tag-later">LATER (Future Phases)</span></summary>
         <ul>
-          <li>Additional free-tier tools as project progresses.</li>
-          <li>Features for the 3rd (blank) sidebar section.</li>
+          <li>Additional free-tier tools as the project progresses.</li>
+          <li>Features for the 3rd (currently blank) sidebar section.</li>
         </ul>
       </details>
 
       <details>
         <summary><span class="tag-cut">CUT (Explicitly Excluded)</span></summary>
         <ul>
-          <li><strong>Files &ge; 2MB:</strong> Strictly rejected; only doc and PDF files under 2MB accepted.</li>
-          <li><strong>MCP server endpoint integration:</strong> Out of scope for this iteration; operates 100% in-browser via WebMCP client protocols without external backend SSE/stdio MCP servers.</li>
-          <li><strong>Image, audio, or video data integration:</strong> Out of scope for this iteration; ingestion and processing are focused strictly on text documents and web references.</li>
-          <li><strong>Backend server / database:</strong> Purely in-browser; zero cloud infrastructure needed.</li>
-          <li><strong>Direct generative image/video models:</strong> Replaced by programmatic canvas graphics.</li>
-          <li><strong>In-app API key billing:</strong> Connection responsibility sits with the visiting agent.</li>
+          <li><strong>Files ≥ 2MB:</strong> strictly rejected; only Doc/PDF files under 2MB are supported.</li>
+          <li><strong>MCP server endpoint integration:</strong> operates 100% in-browser via WebMCP client protocols (<code>document.modelContext</code>, <code>navigator.modelContext</code>, <code>window.webmcp</code>, <code>postMessage</code>) without external backend SSE/stdio MCP servers.</li>
+          <li><strong>Image, audio, or video data integration:</strong> ingestion is focused strictly on text documents (<code>.pdf</code>, <code>.docx</code>, <code>.doc</code>) and public reference URLs.</li>
+          <li><strong>Server-side database / backend servers:</strong> browser storage only; zero server footprint.</li>
+          <li><strong>Direct generative image/video AI APIs:</strong> eliminated in favor of fast, free programmatic HTML canvas drawing.</li>
+          <li><strong>Built-in paid LLM billing/routing:</strong> visiting-agent connectivity is handled by the user's environment/agent via WebMCP.</li>
+        </ul>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>Improvement — Search Fallback Reliability (2026-10-23)</h2>
+      <p style="color: var(--text-muted);">
+        The free DuckDuckGo fallback behind <code>search_web</code> should be correct and trustworthy, not merely "usually works". Today the fallback parser is untested, can mis-pair snippets with the wrong result, lets ad/redirect links through, and reports a DuckDuckGo bot-wall page as a successful empty result. This improvement tightens the fallback so its output can be trusted and its failures are honest.
+      </p>
+      <details open>
+        <summary><span class="tag-now">IN NOW</span></summary>
+        <ul>
+          <li>Extract a pure, unit-testable HTML parser (<code>parseDdgHtml</code>) out of the fetch wrapper.</li>
+          <li>Pair each snippet with its own result block instead of by array position.</li>
+          <li>Drop DuckDuckGo ad/redirect anchors from results.</li>
+          <li>Only surface <code>http(s)</code> result URLs; discard anything else after redirect unwrapping.</li>
+          <li>Treat a challenge/bot-wall page as an <strong>unavailable</strong> failure instead of an empty success.</li>
+          <li>Harden request headers and expand HTML entity decoding; add hermetic tests for the parser and the failure path.</li>
+        </ul>
+      </details>
+      <details>
+        <summary><span class="tag-cut">CUT (Explicitly Excluded)</span></summary>
+        <ul>
+          <li>Paid search APIs; a third fallback provider.</li>
+          <li>Response cache; per-request retry/backoff; de-duplicating the dev/prod fallback orchestration.</li>
         </ul>
       </details>
     </div>

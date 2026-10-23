@@ -205,6 +205,22 @@ Source: `research.md` (dwell-time mechanisms 1–6).
   - All asynchronous callback events (`onEnd`, `onTurnComplete`, `onStart`, `onToolCall`) are strictly guarded against an active-session cancellation token (`isSessionActiveRef`), preventing trailing server events from flipping the UI back to `Live Listening` once stopped.
   - In-flight session initialization or microphone startup is immediately aborted if the user cancels during connection.
 
+### 11. DuckDuckGo Fallback Parser Reliability
+Source: `scope.md > Improvement — Search Fallback Reliability`.
+- **Context:** `search_web` is served by the same-origin `/api/websearch` layer, which tries keyless Tavily first and falls back to a DuckDuckGo HTML scrape (`src/lib/ddgSearch.ts`). This section defines the fallback's required behavior.
+- **Correct result pairing:** Each result's snippet is read from the same result block as its title/link — never matched by array position. A missing snippet yields an empty snippet string for that result only.
+- **Clean results:** DuckDuckGo ad/redirect anchors are excluded. After unwrapping the DuckDuckGo redirect (`uddg`), only `http:` / `https:` URLs are returned; anything else is discarded.
+- **Honest failure:** A challenge/bot-wall page or a non-OK response is surfaced as **unavailable** (`unavailable: true`), never as a successful empty result set. A genuinely empty result page (no results, no challenge) may still return an empty list.
+- **Plain text output:** Titles and snippets are HTML-tag-stripped and entity-decoded (named and numeric entities).
+- **No behavior change** to the result shape (`{ title, snippet, url }`) or to the primary Tavily path.
+
+Acceptance criteria:
+- [ ] A DuckDuckGo challenge/anomaly response yields `unavailable: true` and never an empty success.
+- [ ] Each result's snippet belongs to that result's own block (regression test covers skipped anchors and mismatched snippet counts).
+- [ ] Ad/redirect URLs never appear in returned results.
+- [ ] Non-`http(s)` decoded URLs are dropped.
+- [ ] An empty query returns `[]` without issuing a network request.
+
 ## States and Boundaries
 
 - **Initial State:** Canvas is blank; chat is blank; file upload shows empty dropzone; theme defaults to selected mode.
