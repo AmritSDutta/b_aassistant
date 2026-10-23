@@ -12,7 +12,7 @@ Source: `scope.md > The Unique Kernel`, `scope.md > Who It's For`.
 Source: `scope.md > The Core Loop`, `scope.md > What "Working" Looks Like`.
 
 1. **Arrival:** User loads `bAssistant` in their browser. The UI renders the 20/80 layout in their chosen theme (Light/Dark toggle in branding header). Both canvas and chat areas initialize blank.
-2. **Document Ingestion (Optional):** User drags or selects a Doc or PDF file (< 2MB) into the upload area. LiteParse (browser WASM) parses the document pagewise, and a client-side BM25 index is generated in IndexedDB. The upload area updates to display the file name, page count, and an "Indexed" badge. If a file is ≥ 2MB or unsupported, a popup explains why it was rejected.
+2. **Document Ingestion (Optional):** User drags or selects a Doc, PDF, TXT, or Markdown file (< 2MB) into the upload area. LiteParse (browser WASM) parses PDFs and Word docs pagewise, while plain text and markdown notes are chunked by headings/paragraphs into discrete pages, and a client-side BM25 index is generated in IndexedDB. The upload area updates to display the file name, page count, and an "Indexed" badge. If a file is ≥ 2MB or unsupported, a popup explains why it was rejected.
 3. **User Input:** User enters an inquiry or prompt into the chat text input. The message is displayed in the chat stream with a `user:` prefix.
 4. **Agent Connection & Tool Discovery:** A visiting LLM connects to `bAssistant` using standard browser-native WebMCP, discovering the exposed tools without requiring a specialized in-app inspector UI. The read-only `get_tool_usage_prompt` tool returns the operating guide for every other tool, so the agent learns the intended workflow before acting.
 5. **Tool Execution:** The visiting LLM queries the user's message history, calls `search_document` (BM25), `search_web` (DDGS), `search_research` (ArXiv), or `calculate` as appropriate.
@@ -25,7 +25,7 @@ Source: `scope.md > Inspiration & Identity`.
 A responsive, single-page cockpit filling 100% of the viewport, vertically partitioned:
 - **Left Sidebar (20% width):**
   - **Section 1 (Top) — Branding:** App title "bAssistant", transparent theme-aware logo (`bassistant_light.jpg` in dark mode, `bassistant_dark.jpg` in light mode), and a 2-tiered right-aligned action cluster with Tier 1 utility buttons (`[voice]`, `[tips]`, `[theme]`) and a Tier 2 long single `⚙️ user preferences` button directly underneath, keeping the branding area open and uncrowded.
-  - **Section 2 (Middle) — File Upload:** Dropzone and file picker for Doc/PDF files strictly under 2MB. Status display showing filename, page count, and "Indexed" badge upon processing.
+  - **Section 2 (Middle) — File Upload:** Dropzone and file picker for Doc, PDF, TXT, or MD files strictly under 2MB. Status display showing filename, page count, and "Indexed" badge upon processing.
   - **Section 3 — Reference URLs:** Enboldened `REFERENCE URLS` header with count badge (up to 10 URLs). Click `+ Add` to open a reachability verification modal before caching to browser storage.
   - **Section 4 (Bottom) — Session Highlights:** Enboldened `Session Highlights` section collecting starred dialogue messages for instant revisit.
 - **Main Workspace (80% width):**
@@ -45,8 +45,8 @@ A responsive, single-page cockpit filling 100% of the viewport, vertically parti
 
 ### 1. Document Upload & In-Browser Indexing
 Source: `scope.md > The POC Boundary`.
-- **Capability:** Ingestion of Doc and PDF files strictly < 2MB.
-- **Processing:** Client-side parsing using LiteParse (browser WASM) into page-level chunks, with stream decompressor fallback, hex string decoding (`<...> Tj` and `[...] TJ`), and in-browser DOCX PKZip `word/document.xml` decompression.
+- **Capability:** Ingestion of Doc, PDF, TXT, and Markdown files strictly < 2MB.
+- **Processing:** Client-side parsing using LiteParse (browser WASM) into page-level chunks for PDFs and Word docs, with stream decompressor fallback, hex string decoding (`<...> Tj` and `[...] TJ`), and in-browser DOCX PKZip `word/document.xml` decompression. Plain text (`.txt`) and Markdown (`.md`) files are chunked into discrete logical pages based on Markdown section headings (`# `, `## `, `### `) or double-newline paragraph breaks.
 - **Storage:** Chunks and BM25 search index stored directly in IndexedDB.
 - **Feedback:**
   - Valid file: Displays filename, total page count, and "Indexed" confirmation.
@@ -125,10 +125,11 @@ Source: `scope.md > The POC Boundary`.
 
 ### 5. WebMCP Tool Suite
 Source: `scope.md > The POC Boundary`.
-The application exposes 18 standard WebMCP tools for visiting LLMs:
+The application exposes 19 standard WebMCP tools for visiting LLMs:
 - `get_tool_usage_prompt`: Read-only, zero-argument tool returning the agent operating guide for using every other tool; marked `readOnlyHint: true` and meant to be called first.
 - `get_reference_url`: Read-only, zero-argument tool returning comma-separated list of up to 10 stored reference URLs cached in browser storage.
 - `get_user_preferences`: Read-only, zero-argument tool returning string array (`string[]`) of up to 10 stored user preference items (max 120 characters each) from browser storage.
+- `get_current_time`: Read-only, zero-argument tool returning the user's current local date, weekday, time, time zone, and ISO timestamp.
 - `search_web`: Executes web search queries using Keyless Tavily AI search as primary with automatic DuckDuckGo fallback.
 - `search_research`: Executes academic literature searches via ArXiv.
 - `calculate`: Evaluates decimal math expressions.
@@ -166,8 +167,8 @@ Source: `research.md` (dwell-time mechanisms 1–6).
 
 ### 9. Bidirectional Full-Duplex Live Voice Mode & Pluggable Architecture (`src/voice/`)
 - **Dual-Tier Agent Topology**:
-  - **Tier 1 (Conversational Audio Orchestrator)**: Default `gemini-3.8-live` handling 16 kHz microphone capture via `AudioWorkletProcessor` (`public/audio-capture-processor.js`), 24 kHz gapless PCM output playback, and zero-latency barge-in interruption (audio halts instantly on user speech).
-  - **Tier 2 (Domain Subagent Engine)**: High-throughput text generator (`gemini-3.5-flash-lite`) invoked when diagrams or in-depth technical analysis are requested via the asynchronous bridge tool (`generate_diagram_and_explanation`). The bridge returns immediately to Tier 1 to prevent voice pauses, while the subagent runs in the background to clear the canvas, draw fresh shapes, and post the substantive technical explanation directly to the chat area and IndexedDB.
+  - **Tier 1 (Conversational Audio Orchestrator)**: Default `gemini-3.8-live` handling 16 kHz microphone capture via `AudioWorkletProcessor` (`public/audio-capture-processor.js`), 24 kHz gapless PCM output playback, and zero-latency barge-in interruption (audio halts instantly on user speech). Calibrated as a warm, versatile personal life and work companion ("Hello! I'm your personal assistant. What are we working on or planning today?").
+  - **Tier 2 (Domain Subagent Engine)**: High-throughput autonomous agent (`gemini-3.5-flash-lite` default) with versatility across personal planning, writing, document synthesis, task breakdown, research, and technical product architecting. Invoked when diagrams, workflows, or in-depth technical analysis are requested via the asynchronous bridge tool (`generate_diagram_and_explanation`). The bridge returns immediately to Tier 1 to prevent voice pauses, while the subagent runs in the background to render canvas drawings and post substantive explanations directly to the chat area and IndexedDB.
 - **Ephemeral Spoken Conversation Policy**: Spoken speech turns and live audio chitchat remain ephemeral in the audio stream and Voice HUD caption pill. They are **not** written to the persistent dialogue history, keeping the reading notes and PDF reports clean and executive.
 - **Multi-Provider Tier 2 Subagent Engine**:
   - Implements `ISubagentProvider` across **Google Gemini**, **OpenAI**, **Mistral AI**, **Requesty AI**, and **Ollama Cloud**.
@@ -214,12 +215,21 @@ Source: `scope.md > Improvement — Search Fallback Reliability`.
 - **Plain text output:** Titles and snippets are HTML-tag-stripped and entity-decoded (named and numeric entities).
 - **No behavior change** to the result shape (`{ title, snippet, url }`) or to the primary Tavily path.
 
+### 12. General Personal Life & Work Assistant Expansion
+Source: `scope.md > Improvement — General Personal Life & Work Assistant Expansion`.
+- **Everyday File Ingestion:** Ingests plain text (`.txt`) and Markdown (`.md`) files strictly under 2MB. Employs heading-based (`# `, `## `, `### `) and paragraph-based chunking for long documents, indexing pages into IndexedDB with BM25 keyword scoring.
+- **Real-Time Context (`get_current_time`):** Adds a zero-argument read-only WebMCP tool that resolves the user's current local date, weekday, time, timezone, and ISO timestamp directly from the browser environment, giving visiting models and voice agents accurate calendar context.
+- **General-Purpose Prompt Alignment:** Purges rigid domain-specific biases from system prompts. The Tier 2 subagent assists across personal planning, scheduling, note synthesis, writing, and calculations, reserving Canvas2D diagramming for explicit visual layout requests. The Tier 1 voice assistant greets and converses as a general personal companion.
+
 Acceptance criteria:
 - [ ] A DuckDuckGo challenge/anomaly response yields `unavailable: true` and never an empty success.
 - [ ] Each result's snippet belongs to that result's own block (regression test covers skipped anchors and mismatched snippet counts).
 - [ ] Ad/redirect URLs never appear in returned results.
 - [ ] Non-`http(s)` decoded URLs are dropped.
 - [ ] An empty query returns `[]` without issuing a network request.
+- [ ] Text (`.txt`) and Markdown (`.md`) files under 2MB are accepted and indexed without error.
+- [ ] `get_current_time` returns ISO timestamp, formatted local string, timezone, and epoch milliseconds.
+- [ ] The subagent and voice prompts present general personal life and work capabilities.
 
 ## States and Boundaries
 
@@ -249,14 +259,14 @@ Acceptance criteria:
 ## What We're Building
 - 20/80 split React single-page application with Light/Dark toggle.
 - Modular custom controller hook architecture (`useSessionController`, `useDocumentController`, `useVoiceOrchestrator`).
-- File upload for Doc/PDF < 2MB with LiteParse WASM parsing, natural per-page chunking, and IndexedDB BM25 indexing.
+- File upload for Doc/PDF/TXT/MD < 2MB with LiteParse WASM & text chunking, natural per-page chunking, and IndexedDB BM25 indexing.
 - HTML canvas with live 2D scene graph engine, Clear button, and Export PDF button.
 - Chat stream formatted in Lora longform reading typography, multi-line prompt textarea, and auto-scroll to newest message.
 - Keyless Tavily web search with automatic DuckDuckGo fallback.
 - Isolated voice module in `src/voice/` featuring `gemini-3.8-live` full-duplex audio, multi-provider subagents (Google Gemini, OpenAI `gpt-6-luna`/`gpt-5-nano`, Mistral AI, Requesty AI, Ollama Cloud), preflight audio modal, and AES-GCM-256 key encryption.
 - User Preferences manager (`UserPreferencesModal`) storing up to 10 preferences (max 120 chars each) in browser storage.
 - Long-dwell UI layer: warm token dual themes, onboarding WelcomeModal, chat popup maximize, A-/A+ persisted font steps, reading-progress bar, Session Highlights in sidebar Section 3, thinking pulse, copy/star message actions, drag-over dropzone feedback, and session strip.
-- Complete WebMCP tool suite (18 tools including `get_user_preferences`).
+- Complete WebMCP tool suite (19 tools including `get_current_time` and `get_user_preferences`).
 - Cloudflare Pages deployment configuration.
 - Project documentation:
   - Documentation site created via `docs7` skill, updated with `docs/tavily-search.mdx` and dedicated `"Voice Agent"` section with `docs/voice-agent.mdx`.

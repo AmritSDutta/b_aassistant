@@ -69,6 +69,16 @@ Build mode: fast
   Learner check: Call `search_web` via WebMCP (or hit `/api/websearch?query=...` in `npm run dev`) and confirm results carry matching snippets; no ad links appear.
   Commit: `Harden DuckDuckGo fallback parser with pure, tested HTML parsing`
 
+- [x] **7. General Personal Life & Work Assistant Expansion**
+  Becomes usable: Users can drop plain text (`.txt`) and Markdown (`.md`) files into the upload box (< 2MB) for client-side chunking and BM25 search, agents can query the user's local date/time/timezone via the 19th WebMCP tool `get_current_time`, and the subagent/voice prompts are calibrated as a versatile personal life and work companion rather than locked into tech architecture.
+  Why now: Eliminates narrow domain bias and equips the assistant for everyday personal productivity, planning, and note synthesis while keeping the zero-exposure browser sandbox intact.
+  PRD ref: `prd.md > Features and Behavior > 1 & 5 & 9 & 12`
+  Spec ref: `spec.md > Components > 6 & 11`
+  Build: Update `ALLOWED_EXTENSIONS` in `useDocumentController.ts` and `FileUpload.tsx` for `.txt`/`.md`; enhance `LiteParseService` fallback to chunk Markdown headings; add `get_current_time` to `TOOL_DEFINITIONS` and `executeToolCall` in `src/webmcp/tools.ts`; update `agentGuide.ts`; broaden `SUBAGENT_SYSTEM_PROMPT_TEMPLATE` and `VOICE_LIVE_AGENT_PROMPT_TEMPLATE` in `prompts.ts`; update test suites.
+  Verify (mechanical): `npm test` (all test suites green, covering 19 tools and TXT/MD ingestion) and `npm run build` (tsc strict + vite).
+  Learner check: Ingest a `.md` note, call `get_current_time`, and confirm conversational responses in chat and voice.
+  Commit: `Expand to general personal life and work assistant with TXT/MD ingestion and get_current_time`
+
 ## Hands-on Checkpoints
 
 - [x] Early usable behavior explored — Slice 2 (Layout, Canvas engine, Chat, and WebMCP provider active)
@@ -93,4 +103,5 @@ Activity mode: fast build mode completed
 ## Revisions
 
 - **Search fallback hardening (2026-10-23):** Slice 6 added. The DuckDuckGo fallback parser was refactored into a pure, exported `parseDdgHtml` and hardened (block-scoped snippet pairing, ad/redirect filtering, `http(s)`-only URLs, challenge detection). Recorded because the original inline parser could mis-pair snippets and reported a bot-wall page as a successful empty result; see `prd.md > Features and Behavior > 11` and `spec.md > Components > 12`.
+- **Personal life/work expansion (2026-10-24):** Slice 7 added. Broadened bAssistant from a specialized BA diagramming tool into a versatile personal life and work companion. Added `.txt` and `.md` document ingestion with heading chunking, exposed `get_current_time` as the 19th WebMCP tool, and calibrated subagent and voice prompts for daily planning, writing, and analysis; see `prd.md > Features and Behavior > 12`.
 

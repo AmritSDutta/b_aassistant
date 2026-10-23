@@ -58,6 +58,16 @@ export const TOOL_DEFINITIONS: WebMCPTool[] = [
     },
   },
   {
+    name: 'get_current_time',
+    description:
+      "Returns the user's current local date, weekday, time, time zone, and ISO timestamp. Useful for scheduling, planning, time-sensitive queries, and calendar context.",
+    readOnlyHint: true,
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+  },
+  {
     name: 'chat_post',
     description: 'Posts a response, answer, or status message to the bottom chat dialogue stream on behalf of the AI assistant.',
     inputSchema: {
@@ -361,6 +371,22 @@ export async function executeToolCall(
     case 'get_user_preferences': {
       const prefs = context.getUserPreferences ? context.getUserPreferences() : [];
       return Array.isArray(prefs) ? prefs : [];
+    }
+
+    case 'get_current_time': {
+      const now = new Date();
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+      const formatted = new Intl.DateTimeFormat('en-US', {
+        dateStyle: 'full',
+        timeStyle: 'long',
+        timeZone,
+      }).format(now);
+      return {
+        iso: now.toISOString(),
+        formatted,
+        timeZone,
+        epochMs: now.getTime(),
+      };
     }
 
     case 'canvas2d_draw_shapes': {

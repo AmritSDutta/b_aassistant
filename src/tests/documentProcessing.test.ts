@@ -145,4 +145,19 @@ endobj
     expect(result.pages[0].text).not.toContain('%PDF');
     expect(result.pages[0].text).not.toContain('endobj');
   });
+
+  it('parses markdown documents and chunks on headings when long', async () => {
+    const service = new LiteParseService();
+    const section1 = '# Section 1: Weekly Planning\n' + 'Focus on personal wellness and daily routines. '.repeat(40);
+    const section2 = '\n# Section 2: Budgeting\n' + 'Track monthly expenses and savings goals. '.repeat(40);
+    const mdContent = section1 + section2;
+
+    const file = new File([mdContent], 'weekly_plan.md', { type: 'text/markdown' });
+    const result = await service.parseFile(file);
+
+    expect(result.fileName).toBe('weekly_plan.md');
+    expect(result.pages.length).toBeGreaterThanOrEqual(2);
+    expect(result.pages[0].text).toContain('Weekly Planning');
+    expect(result.pages[1].text).toContain('Budgeting');
+  });
 });

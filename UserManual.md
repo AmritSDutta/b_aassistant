@@ -33,7 +33,7 @@ bAssistant is structured as an ergonomic **20/80 dual-zone cockpit**:
 | [🎙️ Voice] [Theme]  | Live interactive architecture diagrams, flowcharts,  |
 |                     | containers, and connectors drawn by visiting AI       |
 | [Document Upload]   | [Fit View] [Reset] [New Session] [Export PDF]         |
-| (< 2MB PDF/DOCX)    +-------------------------------------------------------+
+| (< 2MB Doc/Text)    +-------------------------------------------------------+
 |                     | [Dialogue Reader (Bottom 40%)]                        |
 | [Reference URLs]    | Header: [Voice HUD: Mic, Status, Captions, Settings]  |
 | (Up to 10 links)    | Conversational dialogue stream (user: prefixing)      |
@@ -88,13 +88,14 @@ bAssistant automatically registers a multi-standard WebMCP provider on four glob
 3. `window.webmcp`
 4. `postMessage` JSON-RPC 2.0 (for iframes and browser extensions)
 
-### 18 Built-In WebMCP Tools Available to Your Agent
+### 19 Built-In WebMCP Tools Available to Your Agent
 | Tool Name | Category | Purpose |
 | :--- | :--- | :--- |
 | `get_tool_usage_prompt` | Core | Returns operating instructions for visiting AI agents. |
 | `get_reference_url` | Context | Fetches up to 10 stored reference URLs added by the user. |
 | `get_user_preferences` | Context | Fetches up to 10 user preference strings (max 120 chars each) for custom guidelines. |
-| `search_document` | Documents | Queries uploaded PDF/DOCX chunks using client-side BM25. |
+| `get_current_time` | Context | Returns the user's current local date, weekday, time, timezone, and ISO timestamp. |
+| `search_document` | Documents | Queries uploaded PDF/DOCX/TXT/MD chunks using client-side BM25. |
 | `clean_document` | Documents | Clears active document chunks from IndexedDB. |
 | `canvas2d_draw_shapes` | Canvas | Appends structured shapes (`rectangle`, `ellipse`, `diamond`, `text`, `sticker`) and perimeter-docked arrows. |
 | `canvas2d_inspect_shapes`| Canvas | Returns active scene graph and ASCII topology tree. |
@@ -113,7 +114,7 @@ bAssistant automatically registers a multi-standard WebMCP provider on four glob
 ### Testing via WebMCP Inspector
 1. Install the Chrome **WebMCP Inspector** extension.
 2. Open bAssistant and navigate to the WebMCP Inspector tab in Chrome DevTools.
-3. You will see all 18 tools listed. You can invoke them manually or attach your LLM API key directly in the extension to let your model explore and draw live.
+3. You will see all 19 tools listed. You can invoke them manually or attach your LLM API key directly in the extension to let your model explore and draw live.
 
 ### First Instruction to Give Your Agent (Copy–Paste)
 Paste this as the opening prompt of a new session:
@@ -130,7 +131,7 @@ That tool returns the full operating prompt, which already contains the drawing 
 
 bAssistant allows you to upload reference documents for private query and analysis.
 
-1. **Size Limit**: Accepts files **under 2MB strictly** (`.pdf`, `.docx`, `.doc`). Oversized files trigger an immediate rejection notification.
+1. **Size Limit**: Accepts files **under 2MB strictly** (`.pdf`, `.docx`, `.doc`, `.txt`, `.md`). Oversized files trigger an immediate rejection notification.
 2. **Zero Server Footprint**: Parsing is executed 100% in-browser using `@llamaindex/liteparse-wasm` with fallback decompressor streams that handle raw hex tokens (`<...> Tj` and `[...] TJ`). No document bytes leave your computer.
 3. **BM25 Search Indexing**: Extracted pages are broken into chunks, filtered of stop-words, and stored into browser **IndexedDB**.
 4. **Agent Querying**: Visiting agents query documents with targeted keywords via the `search_document` tool, which returns the top 3 ranked pages with relevance scores.

@@ -23,6 +23,7 @@ This guide explains how to use every other tool correctly. Read it before acting
 | \`search_research\` | \`{ query }\` | ArXiv papers/preprints (carry a \`fetchedAt\`). |
 | \`get_reference_url\` | \`{}\` | Read-only: comma-separated stored reference URLs. |
 | \`get_user_preferences\` | \`{}\` | Read-only: returns string array of stored user preferences (up to 10 items, max 120 chars each). |
+| \`get_current_time\` | \`{}\` | Read-only: returns local date, weekday, time, timezone, and ISO timestamp. |
 | \`calculate\` | \`{ expression }\` | Decimal-safe math, e.g. "12.5 * 4.2 + 3.1". |
 | \`export_pdf\` | \`{}\` | Build and download the session PDF (canvas snapshot + transcript). |
 | \`canvas_draw\` | \`{ command?, commands? }\` | LEGACY flat drawing (rect/circle/line/text/graph) — prefer \`canvas2d_draw_shapes\`. |
@@ -30,7 +31,7 @@ This guide explains how to use every other tool correctly. Read it before acting
 | \`canvas_clear\` | \`{}\` | Clear legacy flat drawings. |
 
 ## Document Retrieval
-- \`search_document\` queries the user's uploaded document (<2MB PDF/DOC/DOCX) via a BM25 index.
+- \`search_document\` queries the user's uploaded document (<2MB PDF/DOC/DOCX/TXT/MD) via a BM25 index.
   Pass targeted keywords or topic entities ("authentication", "revenue", "architecture"),
   NOT conversational sentences. Returns the top 3 pages with scores.
 - \`clean_document\` wipes all stored document data. Only use this when the user explicitly asks.
@@ -38,6 +39,7 @@ This guide explains how to use every other tool correctly. Read it before acting
 ## Research, Math & Context
 - \`get_reference_url\`: returns a comma-separated list of external reference and documentation URLs added by the user in the sidebar. Use these for external documentation and context.
 - \`get_user_preferences\`: returns string array of custom user guidelines (max 10, max 120 chars each). Always adhere to user preferences during tone selection, formatting, and diagramming.
+- \`get_current_time\`: returns the user's current local date, weekday, time, time zone, and ISO timestamp. Use this whenever the user asks for time, date, deadlines, or scheduling.
 - \`search_web\` (keyless Tavily AI search as primary with automatic DuckDuckGo fallback) for general web lookups. Returns live results with a \`fetchedAt\` timestamp and \`source\`.
 - \`search_research\` (ArXiv) for scientific papers and preprints. Returns results with a \`fetchedAt\` timestamp.
 - If a search returns \`unavailable: true\`, the network is unreachable — tell the user you could not retrieve live data and do NOT invent results. Never present search output as fresher than its \`fetchedAt\`.

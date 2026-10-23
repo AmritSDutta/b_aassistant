@@ -139,6 +139,29 @@ describe('useDocumentController', () => {
     expect(result.current.activeDoc).toBeNull();
   });
 
+  it('accepts and indexes .txt and .md files under 2MB', async () => {
+    const onError = vi.fn();
+    const onIndexed = vi.fn();
+    vi.spyOn(globalIDBStorage, 'saveDocument').mockResolvedValue(undefined);
+    const { result } = renderHook(() =>
+      useDocumentController({ onError, onDocumentIndexed: onIndexed })
+    );
+
+    const mdFile = new File(['# Personal Goals\n\nDaily workout and reading plans.'], 'goals.md', {
+      type: 'text/markdown',
+    });
+
+    await act(async () => {
+      await result.current.handleFileSelect(mdFile);
+    });
+
+    expect(onError).not.toHaveBeenCalled();
+    expect(result.current.activeDoc).not.toBeNull();
+    expect(result.current.activeDoc?.name).toBe('goals.md');
+    expect(result.current.activeDoc?.status).toBe('indexed');
+    expect(onIndexed).toHaveBeenCalled();
+  });
+
   it('returns empty array when search is performed with no indexed documents', async () => {
     vi.spyOn(globalIDBStorage, 'getChunks').mockResolvedValue([]);
     vi.spyOn(globalIDBStorage, 'getBM25Index').mockResolvedValue(null);
