@@ -7,7 +7,7 @@ description: Exhaustive specification of all bassistant_ namespaced client stora
 
 bAssistant operates strictly as a zero-backend workstation. All user configuration, session deliberation history, and LLM credentials reside entirely in the client's local browser sandbox.
 
-To prevent key collisions with other applications, browser extensions, or localhost services, **all configuration keys, vault database names, object stores, and encrypted ciphertext payloads are strictly namespaced with the `bassistant_` prefix**.
+To prevent key collisions with other applications, browser extensions, or localhost services, **configuration keys, vault database names, object stores, and encrypted ciphertext payloads are namespaced with the `bassistant_` prefix**, while app-data keys use a shorter `b_` prefix (`b_user_preferences`, `b_reference_urls`).
 
 ---
 
@@ -30,6 +30,7 @@ Every setting managed by `useVoiceSettings` and the cockpit persists under a ded
 | `bassistant_studio_voice` | `string` | Selected studio voice persona (e.g. `'Puck'`, `'Charon'`, `'Kore'`, `'Fenrir'`, `'Aoede'`) | Plain text |
 | `bassistant_ollama_endpoint` | `string` | Cloud API base URL for Ollama Cloud (default: `'https://ollama.com/api'`) | Plain text |
 | `b_user_preferences` | `string[]` | User preferences array (max 10 items, max 120 chars each) for WebMCP & subagent prompt injection | Plain text JSON |
+| `b_reference_urls` | `string[]` | Verified external reference URLs (capped at 10) shared with visiting LLMs via `get_reference_url` | Plain text JSON |
 
 ---
 
@@ -48,13 +49,13 @@ Transient background tasks dispatched during live deliberation are tracked witho
 Sensitive credentials stored in `localStorage` are never written as plaintext. The cryptographic layer in `src/voice/config/cryptoStorage.ts` packs encrypted payloads into a versioned, verifiable string envelope:
 
 ```text
-__BASSISTANT_ENC__:v1:<iv_hex>:<ciphertext_hex>
+__BASSISTANT_ENC__:v1:<iv_b64>:<ciphertext_b64>
 ```
 
 ### Envelope Structure:
 - **Header Prefix**: `__BASSISTANT_ENC__:v1:` explicitly identifies bAssistant-managed ciphertext and version.
-- **Initialization Vector (`<iv_hex>`)**: 96-bit (12-byte) cryptographically secure random IV generated via `window.crypto.getRandomValues(new Uint8Array(12))`.
-- **Ciphertext (`<ciphertext_hex>`)**: 256-bit AES-GCM ciphertext containing the encrypted string and authentication tag.
+- **Initialization Vector (`<iv_b64>`)**: 96-bit (12-byte) cryptographically secure random IV generated via `window.crypto.getRandomValues(new Uint8Array(12))`, base64-encoded.
+- **Ciphertext (`<ciphertext_b64>`)**: 256-bit AES-GCM ciphertext containing the encrypted string and authentication tag, base64-encoded.
 
 ---
 
@@ -64,18 +65,10 @@ The encryption key used to seal and open credentials is maintained in a dedicate
 
 ```mermaid
 flowchart TD
-    subgraph Browser ["Client Browser Sandbox"]
-        IDB[("IndexedDB: bassistant_secure_vault")]
-        Store["ObjectStore: bassistant_keys"]
-        Key["Key ID: bassistant_device_master_key_v1<br/>(CryptoKey, extractable: false)"]
-        Subtle["Web Cryptography API (crypto.subtle)"]
-        Local["localStorage (bassistant_*_api_key)"]
-
-        IDB --> Store
-        Store --> Key
-        Key <-->|AES-GCM encrypt / decrypt| Subtle
-        Subtle <-->|read/write __BASSISTANT_ENC__:v1:...| Local
-    end
+    IDB[("IndexedDB: bassistant_secure_vault")] --> Store["ObjectStore: bassistant_keys"]
+    Store --> Key["Master Key - non-extractable"]
+    Key <-->|"AES-GCM encrypt / decrypt"| Subtle["Web Cryptography API (crypto.subtle)"]
+    Subtle <-->|"read/write __BASSISTANT_ENC__:v1:..."| Local["localStorage (bassistant_*_api_key)"]
 ```
 
 ### Vault Parameters:
@@ -97,9 +90,8 @@ User documents, lexical search indices, and multi-session deliberation history a
 | `documents` | `id` | Metadata for uploaded PDF/DOCX files (< 2MB) |
 | `chunks` | `id` | Extracted page text chunks and token arrays |
 | `bm25_index` | `id` (`default_index`) | Precomputed BM25 inverted index for instantaneous client-side document search |
-| `session_turns` | `id` (`${sessionId}_turn_${index}`) | Deliberation turns (user prompt, canvas diagram snapshot, AI response) |
-| `session_meta` | `id` (`session_meta_${sessionId}`) | Session metadata (turn counts, creation timestamp, title) |
-| `reference_urls` | `id` (`default_urls`) | Up to 10 verified external reference links |
+| `session_turns` | `id` (`turn_<timestamp>_<rand>`) | Deliberation turns (user prompt, canvas diagram snapshot, AI response) |
+| `session_meta` | `key` (`active_session_id`) | Single record pointing at the active session id |
 
 ---
 

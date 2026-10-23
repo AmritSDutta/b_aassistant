@@ -64,11 +64,11 @@ flowchart TD
   Upload["File Upload (< 2MB)"] --> CheckFormat{"Format Check"}
   CheckFormat -->|PDF| WASM["Tier 1: @llamaindex/liteparse-wasm"]
   WASM -->|Success| IndexedDB[("IndexedDB Chunks & BM25 Index")]
-  WASM -->|WASM Unavailable / Fails| StreamParser["Tier 2: DecompressionStream('deflate-raw')"]
-  StreamParser -->|Extract literal & hex tokens| IndexedDB
+  WASM -->|"WASM Unavailable / Fails"| StreamParser["Tier 2: DecompressionStream('deflate-raw')"]
+  StreamParser -->|"Extract literal & hex tokens"| IndexedDB
   CheckFormat -->|DOCX| ZipParser["Tier 3: PKZip word/document.xml Decompressor"]
   ZipParser --> IndexedDB
-  CheckFormat -->|DOC / Raw Text| TextParser["Tier 4: Printable UTF-8 Extractor"]
+  CheckFormat -->|"DOC / Raw Text"| TextParser["Tier 4: Printable UTF-8 Extractor"]
   TextParser --> IndexedDB
 ```
 

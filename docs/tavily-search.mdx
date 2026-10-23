@@ -12,16 +12,14 @@ flowchart TD
   Agent["WebMCP Agent / User"] -->|"search_web { query }"| WebMCP["WebMCP Provider"]
   WebMCP --> Service["searchService.ts"]
   Service --> Endpoint["GET /api/websearch?query=..."]
-  
   subgraph Proxy["Same-Origin Proxy Layer"]
     Endpoint --> Primary{"Primary:\nsearchTavilyKeyless()"}
     Primary -->|Success| TavilyAPI["POST https://api.tavily.com/search\nX-Tavily-Access-Mode: keyless"]
     TavilyAPI --> CleanJSON["Clean LLM-Ranked Results\nsource: 'tavily'"]
-    Primary -->|Error / 429 / Timeout| Fallback{"Fallback:\nsearchDuckDuckGo()"}
+    Primary -->|"Error / 429 / Timeout"| Fallback{"Fallback:\nsearchDuckDuckGo()"}
     Fallback -->|Success| DDGScraper["DuckDuckGo HTML Scraper\nsource: 'duckduckgo'"]
     Fallback -->|Failure| Unavailable["unavailable: true\n(Honest reporting)"]
   end
-
   CleanJSON --> Service
   DDGScraper --> Service
   Unavailable --> Service

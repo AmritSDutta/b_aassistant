@@ -51,7 +51,7 @@ Instead of fire-and-forget pixel drawing commands, the canvas maintains a persis
 Shape interiors are rendered with [Rough.js](https://roughjs.com/) (`roughjs ^4.6.6`, MIT) for a
 hand-drawn editorial look rather than rigid vector polygons:
 
-- **Hachure fills** are the default when a fill color is present (`fillStyle: 'hachure'`, `hachureAngle: -41`, `hachureGap: 6`); `solid`, `zigzag`, and `cross-hatch` are opt-in per shape.
+- **Hachure fills** are the default when a fill color is present (`fillStyle: 'hachure'`, `hachureAngle: -41`, `hachureGap: 6`); `solid`, `zigzag`, `cross-hatch`, and `dots` are opt-in per shape.
 - **`fillWeight`** is set to `max(strokeWidth, 1)` so hatch strokes stay legible against the dark backdrop instead of fading out.
 - **Fluid connectors**: arrows and lines render as orientation-aware cubic Bézier splines (`ctx.bezierCurveTo`) with tangent-aligned arrowheads; set `curved: false` for a clean straight edge.
 - **Palettes**: a named `palette` (`risograph`, `editorial`, `botanical`, `cyberpunk`) resolves its tokens, and archetype tokens (`client`, `gateway`, `db`, `queue`, `logic`) are resolved by `resolveHarmonizedFill()`; harsh primary hex inputs (`#ff0000`, `#0000ff`, …) are softened into print-grade tones.

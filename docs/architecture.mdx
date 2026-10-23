@@ -17,7 +17,7 @@ flowchart TD
   Voice -->|toolCall| Bridge["VoiceBridge + TaskManager"]
   Bridge --> Canvas
   Bridge --> Chat
-  Chat -->|record turns| Sessions[("session_turns / session_meta")]
+  Chat -->|"record turns"| Sessions[("session_turns / session_meta")]
   Sessions --> Vault["Session Vault (HistoryModal)"]
   Vault -->|restore| Canvas
   Data --> IDB[("IndexedDB bAssistantDB")]

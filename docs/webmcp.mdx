@@ -50,7 +50,7 @@ never re-register (or mid-session abort) the tool set; `updateWebMCPContext()` s
 | `get_user_preferences` | `{}` | Read-only: returns the active user preferences as a string array (e.g. `["Use pastel colors", "Keep explanations concise"]`, max 10 items, max 120 chars each). |
 | `get_chat_history` | `{}` | Returns recent dialogue history with user messages prefixed by `user:`. |
 | `chat_post` | `{ text: string }` | Posts textual responses, markdown, or status updates to the chat area for the visiting LLM. |
-| `canvas2d_draw_shapes` | `{ shapes: object[] \| string }` | Appends structured Canvas2D shapes (rectangles, ellipses, diamonds, text, stickers, freehand `freedraw`) rendered with Rough.js hand-drawn sketching, plus fluid Bézier connectors bound via `startId`/`endId`. Supports optional artistic styling (`roughness`, `fillStyle`, `subtitle`, `palette`). Accepts an array or a JSON string. |
+| `canvas2d_draw_shapes` | `{ shapes: object[] \| string }` | Appends structured Canvas2D shapes (rectangles, ellipses, diamonds, text, stickers) rendered with Rough.js hand-drawn sketching, plus fluid Bézier connectors bound via `startId`/`endId`. Supports optional artistic styling (`roughness`, `fillStyle`, `subtitle`, `palette`). Accepts an array or a JSON string. |
 | `canvas2d_inspect_shapes` | `{}` | Returns the active scene graph and an ASCII topology graph for visiting agent self-inspection. |
 | `canvas2d_modify_shape` | `{ nodeId: string, newLabel?: string, fillColor?: string, strokeColor?: string, x?: number, y?: number }` | In-place shape editing (label, position, colors) while keeping connected arrows attached. |
 | `canvas2d_clear` | `{}` | Clears all shapes from the Canvas2D scene graph. |

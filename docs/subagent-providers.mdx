@@ -24,36 +24,17 @@ All subagent providers implement the uniform `ISubagentProvider` interface, allo
 
 ```mermaid
 flowchart TD
-    subgraph UI ["Voice & Subagent Settings"]
-        PSelect["1. Provider Selector<br/>(Gemini | OpenAI | Mistral | Requesty | Ollama)"]
-        Vault["2. AES-GCM-256 Vault<br/>(Per-Provider Key Isolation)"]
-        MSelect["3. Model Presets or Custom ID"]
-        QTest["4. ⚡ Quick Test<br/>(Live in-memory ping)"]
-        SaveGate["5. Save Settings Gate"]
-        PSelect --> Vault --> MSelect --> QTest --> SaveGate
-    end
-
-    subgraph Factory ["Subagent Factory"]
-        SPF["createSubagentProvider()"]
-        SaveGate --> SPF
-    end
-
-    subgraph Implementations ["ISubagentProvider Implementations"]
-        GeminiImpl["GeminiSubagentProvider"]
-        OpenAIImpl["OpenAISubagentProvider"]
-        MistralImpl["MistralSubagentProvider"]
-        RequestyImpl["RequestySubagentProvider"]
-        OllamaImpl["OllamaSubagentProvider"]
-        SPF --> GeminiImpl & OpenAIImpl & MistralImpl & RequestyImpl & OllamaImpl
-    end
-
-    subgraph Dispatch ["VoiceBridge Execution"]
-        VB["VoiceBridge.handleDiagramAndExplanation()"]
-        GeminiImpl & OpenAIImpl & MistralImpl & RequestyImpl & OllamaImpl -.->|generateText| VB
-        VB --> Canvas["Canvas2D Engine (Rough.js)"]
-        VB --> Chat["ChatArea + Session Turns"]
-        VB --> Task["TaskManager (HUD Badge)"]
-    end
+    PSelect["1. Provider Selector"] --> Vault["2. AES-GCM-256 Vault"] --> MSelect["3. Model Presets or Custom ID"] --> QTest["4. Quick Test"] --> SaveGate["5. Save Settings Gate"]
+    SaveGate --> SPF["createSubagentProvider()"]
+    SPF --> GeminiImpl["GeminiSubagentProvider"]
+    SPF --> OpenAIImpl["OpenAISubagentProvider"]
+    SPF --> MistralImpl["MistralSubagentProvider"]
+    SPF --> RequestyImpl["RequestySubagentProvider"]
+    SPF --> OllamaImpl["OllamaSubagentProvider"]
+    GeminiImpl & OpenAIImpl & MistralImpl & RequestyImpl & OllamaImpl -.->|generateText| VB["VoiceBridge.handleDiagramAndExplanation()"]
+    VB --> Canvas["Canvas2D Engine (Rough.js)"]
+    VB --> Chat["ChatArea + Session Turns"]
+    VB --> Task["TaskManager (HUD Badge)"]
 ```
 
 ### The `ISubagentProvider` Interface
@@ -156,4 +137,4 @@ All API keys are isolated per provider in client-side encrypted storage:
   - `bassistant_ollama_api_key`: Ollama Cloud API key.
 - **Encryption**: 256-bit AES-GCM (`window.crypto.subtle`) using non-extractable keys in IndexedDB (`bassistant_secure_vault`).
 - **Provider Switching**: Switching providers retains previously entered keys in their respective encrypted slots so keys never need to be retyped.
-- **Full Storage Schema**: See the comprehensive key catalog in [Storage Keys & Encrypted Vault Schema](storage-keys).
+- **Full Storage Schema**: See the comprehensive key catalog in [Storage Keys & Encrypted Vault Schema](/storage-keys).

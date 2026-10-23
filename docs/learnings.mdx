@@ -51,10 +51,10 @@ flowchart TD
   Provider --> Declarative["2. Declarative Hidden DOM Forms"]
   Provider --> Legacy["3. navigator.modelContext & window.webmcp"]
   Provider --> PostMessage["4. postMessage & Extension Handshake"]
-  Imperative -->|registerTool + getTools| ChromeNative["Native Chromium AI Runtime"]
-  Declarative -->|toolname / tooldescription| DomInspectors["DOM / Declarative Audits"]
-  Legacy -->|listTools / callTool| DirectJS["Standard Browser Scripts"]
-  PostMessage -->|WEBMCP_GET_TOOLS / JSON-RPC| ContentScripts["Extension Content Scripts"]
+  Imperative -->|"registerTool + getTools"| ChromeNative["Native Chromium AI Runtime"]
+  Declarative -->|"toolname / tooldescription"| DomInspectors["DOM / Declarative Audits"]
+  Legacy -->|"listTools / callTool"| DirectJS["Standard Browser Scripts"]
+  PostMessage -->|"WEBMCP_GET_TOOLS / JSON-RPC"| ContentScripts["Extension Content Scripts"]
 ```
 
 ### Key Implementation Patterns
@@ -107,11 +107,11 @@ flowchart TD
   Input["PDF / DOCX File (< 2MB)"] --> Purge["1. Purge IDB documents, chunks & bm25_index"]
   Purge --> Engine{"Engine Selection"}
   Engine -->|Browser| FetchWasm["Fetch /liteparse_wasm_bg.wasm"]
-  Engine -->|Node / Vitest| ReadDisk["Read from disk via fs.readFileSync"]
+  Engine -->|"Node / Vitest"| ReadDisk["Read from disk via fs.readFileSync"]
   FetchWasm --> LiteParse["LiteParse WASM Extractor"]
   ReadDisk --> LiteParse
   LiteParse --> Filter["2. Syntax & Bytecode Filter: Strip %PDF-, endstream, /ProcSet"]
-  LiteParse -.->|Fallback on error| StreamParser["DecompressionStream('deflate-raw') + Token Validator"]
+  LiteParse -.->|"Fallback on error"| StreamParser["DecompressionStream('deflate-raw') + Token Validator"]
   StreamParser --> Filter
   Filter --> Chunks["3. Clean Natural Page Chunks"]
   Chunks --> BM25["4. BM25 Inverted Index & IDB Storage"]

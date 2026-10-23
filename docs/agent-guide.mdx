@@ -50,6 +50,7 @@ flowchart TD
 | `search_web` | `{ query }` | Live Tavily AI / DuckDuckGo results (carry a `fetchedAt`). |
 | `search_research` | `{ query }` | ArXiv papers/preprints (carry a `fetchedAt`). |
 | `get_reference_url` | `{}` | Read-only: comma-separated stored reference URLs. |
+| `get_user_preferences` | `{}` | Read-only: returns string array of stored user preferences (up to 10 items, max 120 chars each). |
 | `calculate` | `{ expression }` | Decimal-safe math, e.g. `"12.5 * 4.2 + 3.1"`. |
 | `export_pdf` | `{}` | Build and download the session PDF (canvas snapshot + transcript). |
 | `canvas_draw` | `{ command?, commands? }` | LEGACY flat drawing — prefer `canvas2d_draw_shapes`. |
@@ -83,7 +84,7 @@ monospace micro-badge.
 
 ## Conventions
 
-1. Call this guide tool first in a new session, then `get_chat_history` for context.
+1. Call this guide tool first in a new session, then check `get_user_preferences` and `get_chat_history` for context and active user rules.
 2. Ground answers in `search_document` results when a document is loaded; cite page numbers.
 3. Inspect (`canvas2d_inspect_shapes`) before you modify; never clear unless asked.
 4. Draw with `canvas2d_draw_shapes` using the 4-tier column flow and under ~15 nodes, then verify

@@ -8,7 +8,7 @@ interface WelcomeModalProps {
 const STEPS: Array<{ title: string; body: string }> = [
   {
     title: 'Connect via WebMCP Inspector or direct tool calls',
-    body: 'Install the Chrome WebMCP Inspector plugin and attach your API key, or trigger direct WebMCP tool calls in DevTools. bAssistant exposes 17 pre-configured tools for your AI agent to chat, search documents, and render live canvas diagrams.',
+    body: 'Install the Chrome WebMCP Inspector plugin and attach your API key, or trigger direct WebMCP tool calls in DevTools. bAssistant exposes 18 pre-configured tools for your AI agent to chat, search documents, and render live canvas diagrams.',
   },
   {
     title: 'Ask questions & visualize',

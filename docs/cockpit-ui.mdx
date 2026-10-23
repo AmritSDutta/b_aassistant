@@ -31,7 +31,7 @@ The viewport is divided horizontally into a left sidebar and a primary workspace
 
 ### 1. Left Sidebar (20% Width)
 The sidebar serves as the control and context panel:
-- **Branding, Preferences, Voice & Theme Toggle**: Features the dynamic, transparent, theme-aware bAssistant logo (`bassistant_light.jpg` in dark mode, `bassistant_dark.jpg` in light mode for optimal contrast), a 2-tiered right-aligned action cluster with Tier 1 utility buttons (`[voice]`, `[tips]`, `[theme]`) and a Tier 2 long single `[ ⚙️ user preferences ]` button opening the User Preferences modal (managing up to 10 custom guidelines, max 120 chars each, exposed to subagents and WebMCP), and instant light/dark mode switching. Also sets the browser tab favicon. See [Full-Duplex Live Voice Agent](/voice-agent).
+- **Branding, Preferences, Voice & Theme Toggle**: Features the dynamic, transparent, theme-aware bAssistant logo served from the Cloudflare R2 CDN (`bassistant_light.jpg` in dark mode, `bassistant_dark.jpg` in light mode for optimal contrast), a 2-tiered right-aligned action cluster with Tier 1 utility buttons (`[voice]`, `[tips]`, `[theme]`) and a Tier 2 long single `[ ⚙️ user preferences ]` button opening the User Preferences modal (managing up to 10 custom guidelines, max 120 chars each, exposed to subagents and WebMCP), and instant light/dark mode switching. See [Full-Duplex Live Voice Agent](/voice-agent).
 - **Document Dropzone**: Ingests `.pdf`, `.docx`, or `.doc` files strictly under 2MB. Displays parsing status badges (`Parsing...`, `Indexed`, or error modal) with clear file-type validation.
 - **Reference URLs**: Enboldened **REFERENCE URLS** header with count badge. Manage up to 10 external documentation and resource links. Clicking `+ Add` opens a validation modal that verifies reachability via client-side probes before caching URLs into browser storage. Visiting LLMs access these links via `get_reference_url`.
 - **Session Highlights**: Enboldened **Session Highlights** section. Starred messages from the conversation collect here automatically. Clicking any highlight smoothly scrolls the chat stream directly to that turn.
@@ -51,7 +51,7 @@ To support deep analytical work, bAssistant incorporates dedicated dwell-time er
 ### Warm Semantic Token System
 Rather than high-glare white or cold blue-black dark surfaces, bAssistant uses low-strain semantic tokens defined in `src/index.css`:
 - **Light Theme**: Warm paper surface (`#fffdf7`) with navy ink text (`#14213d`).
-- **Dark Theme**: Warm ink surfaces (`#191714` family) with soft parchment text (`#e6e1d8`).
+- **Dark Theme**: Warm ink surfaces (`#191714` family) with soft parchment text (`#ede9e3`).
 - **Accent Roles**: Distinct semantic roles for client ingress (indigo), gateways (emerald), databases (purple), and decision logic (amber).
 
 ### Zen Reader Mode (⤢)

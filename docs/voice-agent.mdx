@@ -50,7 +50,7 @@ Real-time audio models (`gemini-3.8-live`, `gemini-2.5-flash-native-audio-previe
 
 To solve this, bAssistant decouples conversational speech from heavy technical synthesis:
 1. **Tier 1 (Audio Orchestrator)**: `gemini-3.8-live` handles real-time conversational banter, microphone audio streaming, and voice personality. When diagrams are requested, it invokes `generate_diagram_and_explanation` as an internal asynchronous bridge tool, immediately receiving confirmation so it can acknowledge to the user with zero awkward pause.
-2. **Tier 2 (Structured Subagent)**: Runs asynchronously in the background to generate dense Canvas2D shapes and comprehensive markdown breakdowns when the user asks for diagrams, system designs, or calculations. Supports Google Gemini, Mistral AI, Requesty AI, and Ollama Cloud (see [Tier 2 Subagent Providers](subagent-providers)).
+2. **Tier 2 (Structured Subagent)**: Runs asynchronously in the background to generate dense Canvas2D shapes and comprehensive markdown breakdowns when the user asks for diagrams, system designs, or calculations. Supports Google Gemini, OpenAI, Mistral AI, Requesty AI, and Ollama Cloud (see [Tier 2 Subagent Providers](/subagent-providers)).
 
 ---
 
@@ -120,7 +120,7 @@ To prevent API keys stored in the browser from being exfiltrated via third-party
    ```
    __BASSISTANT_ENC__:v1:<base64_iv>:<base64_ciphertext>
    ```
-4. Raw secret key bytes never leave the local browser environment. For the complete list of storage keys and envelope schemas, see [Storage Keys & Encrypted Vault Schema](storage-keys).
+4. Raw secret key bytes never leave the local browser environment. For the complete list of storage keys and envelope schemas, see [Storage Keys & Encrypted Vault Schema](/storage-keys).
 
 ---
 
@@ -180,10 +180,10 @@ To ensure both Tier 1 and Tier 2 agents operate with clean role boundaries:
   - `generate_diagram_and_explanation`: Asynchronous bridge tool (not a WebMCP tool) that delegates visual architecture generation to the background Subagent. Tier 1 receives immediate dispatch confirmation (~50ms) to acknowledge the user verbally while the subagent runs in the background.
   - `get_background_task_status`: Queries the status and progress of background tasks from browser cache, allowing Gemini Live to answer questions like *"Is my diagram done yet?"* verbally.
 - **WebMCP Tool Catalog (Tier 1 — non-visual only)**:
-  - **Retrieval & Context**: `search_web`, `search_research`, `search_document`, `get_reference_url`, and `clean_document`.
-  - **Canvas**: `canvas2d_clear` (voice users can wipe the canvas verbally; all drawing and editing flows through the `generate_diagram_and_explanation` bridge tool).
+  - **Retrieval & Context**: `search_web`, `search_research`, `search_document`, `get_reference_url`, `get_user_preferences`, and `clean_document`.
+  - **Canvas**: `canvas2d_clear` (voice users can wipe the canvas verbally) and `canvas2d_inspect_shapes` (read-only scene graph inspection to verify node/edge counts verbally); all drawing and editing flows through the `generate_diagram_and_explanation` bridge tool.
   - **Dialogue & Reporting**: `calculate`, `export_pdf`, `chat_post`, `get_chat_history`, and `get_tool_usage_prompt`.
-- **Visual Shape Tools (Tier 2 Subagent & visiting WebMCP agents only)**: `canvas2d_draw_shapes`, `canvas2d_inspect_shapes`, and `canvas2d_modify_shape` are deliberately excluded from the Tier 1 declarations — the live voice model never manipulates raw shape JSON.
+- **Visual Shape Tools (Tier 2 Subagent & visiting WebMCP agents only)**: `canvas2d_draw_shapes` and `canvas2d_modify_shape` are deliberately excluded from the Tier 1 declarations — the live voice model never manipulates raw shape JSON.
 - The Subagent prompt is purged of `generate_diagram_and_explanation` to prevent circular bridge calls.
 
 ---
