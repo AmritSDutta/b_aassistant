@@ -197,6 +197,7 @@ Self-contained, decoupled voice package:
 - `providers/mistralSubagentProvider.ts`: `ISubagentProvider` implementation calling Mistral AI chat completions with Bearer token authentication.
 - `providers/requestySubagentProvider.ts`: `ISubagentProvider` implementation calling Requesty AI router with native CORS, automatic prefix scrapping, and CSP allowlisting.
 - `providers/ollamaSubagentProvider.ts`: `ISubagentProvider` implementation targeting the Ollama Cloud endpoint (`https://ollama.com/api/chat`) with Bearer token authentication.
+- `providers/nebiusSubagentProvider.ts`: `ISubagentProvider` implementation calling the Nebius Token Factory OpenAI-compatible endpoint (`https://api.tokenfactory.nebius.com/v1/chat/completions`) with NVIDIA Nemotron models via same-origin `/api/proxy` with Bearer token authentication.
 - `providers/subagentFactory.ts`: Factory resolver (`createSubagentProvider`) instantiating the matching provider class based on active settings.
 - `bridge/voiceBridge.ts`: WebMCP tool translation and subagent task coordination (clears canvas, draws fresh shapes, posts answer to chat, returns voice summary).
 - `hooks/useVoiceAgent.ts`: React voice agent lifecycle hook equipped with an `isSessionActiveRef` cancellation token guarding asynchronous events (`onEnd`, `onTurnComplete`, `onStart`) from mutating state when stopped, guaranteeing reliable `standby` reset.
@@ -251,7 +252,15 @@ Consumed by `functions/api/websearch.ts` (production) and the `dev-api-endpoints
 ### 3. Application State (React State / Local Storage)
 - `theme`: `'dark' | 'light'` (persisted in `localStorage['b_theme']`).
 - `apiKey`: encrypted string `__BASSISTANT_ENC__:v1:<iv>:<cipher>` (persisted in `localStorage['bassistant_gemini_api_key']`).
+- `geminiSubagentKey`: encrypted string `__BASSISTANT_ENC__:v1:<iv>:<cipher>` (dedicated Tier 2 Gemini override; persisted in `localStorage['bassistant_gemini_subagent_key']`).
 - `openaiKey`: encrypted string `__BASSISTANT_ENC__:v1:<iv>:<cipher>` (persisted in `localStorage['bassistant_openai_api_key']`).
+- `mistralKey`: encrypted string `__BASSISTANT_ENC__:v1:<iv>:<cipher>` (persisted in `localStorage['bassistant_mistral_api_key']`).
+- `requestyKey`: encrypted string `__BASSISTANT_ENC__:v1:<iv>:<cipher>` (persisted in `localStorage['bassistant_requesty_api_key']`).
+- `ollamaKey`: encrypted string `__BASSISTANT_ENC__:v1:<iv>:<cipher>` (persisted in `localStorage['bassistant_ollama_api_key']`).
+- `nebiusKey`: encrypted string `__BASSISTANT_ENC__:v1:<iv>:<cipher>` (persisted in `localStorage['bassistant_nebius_api_key']`).
+- `subagentProvider`: `SubagentProviderType` (`'gemini' | 'openai' | 'mistral' | 'requesty' | 'ollama' | 'nebius'`; persisted in `localStorage['bassistant_subagent_provider']`).
+- `useTier1GeminiKey`: boolean (persisted as `'true'`/`'false'` in `localStorage['bassistant_use_tier1_gemini_key']`).
+- `ollamaEndpoint`: string, default `https://ollama.com/api` (persisted in `localStorage['bassistant_ollama_endpoint']`).
 - `userPreferences`: `string[]` max 10 items, max 120 chars each (persisted in `localStorage['b_user_preferences']`).
 - `liveModel`: `'gemini-3.8-live'` (persisted in `localStorage['bassistant_voice_live_model']`).
 - `subagentModel`: `'gemini-3.5-flash-lite'` (persisted in `localStorage['bassistant_subagent_model']`).
@@ -327,7 +336,7 @@ C:/codebase/b_aassistant/
 │   │   ├── types/               # Provider & audio interfaces (ILiveVoiceProvider, ISubagentProvider)
 │   │   ├── config/              # Crypto storage (AES-GCM-256) & model registry (gemini-3.8-live)
 │   │   ├── audio/               # AudioWorklet recorder (16 kHz) & gapless player (24 kHz)
-│   │   ├── providers/           # Gemini, OpenAI, Mistral, Requesty, Ollama providers
+│   │   ├── providers/           # Gemini, OpenAI, Mistral, Requesty, Ollama, Nebius providers
 │   │   ├── bridge/              # Tool adapter & subagent task bridge
 │   │   ├── hooks/               # useVoiceSettings & useVoiceAgent
 │   │   └── components/          # VoiceLiveController, VoiceSettingsModal, AudioPreflightModal

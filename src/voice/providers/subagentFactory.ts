@@ -4,6 +4,7 @@ import { OpenAISubagentProvider } from './openAISubagentProvider';
 import { MistralSubagentProvider } from './mistralSubagentProvider';
 import { RequestySubagentProvider } from './requestySubagentProvider';
 import { OllamaSubagentProvider } from './ollamaSubagentProvider';
+import { NebiusSubagentProvider } from './nebiusSubagentProvider';
 import { SubagentProviderType } from '../config/modelRegistry';
 
 export interface SubagentFactoryOptions {
@@ -38,6 +39,12 @@ export function createSubagentProvider(options: SubagentFactoryOptions): ISubage
         apiKey: options.apiKey,
         model: options.model,
         baseUrl: options.endpoint,
+      });
+    case 'nebius':
+      return new NebiusSubagentProvider({
+        apiKey: options.apiKey,
+        model: options.model,
+        endpoint: options.endpoint,
       });
     case 'gemini':
     default:

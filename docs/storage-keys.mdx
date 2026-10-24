@@ -23,7 +23,8 @@ Every setting managed by `useVoiceSettings` and the cockpit persists under a ded
 | `bassistant_mistral_api_key` | `string` | Mistral AI API key for Tier 2 diagram & explanation subagent | 🔒 AES-GCM-256 Encrypted |
 | `bassistant_requesty_api_key` | `string` | Requesty AI API key for Tier 2 diagram & explanation subagent | 🔒 AES-GCM-256 Encrypted |
 | `bassistant_ollama_api_key` | `string` | Ollama Cloud Bearer token for hosted open-source models | 🔒 AES-GCM-256 Encrypted |
-| `bassistant_subagent_provider` | `string` | Active Tier 2 provider: `'gemini'`, `'openai'`, `'mistral'`, `'requesty'`, or `'ollama'` | Plain text |
+| `bassistant_nebius_api_key` | `string` | Nebius Token Factory API key for Tier 2 diagram & explanation subagent | 🔒 AES-GCM-256 Encrypted |
+| `bassistant_subagent_provider` | `string` | Active Tier 2 provider: `'gemini'`, `'openai'`, `'mistral'`, `'requesty'`, `'ollama'`, or `'nebius'` | Plain text |
 | `bassistant_subagent_model` | `string` | Selected Subagent model ID string (preset or custom identifier) | Plain text |
 | `bassistant_use_tier1_gemini_key` | `string` | Flag (`'true'` / `'false'`) controlling whether Gemini subagent inherits the Tier 1 key | Plain text |
 | `bassistant_voice_live_model` | `string` | Tier 1 Live conversational audio model (default: `'gemini-3.8-live'`) | Plain text |

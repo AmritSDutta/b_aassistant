@@ -21,6 +21,7 @@ const KEY_MISTRAL_KEY = 'bassistant_mistral_api_key';
 const KEY_REQUESTY_KEY = 'bassistant_requesty_api_key';
 const KEY_OLLAMA_KEY = 'bassistant_ollama_api_key';
 const KEY_OLLAMA_ENDPOINT = 'bassistant_ollama_endpoint';
+const KEY_NEBIUS_KEY = 'bassistant_nebius_api_key';
 
 async function loadEncryptedKey(storageKey: string, fallbackKey?: string): Promise<string> {
   const raw =
@@ -71,6 +72,7 @@ export function useVoiceSettings() {
   const [requestyKey, setRequestyKeyState] = useState<string>('');
   const [ollamaKey, setOllamaKeyState] = useState<string>('');
   const [ollamaEndpoint, setOllamaEndpointState] = useState<string>('https://ollama.com/api');
+  const [nebiusKey, setNebiusKeyState] = useState<string>('');
 
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
@@ -85,6 +87,7 @@ export function useVoiceSettings() {
         const loadedMistral = await loadEncryptedKey(KEY_MISTRAL_KEY);
         const loadedRequesty = await loadEncryptedKey(KEY_REQUESTY_KEY);
         const loadedOllama = await loadEncryptedKey(KEY_OLLAMA_KEY);
+        const loadedNebius = await loadEncryptedKey(KEY_NEBIUS_KEY);
 
         if (isCancelled) return;
 
@@ -94,6 +97,7 @@ export function useVoiceSettings() {
         setMistralKeyState(loadedMistral);
         setRequestyKeyState(loadedRequesty);
         setOllamaKeyState(loadedOllama);
+        setNebiusKeyState(loadedNebius);
 
         const savedLive =
           localStorage.getItem(KEY_LIVE_MODEL) ||
@@ -108,7 +112,7 @@ export function useVoiceSettings() {
         localStorage.removeItem('STUDIO_VOICE');
 
         const savedProvider = localStorage.getItem(KEY_SUBAGENT_PROVIDER) as SubagentProviderType;
-        if (savedProvider && ['gemini', 'openai', 'mistral', 'requesty', 'ollama'].includes(savedProvider)) {
+        if (savedProvider && ['gemini', 'openai', 'mistral', 'requesty', 'ollama', 'nebius'].includes(savedProvider)) {
           setSubagentProviderState(savedProvider);
         }
 
@@ -204,6 +208,12 @@ export function useVoiceSettings() {
     localStorage.setItem(KEY_OLLAMA_ENDPOINT, trimmed);
   }, []);
 
+  const setNebiusKey = useCallback(async (key: string): Promise<void> => {
+    const trimmed = key.trim();
+    setNebiusKeyState(trimmed);
+    await saveEncryptedKey(KEY_NEBIUS_KEY, trimmed);
+  }, []);
+
   const getActiveSubagentApiKey = useCallback((): string => {
     switch (subagentProvider) {
       case 'openai':
@@ -214,11 +224,13 @@ export function useVoiceSettings() {
         return requestyKey;
       case 'ollama':
         return ollamaKey;
+      case 'nebius':
+        return nebiusKey;
       case 'gemini':
       default:
         return useTier1GeminiKey ? apiKey : (geminiSubagentKey || apiKey);
     }
-  }, [subagentProvider, openaiKey, mistralKey, requestyKey, ollamaKey, useTier1GeminiKey, apiKey, geminiSubagentKey]);
+  }, [subagentProvider, openaiKey, mistralKey, requestyKey, ollamaKey, nebiusKey, useTier1GeminiKey, apiKey, geminiSubagentKey]);
 
   return {
     apiKey,
@@ -246,6 +258,8 @@ export function useVoiceSettings() {
     setOllamaKey,
     ollamaEndpoint,
     setOllamaEndpoint,
+    nebiusKey,
+    setNebiusKey,
     getActiveSubagentApiKey,
 
     isLoaded,

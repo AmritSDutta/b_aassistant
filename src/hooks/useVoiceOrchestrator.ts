@@ -35,6 +35,7 @@ export interface VoiceSettingsSavePayload {
   requestyKey: string;
   ollamaKey: string;
   ollamaEndpoint: string;
+  nebiusKey: string;
 }
 
 export interface UseVoiceOrchestratorResult {
@@ -64,6 +65,8 @@ export interface UseVoiceOrchestratorResult {
   setOllamaKey: (key: string) => Promise<void>;
   ollamaEndpoint: string;
   setOllamaEndpoint: (endpoint: string) => void;
+  nebiusKey: string;
+  setNebiusKey: (key: string) => Promise<void>;
 
   showVoiceSettings: boolean;
   setShowVoiceSettings: React.Dispatch<React.SetStateAction<boolean>>;
@@ -116,6 +119,8 @@ export function useVoiceOrchestrator({
     setOllamaKey,
     ollamaEndpoint,
     setOllamaEndpoint,
+    nebiusKey,
+    setNebiusKey,
     getActiveSubagentApiKey,
   } = useVoiceSettings();
 
@@ -221,6 +226,7 @@ export function useVoiceOrchestrator({
       await setRequestyKey(settings.requestyKey);
       await setOllamaKey(settings.ollamaKey);
       setOllamaEndpoint(settings.ollamaEndpoint);
+      await setNebiusKey(settings.nebiusKey);
     },
     [
       setApiKey,
@@ -235,6 +241,7 @@ export function useVoiceOrchestrator({
       setRequestyKey,
       setOllamaKey,
       setOllamaEndpoint,
+      setNebiusKey,
     ]
   );
 
@@ -265,6 +272,8 @@ export function useVoiceOrchestrator({
     setOllamaKey,
     ollamaEndpoint,
     setOllamaEndpoint,
+    nebiusKey,
+    setNebiusKey,
 
     showVoiceSettings,
     setShowVoiceSettings,

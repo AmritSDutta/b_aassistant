@@ -23,6 +23,7 @@ export interface VoiceSettingsModalProps {
   requestyKey?: string;
   ollamaKey?: string;
   ollamaEndpoint?: string;
+  nebiusKey?: string;
 
   onSave: (settings: {
     apiKey: string;
@@ -37,6 +38,7 @@ export interface VoiceSettingsModalProps {
     requestyKey: string;
     ollamaKey: string;
     ollamaEndpoint: string;
+    nebiusKey: string;
   }) => Promise<void> | void;
 }
 
@@ -56,6 +58,7 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
   requestyKey: initialRequestyKey = '',
   ollamaKey: initialOllamaKey = '',
   ollamaEndpoint: initialOllamaEndpoint = 'https://ollama.com/api',
+  nebiusKey: initialNebiusKey = '',
 
   onSave,
 }) => {
@@ -75,6 +78,7 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
   const [requestyKey, setRequestyKey] = useState(initialRequestyKey);
   const [ollamaKey, setOllamaKey] = useState(initialOllamaKey);
   const [ollamaEndpoint, setOllamaEndpoint] = useState(initialOllamaEndpoint);
+  const [nebiusKey, setNebiusKey] = useState(initialNebiusKey);
 
   const [showTier1Key, setShowTier1Key] = useState(false);
   const [showSubagentKey, setShowSubagentKey] = useState(false);
@@ -109,6 +113,7 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
     setRequestyKey(initialRequestyKey);
     setOllamaKey(initialOllamaKey);
     setOllamaEndpoint(initialOllamaEndpoint);
+    setNebiusKey(initialNebiusKey);
 
     setTestStatus('idle');
     setTestMessage('');
@@ -126,6 +131,7 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
     initialRequestyKey,
     initialOllamaKey,
     initialOllamaEndpoint,
+    initialNebiusKey,
     isOpen,
   ]);
 
@@ -150,6 +156,8 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
     } else if (subagentProvider === 'ollama') {
       if (ollamaKey !== initialOllamaKey) return true;
       if (ollamaEndpoint !== initialOllamaEndpoint) return true;
+    } else if (subagentProvider === 'nebius') {
+      if (nebiusKey !== initialNebiusKey) return true;
     }
     return false;
   }, [
@@ -171,6 +179,8 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
     initialOllamaKey,
     ollamaEndpoint,
     initialOllamaEndpoint,
+    nebiusKey,
+    initialNebiusKey,
   ]);
 
   if (!isOpen) return null;
@@ -215,6 +225,8 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
           ? mistralKey.trim()
           : subagentProvider === 'requesty'
           ? requestyKey.trim()
+          : subagentProvider === 'nebius'
+          ? nebiusKey.trim()
           : ollamaKey.trim();
 
       if (!resolvedSubagentModel) {
@@ -259,6 +271,7 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
         requestyKey: requestyKey.trim(),
         ollamaKey: ollamaKey.trim(),
         ollamaEndpoint: ollamaEndpoint.trim(),
+        nebiusKey: nebiusKey.trim(),
       });
       onClose();
     } finally {
@@ -470,6 +483,8 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
                       ? mistralKey
                       : subagentProvider === 'requesty'
                       ? requestyKey
+                      : subagentProvider === 'nebius'
+                      ? nebiusKey
                       : ollamaKey
                   }
                   onChange={(e) => {
@@ -478,6 +493,7 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
                     else if (subagentProvider === 'openai') setOpenAIKey(val);
                     else if (subagentProvider === 'mistral') setMistralKey(val);
                     else if (subagentProvider === 'requesty') setRequestyKey(val);
+                    else if (subagentProvider === 'nebius') setNebiusKey(val);
                     else setOllamaKey(val);
                     setTestStatus('idle');
                   }}
@@ -511,6 +527,13 @@ export const VoiceSettingsModal: React.FC<VoiceSettingsModalProps> = ({
               <div className="mt-1 flex items-center justify-between text-[11px]" style={{ color: 'var(--ink-soft)' }}>
                 <span>Cloud Endpoint: <code className="font-mono">https://ollama.com/api</code></span>
                 <span className="opacity-75">Authenticated via Bearer token</span>
+              </div>
+            )}
+
+            {subagentProvider === 'nebius' && (
+              <div className="mt-1 flex items-center justify-between text-[11px]" style={{ color: 'var(--ink-soft)' }}>
+                <span>Endpoint: <code className="font-mono">https://api.tokenfactory.nebius.com/v1</code></span>
+                <span className="opacity-75">OpenAI-compatible</span>
               </div>
             )}
           </div>

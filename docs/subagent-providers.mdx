@@ -13,6 +13,7 @@ bAssistant features a pluggable, interface-driven multi-provider architecture fo
 - **Mistral AI** (Direct REST with European open/commercial frontier models)
 - **Requesty AI** (High-throughput OpenAI-compatible router with native CORS)
 - **Ollama Cloud** (Cloud-hosted open models via Bearer token authentication)
+- **Nebius Token Factory** (NVIDIA Nemotron models via the OpenAI-compatible Token Factory API)
 - **Custom Model IDs** (Arbitrary model string routing across any provider)
 - **Pre-Save Quick Test** (In-memory connectivity and latency verification before saving)
 
@@ -31,7 +32,8 @@ flowchart TD
     SPF --> MistralImpl["MistralSubagentProvider"]
     SPF --> RequestyImpl["RequestySubagentProvider"]
     SPF --> OllamaImpl["OllamaSubagentProvider"]
-    GeminiImpl & OpenAIImpl & MistralImpl & RequestyImpl & OllamaImpl -.->|generateText| VB["VoiceBridge.handleDiagramAndExplanation()"]
+    SPF --> NebiusImpl["NebiusSubagentProvider"]
+    GeminiImpl & OpenAIImpl & MistralImpl & RequestyImpl & OllamaImpl & NebiusImpl -.->|generateText| VB["VoiceBridge.handleDiagramAndExplanation()"]
     VB --> Canvas["Canvas2D Engine (Rough.js)"]
     VB --> Chat["ChatArea + Session Turns"]
     VB --> Task["TaskManager (HUD Badge)"]
@@ -98,6 +100,14 @@ export interface ISubagentProvider {
   - `nemotron-3-nano:30b-cloud` (Compact fast reasoning)
   - `beam:cloud` (Optimized inference subagent)
 
+### Nebius Token Factory (`NebiusSubagentProvider`)
+- **Integration**: REST chat completions endpoint `https://api.tokenfactory.nebius.com/v1/chat/completions` (OpenAI-compatible).
+- **CORS Resolution**: Dispatched via same-origin `/api/proxy` (Vite dev middleware & Cloudflare Pages Functions) to eliminate browser CORS blocks; `api.tokenfactory.nebius.com` is on both proxy allow-lists.
+- **Authentication**: Bearer token via `Authorization: Bearer <NEBIUS_API_KEY>`.
+- **Recommended Presets**:
+  - `nvidia/nemotron-3-super-120b-a12b` (Default high-capability dense reasoning & architecture subagent)
+  - `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` (Compact mixture-of-experts reasoning subagent)
+
 ---
 
 ## 3. Custom Model ID Support
@@ -135,6 +145,7 @@ All API keys are isolated per provider in client-side encrypted storage:
   - `bassistant_mistral_api_key`: Mistral AI API key.
   - `bassistant_requesty_api_key`: Requesty AI API key.
   - `bassistant_ollama_api_key`: Ollama Cloud API key.
+  - `bassistant_nebius_api_key`: Nebius Token Factory API key.
 - **Encryption**: 256-bit AES-GCM (`window.crypto.subtle`) using non-extractable keys in IndexedDB (`bassistant_secure_vault`).
 - **Provider Switching**: Switching providers retains previously entered keys in their respective encrypted slots so keys never need to be retyped.
 - **Full Storage Schema**: See the comprehensive key catalog in [Storage Keys & Encrypted Vault Schema](/storage-keys).
