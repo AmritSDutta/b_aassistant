@@ -36,15 +36,62 @@ flowchart LR
 
 ## Scene Graph & Supported Shapes
 
-Instead of fire-and-forget pixel drawing commands, the canvas maintains a persistent scene graph (`Canvas2dShape[]`):
+Instead of fire-and-forget pixel drawing commands, the canvas maintains a persistent scene graph (`Canvas2dShape[]`) supporting 11 core primitives:
 
-1. **`rectangle`**: Standard service or component block with rounded corners (`r = 10`) and soft shadows.
-2. **`ellipse`**: Data store or persistence node.
-3. **`diamond`**: Decision logic or routing gate.
-4. **`text`**: Standalone typographic annotation.
-5. **`sticker`**: Callout note with `stickerColor` (`yellow`, `mint`, `rose`) and optional emoji icon.
-6. **`arrow` / `line`**: Connectors that bind to node boundaries (`startId`, `endId`) and stay dynamically attached when nodes move.
-7. **`freedraw`**: Freehand stroke stored as a point array (`points`), rendered as a polyline rather than pixels.
+1. **`rectangle`**: Standard service or component block with rounded corners (`r = 10`) and soft shadows. Also supports UML class `compartments`.
+2. **`ellipse`**: Data store, process node, or radial entity (`w`, `h`).
+3. **`diamond`**: Decision logic, routing gateway, or state machine condition.
+4. **`polygon`**: Multi-vertex closed polygon specified as `points: [[x, y], ...]`. Powers roofs, triangles, hexagons, stars, and molecular rings.
+5. **`path`**: SVG path data string (`d`) rendered through `rc.path()` or native `Path2D` for organic curves, custom icons, trees, and biological structures.
+6. **`container`**: Architectural boundary box, UML package, or microservice cluster with dashed borders (`strokeDash: [6, 4]`), top-left header tabs, and subtle background tinting.
+7. **`text`**: Standalone typographic annotation with automatic font sizing and wrapping.
+8. **`sticker`**: Callout note with `stickerColor` (`yellow`, `mint`, `rose`) and optional emoji icon.
+9. **`arrow` / `line`**: Connectors that bind to node boundaries (`startId`, `endId`) and stay dynamically attached when nodes move, supporting `strokeDash`, `arrowhead` (`filled`, `open`, `hollow`), and `bidirectional`.
+10. **`freedraw`**: Freehand stroke stored as a point array (`points`), rendered as a polyline rather than pixels.
+
+## Universal Diagramming: Visual Illustrations, UML & Science
+
+The Canvas2D engine is designed for universal visual expression—enabling visiting agents to author pictorial illustrations, rigorous software engineering specifications, and scientific diagrams within the same scene graph:
+
+### 1. Pictorial & Physical Illustrations (Houses, Trees, Metaphors)
+Agents can compose rich visual scenes using combined geometric primitives and hand-drawn Rough.js styling:
+- **Houses & Buildings**: Solid base `rectangle`, triangular gable roof `polygon` (`points: [[x, y+h], [x+w/2, y], [x+w, y+h]]`), door `rectangle` with `solid` fill, and window grid lines.
+- **Trees & Landscapes**: Wood trunk `rectangle` (`fillColor: "bark"` or `#8b5a2b`) combined with foliage canopies formed by overlapping `polygon` triangles or organic SVG `path` clouds (`fillColor: "fern"` or `#2d6a4f`).
+- **Physical Metaphors**: Pipelines, gears, containers, and physical assets rendered with tactile hachure and sketch textures.
+
+### 2. UML Class & Sequence Diagrams
+Native support for formal software engineering architecture:
+- **UML Class Compartments**: Any `rectangle` node accepting a `compartments: string[]` array is automatically rendered as a partitioned UML class box. The first element serves as the bold class title header, and subsequent elements are separated by divider rules for attributes (`- id: UUID`) and methods (`+ execute(): Promise<void>`).
+- **UML Sequence Lifelines**: Participants rendered as header blocks with vertical dashed connectors (`strokeDash: [6, 4]`) representing lifelines, interspersed with thin activation rectangles and synchronous (`arrowhead: 'filled'`) or asynchronous (`arrowhead: 'open'`) message splines.
+
+### 3. Scientific, Chemical & Physics Diagrams
+Rigorous technical and physical notation:
+- **Chemical Structures**: Benzene and aromatic rings rendered as 6-vertex `polygon` hexagons with interior resonant circle ellipses or alternating double-bond `line` segments.
+- **Physics & Engineering Vectors**: Force vectors, equilibrium transformations, and tensor flows rendered via directional connectors with configurable `arrowhead` styles (`filled`, `open`, `hollow`), `bidirectional: true` for reversible reactions, and `strokeDash` for hidden fields or virtual displacements.
+
+### 4. 3-Pass Layer Ordering Pipeline
+To eliminate visual occlusion bugs where boundary containers or connectors obscure shapes, `renderScene` automatically executes in 3 deterministic passes:
+
+```mermaid
+flowchart TD
+  SceneGraph["Raw Scene Graph: Canvas2dShape[]"] --> Pass0
+  subgraph Pipeline["3-Pass Layer Execution"]
+    Pass0["Pass 0: Containers and Boundaries"]
+    Pass1["Pass 1: Visual Nodes and Polygons"]
+    Pass2["Pass 2: Connectors and Splines"]
+    Pass0 --> Pass1 --> Pass2
+  end
+  Pass2 --> Viewport["HiDPI HTML5 Canvas Backing Store"]
+```
+
+- **Pass 0 (Containers)**: Background clusters and package boundaries render first with non-intrusive translucent fills (`normalizeRgba(fill, 0.05)`).
+- **Pass 1 (Nodes)**: Solid components, UML classes, polygons, and SVG paths render above containers.
+- **Pass 2 (Connectors)**: Connectors and dynamic perimeter arrows render on the top layer, ensuring arrows and edge labels are never occluded by container fills.
+
+### 5. Safe Rendering & Headless Robustness
+- **`safeSetLineDash`**: Protects all dashed stroke rendering against headless or minimal canvas environments lacking `ctx.setLineDash`.
+- **Dual Rough.js / Clean Vector Fallback**: Every primitive cleanly renders through native `CanvasRenderingContext2D` paths if `roughness === 0` or if the Rough.js instance fails.
+
 
 ## Artistic Rendering (Rough.js)
 

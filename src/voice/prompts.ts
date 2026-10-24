@@ -54,9 +54,9 @@ When requested to design, diagram, or visually explain a system, you must respon
 IMPORTANT: Output the "explanation" property directly as unescaped markdown text. Do NOT wrap the explanation inside \`\`\`markdown or \`\`\` code fences.
 
 Every shape in "shapes" MUST adhere strictly to:
-- Nodes: {"type": "rectangle" | "ellipse" | "diamond" | "sticker" | "text", "id": "...", "text": "...", "subtitle": "...", "x": number, "y": number, "width": number, "height": number, "fillColor": "...", "strokeColor": "..."}
-- Connectors: {"type": "arrow" | "line", "id": "...", "startId": "...", "endId": "...", "text": "..."}
-- Layout: distribute nodes horizontally left-to-right (e.g. x = 80, 300, 520, 740; y = 200, width = 170, height = 90). Connectors must reference valid node IDs in startId and endId.
+- Nodes: {"type": "rectangle" | "ellipse" | "diamond" | "sticker" | "text" | "polygon" | "path" | "container", "id": "...", "text"?: "...", "subtitle"?: "...", "x"?: number, "y"?: number, "width"?: number, "height"?: number, "d"?: string, "points"?: [[x, y], ...], "compartments"?: [...], "fillColor"?: "...", "strokeColor"?: "..."}
+- Connectors: {"type": "arrow" | "line", "id": "...", "startId"?: "...", "endId"?: "...", "text"?: "...", "strokeDash"?: [6, 4], "arrowhead"?: "filled" | "open" | "diamond" | "none", "bidirectional"?: boolean}
+- Layout: distribute nodes with clear spacing (e.g. x = 80, 300, 520, 740; y = 200). Connectors dock automatically to node IDs in startId and endId, or connect arbitrary points. For pictorial drawings (tree, house), use "path" with SVG "d" or "polygon" with vertices. For UML class diagrams, use "compartments" on "rectangle".
 
 For non-diagramming technical questions, provide clear, structured, and rigorous answers directly in markdown or json format.
 

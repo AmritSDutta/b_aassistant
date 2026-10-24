@@ -5,9 +5,9 @@ import {
   renderScene,
   renderLegacyCommand,
   type CanvasCommand,
-} from './canvasHelper';
+} from './canvas';
 
-export type { CanvasCommand } from './canvasHelper';
+export type { CanvasCommand } from './canvas';
 
 export class CanvasEngine {
   private canvas: HTMLCanvasElement | null = null;

@@ -45,28 +45,64 @@ This guide explains how to use every other tool correctly. Read it before acting
 - If a search returns \`unavailable: true\`, the network is unreachable — tell the user you could not retrieve live data and do NOT invent results. Never present search output as fresher than its \`fetchedAt\`.
 - \`calculate\` for decimal-safe math (e.g. "12.5 * 4.2 + 3.1").
 
-## Visualization (Canvas & Artistic Sketch Engine)
+## Visualization (Canvas & Universal Visual/Technical Engine)
 Use \`canvas2d_draw_shapes\` (the structured scene graph). Do NOT use the legacy \`canvas_draw\`/\`draw_diagram\` tools — they draw flat pixels that cannot dock connectors or be edited per shape.
 
-EVERY element MUST include a \`type\`, or the shape is silently DROPPED (this is the #1 cause of "only arrows appear, no boxes"):
+EVERY element MUST include a \`type\`, or the shape is silently DROPPED:
 
-1. Node kinds: \`rectangle\` | \`ellipse\` | \`diamond\` | \`sticker\` | \`text\`.
-   Fields: \`{ type, id, text, subtitle?, x, y, width (≈170), height (≈90), fillColor?, strokeColor?, fillStyle? }\`.
-   Use \`text\` for the visible label. NEVER use \`archetype\` or \`label\` in place of \`type\`/\`text\` — \`archetype\` is only a fill token.
+1. Node kinds: \`rectangle\` | \`ellipse\` | \`diamond\` | \`sticker\` | \`text\` | \`polygon\` | \`path\` | \`container\`.
+   - Standard: \`{ type, id, text, subtitle?, x, y, width, height, fillColor?, strokeColor?, fillStyle? }\`.
+   - Pictorial illustrations:
+     * \`path\`: \`{ type: "path", id, d: "M 10 80 Q ... Z", x?, y?, width?, height?, fillColor?, strokeColor? }\` (for trees, clouds, houses, organs, icons).
+     * \`polygon\`: \`{ type: "polygon", id, points: [[x1, y1], [x2, y2], ...], fillColor?, strokeColor? }\` (for roofs, delta shapes, benzene rings).
+   - UML Class Diagrams: use \`compartments\` on \`rectangle\`: \`{ type: "rectangle", id, compartments: ["ClassName", "- field: type", "+ method(): void"], width: 200, height: 120 }\`.
+   - Containers / Subgraphs / Boundaries: \`{ type: "container", id, text: "VPC / Package / Membrane", x, y, width, height, strokeDash: [6, 4] }\`.
 2. Connector kinds: \`arrow\` | \`line\`.
-   Fields: \`{ type, id, startId, endId, text? }\`. \`startId\`/\`endId\` MUST exactly equal the \`id\` of an existing node (e.g. \`client\`, \`gateway\`, \`tx_engine\`, \`ledger_db\`) — if they do not match a node \`id\`, the connector will not dock/connect. The engine docks each connector edge-to-edge automatically when the ids resolve.
-3. Coordinates are numbers (not "170"). Give nodes an explicit \`width\`/\`height\`. Layout: 4-tier column flow X ≈ 80 / 300 / 520 / 740, Y = 200.
+   - Fields: \`{ type, id, startId, endId, text?, strokeDash?, arrowhead?, bidirectional? }\`.
+   - \`startId\`/\`endId\` dock edge-to-edge automatically to any node or shape bounds.
+   - \`strokeDash: [6, 4]\` renders dashed lines (UML sequence lifelines, dependencies, hydrogen bonds).
+   - \`arrowhead\`: \`"filled"\` (default) | \`"open"\` (UML association/physics vector) | \`"diamond"\` (UML aggregation/composition) | \`"none"\`.
+   - \`bidirectional: true\` renders arrowheads at both ends (equilibrium reactions, bidirectional sync).
+3. Coordinates: Give nodes explicit \`width\`/\`height\` or \`points\`.
 
-CANONICAL EXAMPLE — copy this structure exactly (note the \`type\` on EVERY object):
+CANONICAL EXAMPLES:
+
+Architecture Flowchart:
 \`\`\`json
 {"shapes":[
- {"type":"rectangle","id":"client","text":"Customer / Web App","subtitle":"[HTTPS]","x":80,"y":200,"width":170,"height":90,"fillColor":"client","strokeColor":"#0284c7"},
- {"type":"rectangle","id":"gateway","text":"API Gateway","subtitle":"[JWT]","x":300,"y":200,"width":170,"height":90,"fillColor":"gateway"},
- {"type":"rectangle","id":"tx_engine","text":"Transaction Engine","x":520,"y":200,"width":170,"height":90,"fillColor":"logic"},
- {"type":"rectangle","id":"ledger_db","text":"Ledger DB","subtitle":"[PostgreSQL]","x":740,"y":200,"width":170,"height":90,"fillColor":"db"},
- {"type":"arrow","id":"e1","startId":"client","endId":"gateway","text":"1. Submit"},
- {"type":"arrow","id":"e2","startId":"gateway","endId":"tx_engine","text":"2. Authorize"},
- {"type":"arrow","id":"e3","startId":"tx_engine","endId":"ledger_db","text":"3. Commit"}
+ {"type":"rectangle","id":"client","text":"Web App","x":80,"y":200,"width":170,"height":90,"fillColor":"client"},
+ {"type":"rectangle","id":"gateway","text":"API Gateway","x":300,"y":200,"width":170,"height":90,"fillColor":"gateway"},
+ {"type":"arrow","id":"e1","startId":"client","endId":"gateway","text":"HTTPS"}
+]}
+\`\`\`
+
+Pictorial Illustration (House & Tree):
+\`\`\`json
+{"shapes":[
+ {"type":"polygon","id":"roof","points":[[150,140],[250,60],[350,140]],"fillColor":"terracotta"},
+ {"type":"rectangle","id":"wall","text":"House","x":170,"y":140,"width":160,"height":120,"fillColor":"sage"},
+ {"type":"rectangle","id":"door","x":230,"y":190,"width":40,"height":70,"fillColor":"sunflower"},
+ {"type":"rectangle","id":"trunk","x":440,"y":180,"width":30,"height":80,"fillColor":"plum"},
+ {"type":"path","id":"canopy","text":"Tree","d":"M 0 50 C -20 10, 40 -20, 60 10 C 90 -20, 140 10, 120 50 C 140 90, 80 110, 60 80 C 30 110, -20 90, 0 50 Z","x":395,"y":80,"width":120,"height":100,"fillColor":"botanical"}
+]}
+\`\`\`
+
+UML Class & Sequence:
+\`\`\`json
+{"shapes":[
+ {"type":"rectangle","id":"order_cls","x":80,"y":100,"width":220,"height":140,"compartments":["OrderService","- orderRepo: OrderRepo","- logger: Logger","+ placeOrder(cart): Order","+ cancelOrder(id): bool"],"fillColor":"client"},
+ {"type":"rectangle","id":"payment_cls","x":400,"y":100,"width":220,"height":140,"compartments":["PaymentGateway","+ charge(amount): Receipt","+ refund(id): bool"],"fillColor":"gateway"},
+ {"type":"arrow","id":"dep1","startId":"order_cls","endId":"payment_cls","text":"uses","strokeDash":[6,4],"arrowhead":"open"}
+]}
+\`\`\`
+
+Science / Chemical Molecule (Benzene):
+\`\`\`json
+{"shapes":[
+ {"type":"polygon","id":"benzene_ring","text":"C6H6","points":[[300,100],[360,135],[360,205],[300,240],[240,205],[240,135]],"fillColor":"cobalt"},
+ {"type":"line","id":"b1","startX":300,"startY":100,"endX":360,"endY":135,"strokeWidth":3},
+ {"type":"line","id":"b2","startX":360,"startY":205,"endX":300,"endY":240,"strokeWidth":3},
+ {"type":"line","id":"b3","startX":240,"startY":135,"endX":240,"endY":205,"strokeWidth":3}
 ]}
 \`\`\`
 

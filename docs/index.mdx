@@ -13,7 +13,7 @@ description: Zero-backend browser assistant empowering visiting LLMs with local 
 - **Unified WebMCP Provider**: Simultaneous support for `document.modelContext`, `navigator.modelContext`, `window.webmcp`, and `postMessage` JSON-RPC 2.0 with 19 registered tools and agent guide.
 - **100% Private Document Ingestion**: Parses Doc/PDF files under 2MB client-side via LiteParse WASM and indexes chunks with BM25 into browser IndexedDB.
 - **User Preferences Engine**: A dedicated preferences modal stores up to 10 custom guidelines (max 120 characters each) in `localStorage`, exposed both to visiting WebMCP agents via the `get_user_preferences` tool and injected into subagent prompts so tone, formatting, and diagram style follow the user's rules.
-- **Live Artistic Canvas2D Scene Graph**: Visiting LLMs draw and mutate persistent shapes, containers, connectors, and callouts with perimeter docking — rendered with Rough.js hand-drawn sketching and calibrated per theme — while users pan, wheel-zoom, Fit View, and Reset the viewport. See [Canvas2D Scene Graph](/canvas-and-pdf).
+- **Live Universal Canvas2D Scene Graph**: Visiting LLMs draw and mutate persistent shapes, containers, connectors, UML class/sequence diagrams, science schematics, and pictorial illustrations with perimeter docking — rendered with Rough.js hand-drawn sketching and clean vector modes calibrated per theme — with a deterministic 3-pass layer pipeline, pan, wheel-zoom, Fit View, and Reset. See [Canvas2D Scene Graph](/canvas-and-pdf).
 - **Session Vault & Local Persistence**: Every deliberation turn is recorded in IndexedDB; browse, restore, export, or delete past sessions from the vault, and reloads rehydrate the chat stream and canvas scene graph. See [Session Vault](/sessions-vault).
 - **Long-Dwell UI & Ergonomics**: Warm paper/ink semantic tokens, full-screen reader view, A-/A+ font scale, reading-progress bar, reference URL cache, and star highlights revisit loop.
 - **Humanized Chat Stream**: Eliminates raw markdown syntax asterisks and noise for an elegant reading experience.
@@ -129,6 +129,7 @@ description: Zero-backend browser assistant empowering visiting LLMs with local 
       <Tree.File name="canvasArtisticEngine.test.ts" />
       <Tree.File name="canvasDarkMode.test.ts" />
       <Tree.File name="canvasEngine.test.ts" />
+      <Tree.File name="universalCanvas2d.test.ts" />
       <Tree.File name="searchService.test.ts" />
       <Tree.File name="tavilySearch.test.ts" />
       <Tree.File name="ddgSearch.test.ts" />

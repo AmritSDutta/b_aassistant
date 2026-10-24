@@ -84,7 +84,7 @@ export const TOOL_DEFINITIONS: WebMCPTool[] = [
   {
     name: 'canvas2d_draw_shapes',
     description:
-      'Appends structured shapes to the Canvas2D scene graph (Rough.js hand-drawn sketching). Every element MUST include "type". Nodes: "rectangle" | "ellipse" | "diamond" | "sticker" | "text" with { id, text, x, y, width (~170), height (~90), subtitle?, fillColor?, strokeColor?, fillStyle?, palette? }. Connectors: "arrow" | "line" with { id, startId, endId, text? } that dock edge-to-edge to the nodes named by startId/endId. Use "type" for the kind and "text" for the label — a node without "type" is dropped, and "archetype"/"label" are NOT substitutes for "type"/"text". Example: {"shapes":[{"type":"rectangle","id":"a","text":"Client","x":80,"y":200,"width":170,"height":90,"fillColor":"client"},{"type":"rectangle","id":"b","text":"API Gateway","x":300,"y":200,"width":170,"height":90,"fillColor":"gateway"},{"type":"arrow","id":"e1","startId":"a","endId":"b","text":"HTTPS"}]}. fillColor accepts hex/rgba or a palette token (client, gateway, db, queue, logic, terracotta, cobalt, sage, sunflower, plum). After drawing, call canvas2d_inspect_shapes and confirm node/edge counts before reporting success.',
+      'Appends structured shapes to the Canvas2D scene graph (universal visual, UML, science, and architecture diagramming). Every element MUST include "type". Nodes: "rectangle" | "ellipse" | "diamond" | "sticker" | "text" | "polygon" | "path" | "container". Connectors: "arrow" | "line". Pictorial illustrations: use "path" with SVG "d" (e.g. trees, clouds, houses) or "polygon" with "points" (roofs, chemical benzene rings). UML: use "compartments" on rectangles for class diagrams, and "strokeDash: [6, 4]" with "arrowhead: open" for sequence lifelines. Connectors dock edge-to-edge automatically using startId/endId. Coordinates in "d" are offset by (x, y) if specified. After drawing, call canvas2d_inspect_shapes to verify counts.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -97,9 +97,20 @@ export const TOOL_DEFINITIONS: WebMCPTool[] = [
             properties: {
               type: {
                 type: 'string',
-                enum: ['rectangle', 'ellipse', 'diamond', 'sticker', 'text', 'arrow', 'line'],
+                enum: [
+                  'rectangle',
+                  'ellipse',
+                  'diamond',
+                  'sticker',
+                  'text',
+                  'arrow',
+                  'line',
+                  'polygon',
+                  'path',
+                  'container',
+                ],
                 description:
-                  'REQUIRED shape kind. Nodes: rectangle | ellipse | diamond | sticker | text. Connectors: arrow | line. Never omit this.',
+                  'REQUIRED shape kind. Nodes: rectangle | ellipse | diamond | sticker | text | polygon | path | container. Connectors: arrow | line. Never omit this.',
               },
               id: {
                 type: 'string',
@@ -119,6 +130,40 @@ export const TOOL_DEFINITIONS: WebMCPTool[] = [
               height: { type: 'number', description: 'Node height in px (default 80).' },
               startId: { type: 'string', description: 'Connector only: id of the source node.' },
               endId: { type: 'string', description: 'Connector only: id of the target node.' },
+              d: {
+                type: 'string',
+                description:
+                  'SVG path data string (e.g. "M 10 80 Q 95 10 180 80 Z") for trees, houses, icons, and organic shapes.',
+              },
+              points: {
+                type: 'array',
+                items: { type: 'array', items: { type: 'number' } },
+                description:
+                  'Vertices array [[x1, y1], [x2, y2], ...] for arbitrary polygon geometry or chemical rings.',
+              },
+              strokeDash: {
+                type: 'array',
+                items: { type: 'number' },
+                description:
+                  'Stroke dash pattern, e.g. [6, 4] for dashed UML sequence lifelines, dependencies, or weak bonds.',
+              },
+              arrowhead: {
+                type: 'string',
+                enum: ['filled', 'open', 'diamond', 'none'],
+                description:
+                  'Connector arrowhead type: filled (default), open (UML association/physics vector), diamond (UML aggregation/composition), or none.',
+              },
+              bidirectional: {
+                type: 'boolean',
+                description:
+                  'Draws matching arrowheads at both start and arrival ends (e.g. equilibrium reactions, bidirectional sync).',
+              },
+              compartments: {
+                type: 'array',
+                items: { type: 'string' },
+                description:
+                  'UML class box compartments (e.g. ["UserService", "- db: Database", "+ getUser(id): User"]).',
+              },
               fillColor: {
                 type: 'string',
                 description:

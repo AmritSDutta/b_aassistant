@@ -92,8 +92,14 @@ Implements `prd.md > Features and Behavior > 3. Live HTML Canvas Rendering & Sce
 Top 60% pane of the main workspace. Renders the HTML5 `<canvas>` element and toolbar:
 - Toolbar with "New Session", "Fit View", "Reset View", "Export PDF", and "Clear Canvas" buttons.
 - `CanvasEngine`: Manages reactive scene graph (`Canvas2dShape[]`), auto-centering viewport matrix (`fitToContent`), interactive drag-to-pan, cursor-pinned wheel zoom (`zoomAtPoint`), perimeter-docked connectors with pill badges, 2.5D drop shadows, live DOM theme synchronization (`getTheme` + `MutationObserver` on `<html>` for instant theme repaint), universal **medium dark yellow** (`#d97706` / Amber 600) **bold labels** anchored at the **top of elements** (`topCenter` with top padding) and on connector pills to guarantee sharp, readable contrast across both light mode and dark mode, adaptive theme strokes (`resolveThemeStrokeColor`), light-mode alpha scaling, HiDPI scaling, and snapshot capture.
-- **Artistic Illustration Upgrades:**
-  - **Procedural Sketching:** Integrates `roughjs` for organic, hand-drawn node boundaries, double strokes, and textured fills (`hachure`, `zigzag`, `cross-hatch`).
+- **Universal Visual, UML & Science Diagramming Upgrades:**
+  - **Modular Canvas Package Architecture (`src/lib/canvas/`):** Decomposes the canvas engine into 8 purpose-led submodules (`types.ts`, `constants.ts`, `color.ts`, `geometry.ts`, `sanitize.ts`, `renderNodes.ts`, `renderConnectors.ts`, `renderScene.ts`, `index.ts`), organized in a strict Directed Acyclic Graph (DAG) with zero circular dependencies. A lightweight facade in `src/lib/canvasHelper.ts` (`export * from './canvas';`) guarantees 100% backward compatibility for all existing callers and tests.
+  - **11 Shape Primitives:** `rectangle`, `ellipse`, `diamond`, `sticker`, `text`, `freedraw`, `arrow`, `line`, `polygon`, `path`, and `container`.
+  - **Pictorial Illustrations:** SVG path strings (`d`) for trees, houses, icons, and organic contours (translated to `(x, y)` if provided), and arbitrary polygon geometry (`points`) for house roofs and custom n-gons.
+  - **UML Class Compartments:** Structured `compartments: string[]` rendering divided class boxes (Title, Attributes, Methods) with partition lines and constrained text wrapping.
+  - **Sequence Lifelines & Science Connectors:** Supports `strokeDash: number[]` (e.g. `[6, 4]`), arrowhead styles (`filled`, `open`, `diamond`, `none`), dynamic arrowhead scaling (`Math.max(10, strokeWidth * 5)`), and double-headed `bidirectional` connectors for equilibrium reactions.
+  - **3-Pass Layer Ordering (`renderScene`):** Pass 0 renders `container` shapes in the background, Pass 1 renders nodes/polygons/paths/stickers in the midground, and Pass 2 renders perimeter-docked connectors on top, resolving all z-order occlusion bugs without requiring manual z-index tags.
+  - **Procedural Sketching:** Integrates `roughjs` for organic, hand-drawn node boundaries, double strokes, and textured fills (`hachure`, `zigzag`, `cross-hatch`), with clean vector path fallbacks when `roughness: 0`.
   - **Fluid Generative Connectors:** Replaces rigid straight lines with smooth cubic Bézier splines (`ctx.bezierCurveTo`) whose control points curve gracefully based on relative orientation, terminating in tangent-aligned arrowheads with rounded line caps.
   - **Tactile Paper Backdrops:** Composites a subtle warm parchment and paper grain texture in the viewport and offscreen snapshot captures.
   - **Editorial Color Harmonies:** Built-in Risograph palettes (terracotta, sage mint, warm cobalt, sunflower gold) that soften harsh saturated primaries into print-grade tones.
@@ -138,7 +144,7 @@ Central service registering and dispatching all 18 WebMCP tools:
   - `get_user_preferences`: Read-only, zero-arg tool returning stored user preferences as `string[]` (max 10 items, max 120 chars each).
   - `search_web`: DuckDuckGo query API.
   - `search_research`: ArXiv API export query.
-  - `calculate`: Evaluates decimal math strings.
+  - `calculate`: Evaluates decimal math strings, scientific functions (`sqrt`, `cbrt`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `log`, `ln`, `log10`, `log2`, `exp`, `abs`, `round`, `floor`, `ceil`, `min`, `max`), constants (`pi`, `e`), scientific notation (`1.5e-3`), roots (`√`), powers (`²`, `³`, `^`), and factorials, with strict sandbox safety.
   - `search_document`: BM25 query over IndexedDB chunks. Removes query stop words, returns top 3 ranked pages, and provides keyword guidance to visiting LLMs.
   - `clean_document`: Purges IndexedDB tables and resets `FileUpload` UI.
   - `get_chat_history`: Returns chat logs with `user:` messages.
@@ -161,14 +167,22 @@ In-browser report generation engine:
 ### 9. `symbolHumanizer`
 Implements `prd.md > Features and Behavior > 2. Chat Conversation & History > Symbol Humanization`.
 Dedicated standalone string normalization utility module (`src/lib/symbolHumanizer.ts`):
-- `humanizeSymbols(text: string): string`: Normalizes LaTeX directional arrows (`$\rightarrow$`, `$\to$`, `\rightarrow`, etc.), relations (`$\leq$`, `$\neq$`, etc.), arithmetic (`$\times$`, `$\pm$`, etc.), and Greek characters to clean Unicode for UI display. Preserves currency quantities (`$100`, `$50M`).
-- `humanizeSymbolsForPdf(text: string): string`: Translates LaTeX and Unicode symbols to clean, non-crashing ASCII strings (`->`, `<-`, `=>`, `<=`, `>=`, `!=`, `~=`) for standard jsPDF Latin-1 typefaces.
+- `humanizeSymbols(text: string): string`: Normalizes LaTeX directional arrows (`$\rightarrow$`, `$\to$`, `\rightarrow`, etc.), relations (`$\leq$`, `$\neq$`, etc.), arithmetic (`$\times$`, `$\pm$`, etc.), scientific & calculus symbols (`\sqrt`, `\cbrt`, `\deg`, `\degree`, `\sum`, `\prod`, `\int`, `\hbar`), and complete Greek characters to clean Unicode for UI display. Preserves currency quantities (`$100`, `$50M`).
+- `humanizeSymbolsForPdf(text: string): string`: Translates LaTeX and Unicode symbols to clean, non-crashing ASCII strings (`->`, `<-`, `=>`, `<=`, `>=`, `!=`, `~=`, `sqrt`, `cbrt`, `^2`, `^3`, `deg`, `SUM`, `PROD`, `INT`, `hbar`, `Delta`, `Omega`, `theta`) for standard jsPDF Latin-1 typefaces, preventing `?` glyph corruption in export transcripts.
 
-### 10. `tavilySearch`
+### 10. `mathEvaluator`
+Implements `prd.md > Features and Behavior > 5. WebMCP Tool Suite > calculate`.
+Dedicated scientific math calculation module (`src/lib/mathEvaluator.ts`):
+- `calculateMath(expression: string): number`: Evaluates decimal math and scientific expressions.
+- Normalization pipeline: Translates Unicode operators (`×`, `·`, `⋅`, `x` -> `*`; `÷`, `∕` -> `/`; `−`, `–`, `—` -> `-`), roots (`√` -> `sqrt`), powers (`²` -> `**2`, `³` -> `**3`, `^` -> `**`), and constants (`pi`/`π` -> `Math.PI`, `e` -> `Math.E`, `ln` -> `Math.log`).
+- Security sandbox: Validates all identifiers against a strict whitelist of safe native `Math` functions (`sqrt`, `cbrt`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `log`, `log10`, `log2`, `exp`, `abs`, `round`, `floor`, `ceil`, `min`, `max`) and numbers, strictly blocking arbitrary code injection or globals (`alert`, `window`, `document`, `eval`).
+- Floating-point precision correction: Eliminates standard IEEE 754 precision drift (e.g. `0.1 + 0.2 = 0.3`).
+
+### 11. `tavilySearch`
 Implements `prd.md > Features and Behavior > 8. Keyless Tavily Web Search`.
 Standalone module (`src/lib/tavilySearch.ts`) querying `https://api.tavily.com/search` with header `X-Tavily-Access-Mode: keyless` and returning `{ title, snippet, url, score }`. Backed by DuckDuckGo fallback in the `/api/websearch` proxy.
 
-### 11. `src/voice/` Module Suite
+### 12. `src/voice/` Module Suite
 Implements `prd.md > Features and Behavior > 9. Live Voice Mode & Pluggable Architecture`.
 Self-contained, decoupled voice package:
 - `types/provider.ts`: Declares abstract interfaces `ILiveVoiceProvider` (connect, stream, interrupt, tool response), `ILiveVoiceSession`, and `ISubagentProvider` (generateTask).
@@ -247,6 +261,22 @@ Consumed by `functions/api/websearch.ts` (production) and the `dev-api-endpoints
 - `chatMessages`: Array<{ id: string, sender: 'user' | 'agent', text: string, timestamp: number }>.
 - `activeDocument`: `{ name: string, pageCount: number, status: 'idle' | 'parsing' | 'indexed' | 'error' } | null`.
 
+### 4. `Canvas2D` Scene Graph (`Canvas2dShape`)
+- `id`: string (unique identifier)
+- `type`: `Canvas2dShapeType` (`rectangle` | `ellipse` | `diamond` | `sticker` | `text` | `freedraw` | `arrow` | `line` | `polygon` | `path` | `container`)
+- `x`, `y`: number (coordinates / translation origin)
+- `width?`, `height?`: number (dimensions)
+- `text?`, `subtitle?`: string (label and micro-badge)
+- `d?`: string (SVG path data)
+- `points?`: Array<[number, number]> (polygon vertices)
+- `strokeDash?`: number[] (e.g. `[6, 4]`)
+- `arrowhead?`: `'filled' | 'open' | 'diamond' | 'none'`
+- `bidirectional?`: boolean
+- `compartments?`: string[] (UML class divisions)
+- `startId?`, `endId?`: string (docking foreign keys)
+- `fillColor?`, `strokeColor?`, `strokeWidth?`, `textColor?`, `fontSize?`: visual properties
+- `roughness?`, `bowing?`, `fillStyle?`, `hachureAngle?`, `hachureGap?`, `curved?`, `palette?`: artistic properties
+
 ## File Structure
 
 ```
@@ -271,6 +301,17 @@ C:/codebase/b_aassistant/
 │   │   └── WelcomeModal.tsx     # First-load how-to-use onboarding popup
 │   ├── lib/
 │   │   ├── canvasEngine.ts      # Canvas2D scene graph & legacy command renderer
+│   │   ├── canvasHelper.ts      # Backward-compatible facade (re-exports src/lib/canvas)
+│   │   ├── canvas/              # Modular Canvas2D Package (8 purpose-led submodules)
+│   │   │   ├── types.ts         # Command interfaces & Bounds
+│   │   │   ├── constants.ts     # Styling tokens & palettes
+│   │   │   ├── color.ts         # RGBA normalization & theme contrast
+│   │   │   ├── geometry.ts      # Docking math & bounds calculation
+│   │   │   ├── sanitize.ts      # Defensive shape ingestion & coercion
+│   │   │   ├── renderNodes.ts   # Primitives, UML compartments, Rough.js
+│   │   │   ├── renderConnectors.ts # Bézier splines & arrowheads
+│   │   │   ├── renderScene.ts   # 3-pass layer ordering & legacy dispatch
+│   │   │   └── index.ts         # Barrel export
 │   │   ├── pdfExportService.ts  # Multilingual dual-section PDF export engine
 │   │   ├── liteparseService.ts  # LiteParse WASM initialization and parser
 │   │   ├── idbStorage.ts        # IndexedDB connection and document store
@@ -280,7 +321,7 @@ C:/codebase/b_aassistant/
 │   │   ├── tavilySearch.ts      # Keyless Tavily search client (primary)
 │   │   ├── ddgSearch.ts         # DuckDuckGo HTML fallback scraper & pure parser
 │   │   ├── symbolHumanizer.ts   # LaTeX symbol & arrow normalizer (UI & PDF)
-│   │   └── mathEvaluator.ts     # Decimal math calculator
+│   │   └── mathEvaluator.ts     # Scientific math calculator
 │   ├── voice/                   # Isolated Voice Live & Pluggable Model Package
 │   │   ├── index.ts             # Public package exports
 │   │   ├── types/               # Provider & audio interfaces (ILiveVoiceProvider, ISubagentProvider)
@@ -302,6 +343,7 @@ C:/codebase/b_aassistant/
 │       ├── webmcp.test.ts       # WebMCP tool dispatching
 │       ├── canvasEngine.test.ts # Canvas command engine
 │       ├── canvas2dAdvanced.test.ts  # Scene graph shapes & arrows
+│       ├── universalCanvas2d.test.ts # Universal visual, UML & science primitives
 │       ├── pdfExportService.test.ts  # PDF export & markdown cleaning
 │       ├── humanizedMessage.test.tsx # Chat humanization
 │       ├── documentProcessing.test.ts# LiteParse parsing pipeline
