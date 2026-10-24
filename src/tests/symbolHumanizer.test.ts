@@ -63,4 +63,23 @@ describe('symbolHumanizer', () => {
     expect(pdfOutput).not.toContain('≤');
     expect(pdfOutput).not.toContain('≠');
   });
+
+  it('humanizes scientific symbols and converts them to safe PDF ASCII', () => {
+    expect(humanizeSymbols('$\\sqrt{x}$ and $30\\degree$')).toBe('√{x} and 30°');
+    expect(humanizeSymbols('\\hbar and \\sum and \\int')).toBe('ℏ and ∑ and ∫');
+
+    const pdfOutput = humanizeSymbolsForPdf('Formula: $\\sqrt{x}$ and $30\\degree$ with $\\Delta$ and $\\Omega$ ($2² + 3³$)');
+    expect(pdfOutput).toContain('sqrt');
+    expect(pdfOutput).toContain('deg');
+    expect(pdfOutput).toContain('Delta');
+    expect(pdfOutput).toContain('Omega');
+    expect(pdfOutput).toContain('^2');
+    expect(pdfOutput).toContain('^3');
+    expect(pdfOutput).not.toContain('√');
+    expect(pdfOutput).not.toContain('°');
+    expect(pdfOutput).not.toContain('²');
+    expect(pdfOutput).not.toContain('³');
+    expect(pdfOutput).not.toContain('Δ');
+    expect(pdfOutput).not.toContain('Ω');
+  });
 });

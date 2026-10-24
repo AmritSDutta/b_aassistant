@@ -73,6 +73,7 @@ Source: `scope.md > The Core Loop`.
 ### 3. Live HTML Canvas Rendering & Scene Graph
 Source: `scope.md > The Unique Kernel`.
 - **Universal Drawing Engine:** Executes drawing tool calls from visiting agents to render structured Canvas2D shapes across software architectures, pictorial illustrations, UML diagrams, and scientific schemas using procedural hand-drawn sketch techniques powered by **Rough.js** (MIT) alongside clean vector fallbacks (`roughness: 0`).
+- **Modular Canvas Package Architecture (`src/lib/canvas/`):** Decomposes the canvas rendering engine into 8 purpose-led submodules (`types.ts`, `constants.ts`, `color.ts`, `geometry.ts`, `sanitize.ts`, `renderNodes.ts`, `renderConnectors.ts`, `renderScene.ts`), unified by a central barrel `index.ts`. All submodules are organized in a strict Directed Acyclic Graph (DAG) with zero circular dependencies, keeping all files under ~450 lines. A lightweight facade in `src/lib/canvasHelper.ts` (`export * from './canvas';`) guarantees 100% backward compatibility for all existing callers and tests.
 - **Supported Shape Primitives (11 types):**
   - Architecture & Business: `rectangle`, `ellipse`, `diamond`, `sticker`, `text`.
   - Pictorial Illustrations: `path` (SVG path data `d` for trees, houses, icons, and organic contours) and `polygon` (arbitrary vertices `points` for house roofs, delta shapes, and benzene rings).
@@ -127,7 +128,7 @@ Source: `scope.md > The POC Boundary`.
   - Formats blockquotes (`> `) in italic with subtle vertical border accents.
   - Formats fenced code blocks in Courier monospace with light-slate background tinting.
   - Cleans inline markup (`**bold**`, `*italic*`, `` `code` ``, `[label](url)`) into clean readable text.
-  - Normalizes LaTeX and Unicode arrow/math symbols to clean ASCII equivalents (`->`, `<-`, `=>`, `<=`, `>=`, `!=`, `~=`) for standard jsPDF core fonts, preventing encoding corruption or broken glyphs.
+  - Normalizes LaTeX and Unicode arrow/math symbols to clean ASCII equivalents (`->`, `<-`, `=>`, `<=`, `>=`, `!=`, `~=`, `sqrt`, `^2`, `deg`, `theta`, `Delta`, `Omega`) via `humanizeSymbolsForPdf` for standard jsPDF core fonts, preventing encoding corruption, mojibake, or broken `?` glyphs.
 - **Multilingual Indic Script Support (Bengali & Hindi):**
   - Resolves standard PDF Latin-1 font limitations for Indic complex scripts by utilizing native browser text-shaping (HarfBuzz/Uniscribe via Canvas2D rasterization).
   - Accurately renders Bengali (বাংলা, যেমন যুক্তাক্ষর 'ক্ষ', 'জ্ঞ') and Hindi (हिन्दी, जैसे संयुक्त व्यंजन 'क्त', 'त्र', मात्राएं) with 100% typographic fidelity, preventing missing characters or broken ligatures.
@@ -145,7 +146,7 @@ The application exposes 19 standard WebMCP tools for visiting LLMs:
 - `get_current_time`: Read-only, zero-argument tool returning the user's current local date, weekday, time, time zone, and ISO timestamp.
 - `search_web`: Executes web search queries using Keyless Tavily AI search as primary with automatic DuckDuckGo fallback.
 - `search_research`: Executes academic literature searches via ArXiv.
-- `calculate`: Evaluates decimal math expressions.
+- `calculate`: Evaluates decimal math expressions, scientific functions (sqrt, cbrt, sin, cos, tan, asin, acos, atan, log, ln, log10, log2, exp, abs, round, floor, ceil, min, max), constants (pi, e), scientific notation (1.5e-3), roots (√), powers (², ³, ^), and factorials, with strict sandbox safety preventing unauthorized code execution.
 - `search_document`: Searches ingested document chunks in IndexedDB using the BM25 index with stop-word filtering.
 - `clean_document`: Purges stored document chunks from IndexedDB and resets upload section.
 - `get_chat_history`: Returns chat messages including `user:` prefixed prompts.

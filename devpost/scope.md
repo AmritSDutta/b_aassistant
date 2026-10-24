@@ -143,3 +143,14 @@ Broaden bAssistant's Canvas2D engine from a software-flowchart-only visualizer i
   - Raster bitmap image embedding onto canvas (retained as pure procedural/vector Canvas2D).
   - 3D rendering or WebGL runtimes (unnecessary overhead; Canvas2D + Rough.js suffices).
   - Server-side rendering or heavy external layout compilation (keeps zero-backend browser client architecture intact).
+
+## Improvement — Canvas Package Modularization & Scientific Math Engine (2026-10-24)
+
+Decompose the monolithic canvas engine into an isolated, purpose-led package and upgrade math evaluation into a secure, full scientific calculator.
+
+- **In now:**
+  - Decompose `canvasHelper.ts` into a cohesive `src/lib/canvas/` package (`types`, `constants`, `color`, `geometry`, `sanitize`, `renderNodes`, `renderConnectors`, `renderScene`, `index`), retaining `canvasHelper.ts` as a 100% backward-compatible facade.
+  - Upgrade `calculateMath` to evaluate scientific functions (`sqrt`, `cbrt`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `log`, `ln`, `log10`, `log2`, `exp`, `abs`, `round`, `floor`, `ceil`, `min`, `max`), constants (`pi`, `e`), scientific notation (`1.5e-3`), factorials, and Unicode math symbols (`√`, `²`, `³`, `×`, `÷`, `·`, `−`).
+  - Expand `symbolHumanizer.ts` with Latin-1 safe ASCII transliterations for PDF export (`√` -> `sqrt`, `²` -> `^2`, `°` -> ` deg`, `θ` -> `theta`, `Δ` -> `Delta`, `Ω` -> `Omega`, `∑` -> `SUM`, `∫` -> `INT`).
+- **Explicitly cut:**
+  - CAS symbolic differentiation or algebraic equation solving (numerical evaluation with precision rounding suffices).

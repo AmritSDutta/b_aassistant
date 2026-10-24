@@ -92,6 +92,16 @@ const LATEX_TO_UNICODE: Record<string, string> = {
   Phi: 'Φ',
   omega: 'ω',
   Omega: 'Ω',
+
+  // Scientific & Calculus notation
+  sqrt: '√',
+  cbrt: '∛',
+  deg: '°',
+  degree: '°',
+  sum: '∑',
+  prod: '∏',
+  int: '∫',
+  hbar: 'ℏ',
 };
 
 // Map of Unicode or LaTeX symbols to clean printable ASCII for jsPDF (WinAnsi Latin-1)
@@ -120,6 +130,8 @@ const UNICODE_TO_PDF_ASCII: Record<string, string> = {
   '×': 'x',
   '÷': '/',
   '·': '*',
+  '⋅': '*',
+  '−': '-',
   '•': '*',
   '…': '...',
   '∘': 'o',
@@ -136,18 +148,36 @@ const UNICODE_TO_PDF_ASCII: Record<string, string> = {
   '∨': 'OR',
   '∞': 'inf',
   '∂': 'd',
+  '∇': 'nabla',
+  '√': 'sqrt',
+  '∛': 'cbrt',
+  '²': '^2',
+  '³': '^3',
+  '⁴': '^4',
+  '⁰': '^0',
+  '¹': '^1',
+  '°': ' deg',
+  '∑': 'SUM',
+  '∏': 'PROD',
+  '∫': 'INT',
+  'ℏ': 'hbar',
   'α': 'alpha',
   'β': 'beta',
   'γ': 'gamma',
   'δ': 'delta',
+  'Δ': 'Delta',
+  'θ': 'theta',
   'λ': 'lambda',
   'μ': 'mu',
   'π': 'pi',
   'σ': 'sigma',
+  'τ': 'tau',
+  'φ': 'phi',
   'ω': 'omega',
+  'Ω': 'Omega',
 };
 
-const MATH_OPERATOR_REGEX = /[→←↔⇒⇐⇔↑↓↕↦=<>≤≥≠≈≡∼≃≪≫±∓×÷·•…∘∈∉⊂⊆∩∪∀∃¬∧∨∞∂\+\-\*\/\^α-ωΑ-Ω]/;
+const MATH_OPERATOR_REGEX = /[→←↔⇒⇐⇔↑↓↕↦=<>≤≥≠≈≡∼≃≪≫±∓×÷·•…∘∈∉⊂⊆∩∪∀∃¬∧∨∞∂\+\-\*\/\^α-ωΑ-Ω√²³°]/;
 
 /**
  * Normalizes LaTeX math symbols, arrows, and expressions into clean Unicode for UI display.
