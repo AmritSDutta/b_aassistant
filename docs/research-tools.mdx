@@ -53,8 +53,9 @@ flowchart TD
 - **Output**: Paper titles, summaries, author lists, and ArXiv IDs.
 
 ### 3. `calculate`
-- **Implementation**: Pure JavaScript sanitized evaluator with precision rounding.
-- **Capabilities**: Standard operators (`+`, `-`, `*`, `/`, `×`, `÷`, `^`), parenthetical groupings, and floating-point correction.
+- **Implementation**: A pure, sandboxed scientific evaluator (`calculateMath` in `src/lib/mathEvaluator.ts`) with precision rounding — no `eval` of arbitrary code and no CAS features.
+- **Capabilities**: Standard operators and parentheses, scientific functions (`sqrt`, `cbrt`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `log`, `ln`, `log10`, `log2`, `exp`, `abs`, `round`, `floor`, `ceil`, `min`, `max`), constants (`pi`, `e`), scientific notation (`1.5e-3`), and Unicode notation (`√`, `∛`, `²`, `³`, `×`, `÷`, `−`).
+- **Safety**: Identifiers are validated against a strict whitelist, so unknown names (`window`, `eval`, …) are rejected rather than executed. See [Symbol Humanization & Scientific Math](/symbols-and-math).
 
 ## Freshness & Failure Semantics
 

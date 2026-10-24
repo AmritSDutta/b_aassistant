@@ -63,7 +63,7 @@ never re-register (or mid-session abort) the tool set; `updateWebMCPContext()` s
 | `clean_document` | `{}` | Purges IndexedDB tables and resets document UI. |
 | `search_web` | `{ query: string }` | Keyless Tavily AI search (primary) with automatic DuckDuckGo fallback via the same-origin `/api/websearch` proxy. Returns `{ results, fetchedAt, source }`, where `source` is `'tavily'` or `'duckduckgo'`; on failure `{ results: [], unavailable: true }` rather than fabricated data. |
 | `search_research` | `{ query: string }` | ArXiv papers via the same-origin `/api/arxiv` proxy, with `fetchedAt`/`source` and honest unavailability. |
-| `calculate` | `{ expression: string }` | Evaluates decimal math with floating-point correction. |
+| `calculate` | `{ expression: string }` | Evaluates scientific and decimal math — functions (`sqrt`, `sin`, `log`, …), constants (`pi`, `e`), scientific notation, and Unicode symbols (`√`, `²`, `×`) — with floating-point correction. See [Symbol Humanization & Scientific Math](/symbols-and-math). |
 
 ## First Instruction for a Visiting Agent
 

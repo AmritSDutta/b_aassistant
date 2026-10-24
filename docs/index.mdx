@@ -47,7 +47,18 @@ description: Zero-backend browser assistant empowering visiting LLMs with local 
     </Tree.Folder>
     <Tree.Folder name="lib" defaultOpen>
       <Tree.File name="canvasEngine.ts" highlight />
-      <Tree.File name="canvasHelper.ts" highlight />
+      <Tree.Folder name="canvas">
+        <Tree.File name="types.ts" />
+        <Tree.File name="constants.ts" />
+        <Tree.File name="color.ts" />
+        <Tree.File name="geometry.ts" />
+        <Tree.File name="sanitize.ts" />
+        <Tree.File name="renderNodes.ts" highlight />
+        <Tree.File name="renderConnectors.ts" />
+        <Tree.File name="renderScene.ts" highlight />
+        <Tree.File name="index.ts" />
+      </Tree.Folder>
+      <Tree.File name="canvasHelper.ts" />
       <Tree.File name="pdfExportService.ts" highlight />
       <Tree.File name="userPreferences.ts" highlight />
       <Tree.File name="bm25.ts" highlight />
@@ -85,6 +96,7 @@ description: Zero-backend browser assistant empowering visiting LLMs with local 
         <Tree.File name="mistralSubagentProvider.ts" />
         <Tree.File name="ollamaSubagentProvider.ts" />
         <Tree.File name="requestySubagentProvider.ts" />
+        <Tree.File name="nebiusSubagentProvider.ts" />
         <Tree.File name="subagentFactory.ts" />
       </Tree.Folder>
       <Tree.Folder name="config">

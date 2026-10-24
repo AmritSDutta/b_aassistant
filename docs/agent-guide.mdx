@@ -51,7 +51,7 @@ flowchart TD
 | `search_research` | `{ query }` | ArXiv papers/preprints (carry a `fetchedAt`). |
 | `get_reference_url` | `{}` | Read-only: comma-separated stored reference URLs. |
 | `get_user_preferences` | `{}` | Read-only: returns string array of stored user preferences (up to 10 items, max 120 chars each). |
-| `calculate` | `{ expression }` | Decimal-safe math, e.g. `"12.5 * 4.2 + 3.1"`. |
+| `calculate` | `{ expression }` | Scientific & decimal math — functions (`sqrt`, `sin`, `log`, …), constants (`pi`, `e`), and Unicode notation (`√`, `²`, `×`). See [Symbol Humanization & Scientific Math](/symbols-and-math). |
 | `export_pdf` | `{}` | Build and download the session PDF (canvas snapshot + transcript). |
 | `canvas_draw` | `{ command?, commands? }` | LEGACY flat drawing — prefer `canvas2d_draw_shapes`. |
 | `draw_diagram` | `{ nodes, edges, title?, clearFirst? }` | LEGACY flat flowchart — prefer `canvas2d_draw_shapes`. |
@@ -83,7 +83,7 @@ place of `type` / `text`. Coordinates and dimensions are numbers, not strings.
 edge-to-edge automatically once the ids resolve. For unattached connectors or free vectors, pass `startX`, `startY`, `endX`, `endY`.
 
 **Optional styling:** `fillStyle` (`hachure` default, or `zigzag` / `cross-hatch` / `solid` / `dots`),
-`roughness` (0–3, 0 = clean vector), `strokeDash` (e.g. `[6, 4]`), `arrowhead` (`filled` | `open` | `hollow`), `bidirectional` (boolean), fill tokens (`client`, `gateway`, `db`, `queue`, `logic`) or a
+`roughness` (0–3, 0 = clean vector), `strokeDash` (e.g. `[6, 4]`), `arrowhead` (`filled` | `open` | `diamond` | `none`), `bidirectional` (boolean), fill tokens (`client`, `gateway`, `db`, `queue`, `logic`) or a
 `palette` + token (see [Canvas2D Scene Graph](/canvas-and-pdf)), and `subtitle` for an uppercase
 monospace micro-badge.
 

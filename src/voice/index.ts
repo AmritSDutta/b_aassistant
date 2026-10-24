@@ -11,6 +11,7 @@ export * from './providers/openAISubagentProvider';
 export * from './providers/mistralSubagentProvider';
 export * from './providers/requestySubagentProvider';
 export * from './providers/ollamaSubagentProvider';
+export * from './providers/nebiusSubagentProvider';
 export * from './providers/subagentFactory';
 export * from './bridge/toolAdapter';
 export * from './bridge/voiceBridge';

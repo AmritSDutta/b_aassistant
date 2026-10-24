@@ -3,6 +3,7 @@ import {
   MistralSubagentProvider,
   RequestySubagentProvider,
   OllamaSubagentProvider,
+  NebiusSubagentProvider,
   createSubagentProvider,
   GeminiSubagentProvider,
 } from '../voice';
@@ -341,6 +342,79 @@ describe('Subagent Providers', () => {
     });
   });
 
+  describe('NebiusSubagentProvider', () => {
+    it('throws error when apiKey is empty', async () => {
+      const provider = new NebiusSubagentProvider({ apiKey: '' });
+      await expect(provider.generateText('hello')).rejects.toThrow('Nebius Token Factory API key is required');
+    });
+
+    it('routes through /api/proxy to the Token Factory completions endpoint and parses response', async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [{ message: { content: 'Nebius Nemotron architecture explanation' } }],
+        }),
+      });
+      globalThis.fetch = mockFetch;
+
+      const provider = new NebiusSubagentProvider({
+        apiKey: 'nebius-test-key',
+      });
+
+      const result = await provider.generateText('Design event architecture', 'System prompt');
+
+      expect(result).toBe('Nebius Nemotron architecture explanation');
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/proxy',
+        expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            targetUrl: 'https://api.tokenfactory.nebius.com/v1/chat/completions',
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer nebius-test-key',
+            },
+            body: {
+              model: 'nvidia/nemotron-3-super-120b-a12b',
+              messages: [
+                { role: 'system', content: 'System prompt' },
+                { role: 'user', content: 'Design event architecture' },
+              ],
+            },
+          }),
+        })
+      );
+    });
+
+    it('throws descriptive error on 400 Bad Request with model hint', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        text: async () => 'Invalid model identifier',
+      });
+
+      const provider = new NebiusSubagentProvider({ apiKey: 'valid-key' });
+      await expect(provider.generateText('test')).rejects.toThrow(
+        /Nebius Token Factory request rejected \(400 Bad Request\).*nvidia\/nemotron-3-super-120b-a12b/
+      );
+    });
+
+    it('throws descriptive error on 401 Unauthorized', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        statusText: 'Unauthorized',
+        text: async () => 'Invalid key',
+      });
+
+      const provider = new NebiusSubagentProvider({ apiKey: 'invalid-key' });
+      await expect(provider.generateText('test')).rejects.toThrow(/Nebius Token Factory authentication failed \(401 Unauthorized\)/);
+    });
+  });
+
   describe('createSubagentProvider factory', () => {
     it('creates GeminiSubagentProvider for gemini provider type', () => {
       const provider = createSubagentProvider({
@@ -381,6 +455,16 @@ describe('Subagent Providers', () => {
       });
       expect(provider).toBeInstanceOf(OllamaSubagentProvider);
       expect(provider.id).toBe('ollama-subagent');
+    });
+
+    it('creates NebiusSubagentProvider for nebius provider type', () => {
+      const provider = createSubagentProvider({
+        provider: 'nebius',
+        apiKey: 'nebius-key',
+        model: 'nvidia/nemotron-3-super-120b-a12b',
+      });
+      expect(provider).toBeInstanceOf(NebiusSubagentProvider);
+      expect(provider.id).toBe('nebius-subagent');
     });
   });
 });

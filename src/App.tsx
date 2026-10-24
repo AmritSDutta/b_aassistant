@@ -346,6 +346,7 @@ export const App: React.FC = () => {
         requestyKey={voice.requestyKey}
         ollamaKey={voice.ollamaKey}
         ollamaEndpoint={voice.ollamaEndpoint}
+        nebiusKey={voice.nebiusKey}
         onSave={voice.handleSaveSettings}
       />
 

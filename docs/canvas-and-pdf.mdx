@@ -34,6 +34,36 @@ flowchart LR
   Export --> JSPDF
 ```
 
+## Modular Canvas Package (`src/lib/canvas/`)
+
+The Canvas2D engine is decomposed into a purpose-led package rather than one monolithic file. Each module
+has a single concern, and `src/lib/canvasHelper.ts` is now a thin backward-compatible facade
+(`export * from './canvas'`) so existing callers and test suites keep working unchanged:
+
+<Tree>
+  <Tree.Folder name="canvas" defaultOpen>
+    <Tree.File name="types.ts" />
+    <Tree.File name="constants.ts" />
+    <Tree.File name="color.ts" />
+    <Tree.File name="geometry.ts" />
+    <Tree.File name="sanitize.ts" />
+    <Tree.File name="renderNodes.ts" highlight />
+    <Tree.File name="renderConnectors.ts" />
+    <Tree.File name="renderScene.ts" highlight />
+    <Tree.File name="index.ts" />
+  </Tree.Folder>
+</Tree>
+
+- **`types.ts`** — command interfaces and the `Bounds` type.
+- **`constants.ts`** — styling tokens and the `EDITORIAL_PALETTES` definitions.
+- **`color.ts`** — RGBA normalization, luminance checks, and theme contrast helpers.
+- **`geometry.ts`** — docking math and bounding-box calculation.
+- **`sanitize.ts`** — defensive shape ingestion, type aliasing, and numeric coercion.
+- **`renderNodes.ts`** — primitives, UML compartments, and the Rough.js draw paths.
+- **`renderConnectors.ts`** — Bézier splines and arrowhead rendering.
+- **`renderScene.ts`** — the 3-pass layer ordering pipeline and legacy command dispatch.
+- **`index.ts`** — the barrel that re-exports the public surface.
+
 ## Scene Graph & Supported Shapes
 
 Instead of fire-and-forget pixel drawing commands, the canvas maintains a persistent scene graph (`Canvas2dShape[]`) supporting 11 core primitives:
@@ -46,7 +76,7 @@ Instead of fire-and-forget pixel drawing commands, the canvas maintains a persis
 6. **`container`**: Architectural boundary box, UML package, or microservice cluster with dashed borders (`strokeDash: [6, 4]`), top-left header tabs, and subtle background tinting.
 7. **`text`**: Standalone typographic annotation with automatic font sizing and wrapping.
 8. **`sticker`**: Callout note with `stickerColor` (`yellow`, `mint`, `rose`) and optional emoji icon.
-9. **`arrow` / `line`**: Connectors that bind to node boundaries (`startId`, `endId`) and stay dynamically attached when nodes move, supporting `strokeDash`, `arrowhead` (`filled`, `open`, `hollow`), and `bidirectional`.
+9. **`arrow` / `line`**: Connectors that bind to node boundaries (`startId`, `endId`) and stay dynamically attached when nodes move, supporting `strokeDash`, `arrowhead` (`filled`, `open`, `diamond`, `none`), and `bidirectional`.
 10. **`freedraw`**: Freehand stroke stored as a point array (`points`), rendered as a polyline rather than pixels.
 
 ## Universal Diagramming: Visual Illustrations, UML & Science
@@ -67,7 +97,7 @@ Native support for formal software engineering architecture:
 ### 3. Scientific, Chemical & Physics Diagrams
 Rigorous technical and physical notation:
 - **Chemical Structures**: Benzene and aromatic rings rendered as 6-vertex `polygon` hexagons with interior resonant circle ellipses or alternating double-bond `line` segments.
-- **Physics & Engineering Vectors**: Force vectors, equilibrium transformations, and tensor flows rendered via directional connectors with configurable `arrowhead` styles (`filled`, `open`, `hollow`), `bidirectional: true` for reversible reactions, and `strokeDash` for hidden fields or virtual displacements.
+- **Physics & Engineering Vectors**: Force vectors, equilibrium transformations, and tensor flows rendered via directional connectors with configurable `arrowhead` styles (`filled`, `open`, `diamond`, `none`), `bidirectional: true` for reversible reactions, and `strokeDash` for hidden fields or virtual displacements.
 
 ### 4. 3-Pass Layer Ordering Pipeline
 To eliminate visual occlusion bugs where boundary containers or connectors obscure shapes, `renderScene` automatically executes in 3 deterministic passes:
@@ -147,7 +177,7 @@ The Canvas2D engine features interactive viewport management and depth rendering
 - **Interactive Pan & Smooth Wheel Zoom:** Allows users to drag-to-pan across the canvas plane and zoom with mouse wheel (`zoomAtPoint`, factor 1.1 in / 0.9 out, scale clamped `[0.2, 4]`), keeping the cursor focus pinned. The `Fit View` and `Reset` toolbar buttons map to `fitToContent()` and `resetView()`.
 - **Tight-Crop Snapshot Export:** `getSnapshotDataUrl()` computes the content bounds of all shapes, renders them to an offscreen canvas with a 40px padding (nodes first, then docked connectors), and returns a cropped PNG data URL — used for canvas snapshots in PDF reports and persisted session turns.
 - **2.5D Drop Shadows:** Nodes render with ambient elevation shadows (`shadowOffsetY: 4`, `shadowBlur: 12`), cleared before stroking borders for crisp lines.
-- **Theme-Aware Contrast:** `applyThemeAlpha` scales fill alpha up in light mode so soft tones stay visible on warm paper; `resolveThemeTextColor` normalizes white/off-white/black/washed-out colors to the universal amber `#d97706` (`MEDIUM_DARK_YELLOW`), while genuine custom accent colors pass through — giving labels equal, readable contrast in both themes. These stateless color, geometry, and render-pipeline helpers live in `src/lib/canvasHelper.ts` (with `parseColorLuminance`, `isLightColor`, `isDarkColor`), consumed by the `CanvasEngine` class in `src/lib/canvasEngine.ts`.
+- **Theme-Aware Contrast:** `applyThemeAlpha` scales fill alpha up in light mode so soft tones stay visible on warm paper; `resolveThemeTextColor` normalizes white/off-white/black/washed-out colors to the universal amber `#d97706` (`MEDIUM_DARK_YELLOW`), while genuine custom accent colors pass through — giving labels equal, readable contrast in both themes. These stateless color, geometry, and render-pipeline helpers live in the modular package `src/lib/canvas/` (e.g. `parseColorLuminance`, `isLightColor`, and `isDarkColor` in `color.ts`), consumed by the `CanvasEngine` class in `src/lib/canvasEngine.ts`.
 - **Live DOM Theme Synchronization:** A `MutationObserver` on `document.documentElement` dynamically tracks theme class toggles in real time via `getTheme()`, triggering automatic redraws without delay or state mismatch.
 
 ## Translucent Color Palette
@@ -167,7 +197,7 @@ dark, `#334155` in light), and every label resolves to the universal high-contra
 | **Decision / Logic** | `rgba(250,204,21,0.20)` | `logic` |
 
 A **Risograph / editorial** palette is also available via the `palette` field plus a token name. Four
-palettes are defined (`EDITORIAL_PALETTES` in `src/lib/canvasHelper.ts`):
+palettes are defined (`EDITORIAL_PALETTES` in `src/lib/canvas/constants.ts`):
 
 | Palette | Tokens |
 | :--- | :--- |

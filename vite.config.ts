@@ -11,6 +11,7 @@ const ALLOWED_PROXY_HOSTS = new Set([
   'openai.com',
   'router.requesty.ai',
   'requesty.ai',
+  'api.tokenfactory.nebius.com',
   'api.duckduckgo.com',
   'html.duckduckgo.com',
   'duckduckgo.com',

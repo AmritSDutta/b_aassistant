@@ -11,7 +11,7 @@ export interface VoiceOption {
   tone: string;
 }
 
-export type SubagentProviderType = 'gemini' | 'openai' | 'mistral' | 'requesty' | 'ollama';
+export type SubagentProviderType = 'gemini' | 'openai' | 'mistral' | 'requesty' | 'ollama' | 'nebius';
 
 export interface SubagentProviderOption {
   id: SubagentProviderType;
@@ -89,6 +89,18 @@ export const SUBAGENT_PROVIDERS: SubagentProviderOption[] = [
       { id: 'nemotron-3-super:cloud', label: 'Nemotron 3 Super Cloud', description: 'Superior architecture & synthesis' },
       { id: 'nemotron-3-nano:30b-cloud', label: 'Nemotron 3 Nano 30B Cloud', description: 'Compact fast reasoning' },
       { id: 'beam:cloud', label: 'Beam Cloud', description: 'Optimized inference subagent' },
+    ],
+  },
+  {
+    id: 'nebius',
+    name: 'Nebius Token Factory',
+    description: 'NVIDIA Nemotron frontier models via the Nebius Token Factory OpenAI-compatible API',
+    defaultModel: 'nvidia/nemotron-3-super-120b-a12b',
+    defaultEndpoint: 'https://api.tokenfactory.nebius.com/v1',
+    keyPlaceholder: 'nebius_...',
+    presets: [
+      { id: 'nvidia/nemotron-3-super-120b-a12b', label: 'Nemotron 3 Super 120B A12B (Default)', description: 'High-capability dense reasoning & architecture subagent' },
+      { id: 'nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B', label: 'Nemotron 3 Nano 30B A3B', description: 'Compact mixture-of-experts reasoning subagent' },
     ],
   },
 ];

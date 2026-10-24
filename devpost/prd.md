@@ -165,7 +165,7 @@ Source: `research.md` (dwell-time mechanisms 1–6).
 - **Chat popup maximize:** ⤢ expands the dialogue into a full-screen reader (Escape/✕ closes) with the same stream, input, and font controls — the zen reading mode.
 - **Reading comfort:** A- / A+ font steps (15/17/19px) persisted across sessions; 2px reading-progress bar atop the stream for a sense of investment.
 - **Session Highlights:** users star (☆/★) any message; starred messages collect in sidebar Section 3 and clicking one scrolls the dialogue to it — the revisit loop.
-- **Alive-but-calm feedback:** "agent is thinking" pulse while awaiting a reply, 0.18s message entrance fades, per-message copy button, dropzone drag-over highlight, and gentle session strip (messages · highlights · minutes). All motion disabled under `prefers-reduced-motion`.
+- **Alive-but-calm feedback:** 0.18s message entrance fades, per-message copy button, dropzone drag-over highlight, clean immediate message logging, and gentle session strip (messages · highlights · minutes). All motion disabled under `prefers-reduced-motion`.
 
 ### 7. SEO, Crawler Discoverability & Indexing Standards
 - **Meta Description & Content Summary:** Comprehensive `<meta name="description">` defining bAssistant as a 100% private, client-side AI Business Analyst workstation with interactive HTML5 canvas diagramming, local document retrieval, and WebMCP agent tools.
@@ -185,12 +185,13 @@ Source: `research.md` (dwell-time mechanisms 1–6).
   - **Tier 2 (Domain Subagent Engine)**: High-throughput autonomous agent (`gemini-3.5-flash-lite` default) with versatility across personal planning, writing, document synthesis, task breakdown, research, and technical product architecting. Invoked when diagrams, workflows, or in-depth technical analysis are requested via the asynchronous bridge tool (`generate_diagram_and_explanation`). The bridge returns immediately to Tier 1 to prevent voice pauses, while the subagent runs in the background to render canvas drawings and post substantive explanations directly to the chat area and IndexedDB.
 - **Ephemeral Spoken Conversation Policy**: Spoken speech turns and live audio chitchat remain ephemeral in the audio stream and Voice HUD caption pill. They are **not** written to the persistent dialogue history, keeping the reading notes and PDF reports clean and executive.
 - **Multi-Provider Tier 2 Subagent Engine**:
-  - Implements `ISubagentProvider` across **Google Gemini**, **OpenAI**, **Mistral AI**, **Requesty AI**, and **Ollama Cloud**.
+  - Implements `ISubagentProvider` across **Google Gemini**, **OpenAI**, **Mistral AI**, **Requesty AI**, **Ollama Cloud**, and **Nebius Token Factory**.
   - **Google Gemini**: Integrates `@google/genai` with optional Tier 1 key inheritance or dedicated subagent key.
   - **OpenAI**: Integrates OpenAI chat completions with models `gpt-6-luna` (default) and `gpt-5-nano`, routed through same-origin `/api/proxy` with Bearer authorization.
   - **Mistral AI**: Calls `POST https://api.mistral.ai/v1/chat/completions` with Bearer authorization.
   - **Requesty AI**: OpenAI-compatible router at `https://router.requesty.ai/v1/chat/completions` with native CORS, automatic prefix scrapping, and CSP allowlisting.
   - **Ollama Cloud**: Fixed cloud endpoint `https://ollama.com/api/chat` authenticated via Bearer token.
+  - **Nebius Token Factory**: OpenAI-compatible endpoint `https://api.tokenfactory.nebius.com/v1/chat/completions` serving NVIDIA Nemotron models (`nvidia/nemotron-3-super-120b-a12b`, `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`), routed through same-origin `/api/proxy` with Bearer authorization.
   - **Custom Model IDs**: Allows users to specify arbitrary model strings alongside curated presets for any provider.
   - **Interactive Quick Test Preflight**: In-memory connection test validates API keys and model availability with live latency feedback before saving; mandatory before saving when Tier 2 settings are changed.
 - **Client-Side Key Encryption**: Encrypts user API keys with 256-bit AES-GCM via Web Cryptography API (`window.crypto.subtle`) using non-extractable keys in IndexedDB (`bassistant_secure_vault`), saving formatted ciphertext (`__BASSISTANT_ENC__:v1:...`) to `localStorage` under `bassistant_` prefix. Preserves separate encrypted key slots per provider.
@@ -277,9 +278,9 @@ Acceptance criteria:
 - HTML canvas with live 2D scene graph engine, Clear button, and Export PDF button.
 - Chat stream formatted in Lora longform reading typography, multi-line prompt textarea, and auto-scroll to newest message.
 - Keyless Tavily web search with automatic DuckDuckGo fallback.
-- Isolated voice module in `src/voice/` featuring `gemini-3.8-live` full-duplex audio, multi-provider subagents (Google Gemini, OpenAI `gpt-6-luna`/`gpt-5-nano`, Mistral AI, Requesty AI, Ollama Cloud), preflight audio modal, and AES-GCM-256 key encryption.
+- Isolated voice module in `src/voice/` featuring `gemini-3.8-live` full-duplex audio, multi-provider subagents (Google Gemini, OpenAI `gpt-6-luna`/`gpt-5-nano`, Mistral AI, Requesty AI, Ollama Cloud, Nebius Token Factory), preflight audio modal, and AES-GCM-256 key encryption.
 - User Preferences manager (`UserPreferencesModal`) storing up to 10 preferences (max 120 chars each) in browser storage.
-- Long-dwell UI layer: warm token dual themes, onboarding WelcomeModal, chat popup maximize, A-/A+ persisted font steps, reading-progress bar, Session Highlights in sidebar Section 3, thinking pulse, copy/star message actions, drag-over dropzone feedback, and session strip.
+- Long-dwell UI layer: warm token dual themes, onboarding WelcomeModal, chat popup maximize, A-/A+ persisted font steps, reading-progress bar, Session Highlights in sidebar Section 3, immediate chat history logging, copy/star message actions, drag-over dropzone feedback, and session strip.
 - Complete WebMCP tool suite (19 tools including `get_current_time` and `get_user_preferences`).
 - Cloudflare Pages deployment configuration.
 - Project documentation:
