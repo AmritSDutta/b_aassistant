@@ -72,13 +72,26 @@ Source: `scope.md > The Core Loop`.
 
 ### 3. Live HTML Canvas Rendering & Scene Graph
 Source: `scope.md > The Unique Kernel`.
-- **Artistic Drawing Engine:** Executes drawing tool calls from visiting agents to render structured Canvas2D shapes (`rectangle`, `ellipse`, `diamond`, `text`, `sticker`) and dynamic perimeter-docked connectors (`arrow`, `line`) using procedural hand-drawn sketch techniques powered by **Rough.js** (MIT).
+- **Universal Drawing Engine:** Executes drawing tool calls from visiting agents to render structured Canvas2D shapes across software architectures, pictorial illustrations, UML diagrams, and scientific schemas using procedural hand-drawn sketch techniques powered by **Rough.js** (MIT) alongside clean vector fallbacks (`roughness: 0`).
+- **Supported Shape Primitives (11 types):**
+  - Architecture & Business: `rectangle`, `ellipse`, `diamond`, `sticker`, `text`.
+  - Pictorial Illustrations: `path` (SVG path data `d` for trees, houses, icons, and organic contours) and `polygon` (arbitrary vertices `points` for house roofs, delta shapes, and benzene rings).
+  - Containers & Boundaries: `container` (boundary boxes, subgraphs, biological cell membranes, and packages with top-left header tabs and customizable `strokeDash`).
+- **3-Pass Layer Ordering Architecture:**
+  - Pass 0 (Background): Renders `container` shapes first so their subtle translucent wash never occludes enclosed nodes.
+  - Pass 1 (Midground): Renders nodes, polygons, SVG paths, stickers, and text.
+  - Pass 2 (Foreground): Renders perimeter-docked connectors, scaled arrowheads, and protective label pills on top.
+- **UML & Technical Diagramming Primitives:**
+  - **UML Class Compartments:** Rectangles support a `compartments: string[]` array to render classic divided class boxes (Class Name, Attributes, Methods) with partition divider lines and line-wrapped monospace text constrained to `width - 16`.
+  - **Sequence Lifelines & Weak Bonds:** Connectors and boundaries support `strokeDash: number[]` (e.g. `[6, 4]`).
+  - **Arrowhead Styles:** Selectable arrowhead styles (`arrowhead: 'filled' | 'open' | 'diamond' | 'none'`) with dynamic scaling proportional to connector `strokeWidth` (`size = Math.max(10, strokeWidth * 5)`).
+  - **Bidirectional Connectors:** Renders matching arrowheads at both start and arrival ends (`bidirectional: true`) for chemical equilibrium reactions and bidirectional sync.
 - **Procedural Hand-Drawn Sketching:** Renders organic, double-stroked boundaries, sketchy jittered contours, and textured hachure/cross-hatch fills rather than rigid CAD-like vector polygons.
 - **Fluid Generative Connectors (Bézier Splines):** Replaces rigid straight lines with graceful cubic Bézier splines (`ctx.bezierCurveTo`) whose control points curve naturally according to relative orientation, terminating in tangent-aligned arrowheads with rounded caps.
 - **Tactile Paper Backdrops:** Composites a subtle warm parchment and paper grain texture across the canvas viewport and in offscreen snapshot captures for PDF export.
 - **Curated Editorial & Risograph Color Harmonies:** Built-in artistic palettes (terracotta `#e06d53`, warm cobalt `#3b66cf`, sage mint `#4e9a7e`, sunflower gold `#e5a93b`, plum `#7c4a73`) that automatically harmonize raw primary hex inputs into magazine-grade illustration tones.
 - **Edge-to-Edge Perimeter Docking:** Connectors anchor to shape borders and stay attached when shapes move.
-- **Viewport Auto-Centering (`fitToContent`):** Measures total bounding box of all shapes and computes uniform scaling and offsets so diagrams never clip or land outside the visible canvas viewport.
+- **Viewport Auto-Centering (`fitToContent`):** Measures total bounding box of all shapes (including polygon vertices and paths) and computes uniform scaling and offsets so diagrams never clip or land outside the visible canvas viewport.
 - **Interactive Pan & Smooth Wheel Zoom:** Allows users to drag-to-pan across the infinite canvas and zoom with mouse wheel (`zoomAtPoint`), keeping cursor focus stationary.
 - **Visual Elevation (2.5D Drop Shadows):** Ambient drop shadows on containers (`shadowOffsetY: 4`, `shadowBlur: 14`) for sharp contrast above the grid, cleared before stroking borders.
 - **Universal Medium Dark Yellow Bold Labels at Top of Elements:** To ensure crisp, unambiguous contrast across both light mode (on light/translucent fills and warm paper) and dark mode (on dark fills and ink surfaces), element labels on shapes use **medium dark yellow** (`#d97706` / Amber 600) in **bold typography**, anchored at the **top of the element** (`topCenter` with top padding). Connector pills similarly use bold medium dark yellow text on protective backdrops.

@@ -6,7 +6,10 @@ export type Canvas2dShapeType =
   | 'arrow'
   | 'line'
   | 'freedraw'
-  | 'sticker';
+  | 'sticker'
+  | 'polygon'
+  | 'path'
+  | 'container';
 
 export interface Canvas2dShape {
   id: string;
@@ -30,6 +33,15 @@ export interface Canvas2dShape {
   endX?: number;
   endY?: number;
   points?: Array<[number, number]>;
+
+  // Arbitrary geometry & SVG path
+  d?: string;
+
+  // Technical & UML diagramming
+  strokeDash?: number[];
+  arrowhead?: 'filled' | 'open' | 'diamond' | 'none';
+  bidirectional?: boolean;
+  compartments?: string[];
 
   // Sticker attributes
   stickerColor?: 'yellow' | 'mint' | 'rose';

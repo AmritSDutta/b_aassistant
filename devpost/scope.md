@@ -125,3 +125,21 @@ Broaden bAssistant from a specialized Business Analyst cockpit into a versatile 
   - Calibrate the Tier 2 subagent system prompt (`SUBAGENT_SYSTEM_PROMPT_TEMPLATE`) for personal planning, writing, analysis, and task breakdown, while retaining the Canvas2D diagramming schema contract.
   - Calibrate the Tier 1 Live Voice Agent prompt (`VOICE_LIVE_AGENT_PROMPT_TEMPLATE`) to serve as a conversational sounding board for daily work and ideas.
 - **Explicitly cut:** File system write access, arbitrary folder mounting, external cloud memory servers.
+
+## Improvement — Universal Visual, UML & Science Diagramming Engine (2026-10-24)
+
+Broaden bAssistant's Canvas2D engine from a software-flowchart-only visualizer into a universal diagramming engine capable of rendering pictorial illustrations (trees, houses, scenery), UML diagrams (classes with compartments, sequence lifelines), and scientific diagrams (chemical benzene rings, physics vectors), preserving Rough.js hand-drawn sketching and clean vector fallbacks.
+
+- **In now:**
+  - Expand `Canvas2dShapeType` with three new first-class primitives: `polygon` (arbitrary vertices for roofs, delta shapes, benzene rings), `path` (SVG path data for trees, houses, icons, and organic contours), and `container` (boundary boxes, subgraphs, biological cell membranes, and packages).
+  - Extend `Canvas2dShape` with granular diagramming properties: `d` (SVG path string), `points` (vertices array), `strokeDash` (dashed lines for UML lifelines and weak bonds), `arrowhead` (`filled`, `open`, `diamond`, `none`), `bidirectional` (double-headed equilibrium arrows), and `compartments` (divided UML class boxes).
+  - 3-pass layer ordering in `renderScene`: Pass 0 renders `container` shapes in the background, Pass 1 renders nodes/polygons/paths in the midground, and Pass 2 renders perimeter-docked connectors and pill labels on top.
+  - Proportional arrowhead scaling: arrowheads scale dynamically with `strokeWidth` (`size = Math.max(10, strokeWidth * 5)`).
+  - Compartment text wrapping: calculates partition heights and wraps multi-line attributes/methods cleanly within `width - 16`.
+  - Polygon closure safety: clean fallbacks enforce `ctx.closePath()` so polygons seal completely regardless of author vertex loop closure.
+  - Retain strict backward compatibility for all existing 8 shape types and aliases.
+  - Maintain WebMCP tool count strictly invariant at 19 tools.
+- **Explicitly cut:**
+  - Raster bitmap image embedding onto canvas (retained as pure procedural/vector Canvas2D).
+  - 3D rendering or WebGL runtimes (unnecessary overhead; Canvas2D + Rough.js suffices).
+  - Server-side rendering or heavy external layout compilation (keeps zero-backend browser client architecture intact).

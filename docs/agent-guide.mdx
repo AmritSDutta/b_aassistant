@@ -59,11 +59,16 @@ flowchart TD
 
 ## Canvas Shape Contract
 
-**Node kinds** — `rectangle` | `ellipse` | `diamond` | `sticker` | `text`:
+**Node kinds** — `rectangle` | `ellipse` | `diamond` | `polygon` | `path` | `container` | `sticker` | `text`:
 
 ```json
 { "type": "rectangle", "id": "gateway", "text": "API Gateway", "subtitle": "[JWT]", "x": 300, "y": 200, "width": 170, "height": 90, "fillColor": "gateway" }
 ```
+
+- **UML Class**: `{ "type": "rectangle", "id": "user_cls", "x": 100, "y": 100, "width": 200, "height": 130, "compartments": ["UserManager", "+ users: User[]", "+ login(): boolean"] }`
+- **Polygon (roofs, triangles, benzene rings)**: `{ "type": "polygon", "id": "roof", "points": [[100, 160], [180, 100], [260, 160]], "fillColor": "terracotta" }`
+- **SVG Path (trees, organic shapes, icons)**: `{ "type": "path", "id": "foliage", "x": 100, "y": 100, "d": "M 40 80 C 10 50, 20 20, 60 20 C 80 0, 120 10, 130 30 C 160 20, 180 60, 150 90 Z", "fillColor": "fern" }`
+- **Boundary Container**: `{ "type": "container", "id": "backend_cluster", "text": "Backend Services", "x": 250, "y": 150, "width": 420, "height": 280 }`
 
 Use `text` for the visible label. `archetype` is **only** a fill token — never use it (or `label`) in
 place of `type` / `text`. Coordinates and dimensions are numbers, not strings.
@@ -71,14 +76,14 @@ place of `type` / `text`. Coordinates and dimensions are numbers, not strings.
 **Connector kinds** — `arrow` | `line`:
 
 ```json
-{ "type": "arrow", "id": "e1", "startId": "client", "endId": "gateway", "text": "1. Submit" }
+{ "type": "arrow", "id": "e1", "startId": "client", "endId": "gateway", "text": "1. Submit", "strokeDash": [6, 4], "arrowhead": "filled", "bidirectional": false }
 ```
 
 `startId` / `endId` must exactly match an existing node `id`; the engine docks each connector
-edge-to-edge automatically once the ids resolve.
+edge-to-edge automatically once the ids resolve. For unattached connectors or free vectors, pass `startX`, `startY`, `endX`, `endY`.
 
 **Optional styling:** `fillStyle` (`hachure` default, or `zigzag` / `cross-hatch` / `solid` / `dots`),
-`roughness` (0–3, 0 = clean vector), fill tokens (`client`, `gateway`, `db`, `queue`, `logic`) or a
+`roughness` (0–3, 0 = clean vector), `strokeDash` (e.g. `[6, 4]`), `arrowhead` (`filled` | `open` | `hollow`), `bidirectional` (boolean), fill tokens (`client`, `gateway`, `db`, `queue`, `logic`) or a
 `palette` + token (see [Canvas2D Scene Graph](/canvas-and-pdf)), and `subtitle` for an uppercase
 monospace micro-badge.
 

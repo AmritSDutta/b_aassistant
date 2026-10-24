@@ -92,8 +92,13 @@ Implements `prd.md > Features and Behavior > 3. Live HTML Canvas Rendering & Sce
 Top 60% pane of the main workspace. Renders the HTML5 `<canvas>` element and toolbar:
 - Toolbar with "New Session", "Fit View", "Reset View", "Export PDF", and "Clear Canvas" buttons.
 - `CanvasEngine`: Manages reactive scene graph (`Canvas2dShape[]`), auto-centering viewport matrix (`fitToContent`), interactive drag-to-pan, cursor-pinned wheel zoom (`zoomAtPoint`), perimeter-docked connectors with pill badges, 2.5D drop shadows, live DOM theme synchronization (`getTheme` + `MutationObserver` on `<html>` for instant theme repaint), universal **medium dark yellow** (`#d97706` / Amber 600) **bold labels** anchored at the **top of elements** (`topCenter` with top padding) and on connector pills to guarantee sharp, readable contrast across both light mode and dark mode, adaptive theme strokes (`resolveThemeStrokeColor`), light-mode alpha scaling, HiDPI scaling, and snapshot capture.
-- **Artistic Illustration Upgrades:**
-  - **Procedural Sketching:** Integrates `roughjs` for organic, hand-drawn node boundaries, double strokes, and textured fills (`hachure`, `zigzag`, `cross-hatch`).
+- **Universal Visual, UML & Science Diagramming Upgrades:**
+  - **11 Shape Primitives:** `rectangle`, `ellipse`, `diamond`, `sticker`, `text`, `freedraw`, `arrow`, `line`, `polygon`, `path`, and `container`.
+  - **Pictorial Illustrations:** SVG path strings (`d`) for trees, houses, icons, and organic contours (translated to `(x, y)` if provided), and arbitrary polygon geometry (`points`) for house roofs and custom n-gons.
+  - **UML Class Compartments:** Structured `compartments: string[]` rendering divided class boxes (Title, Attributes, Methods) with partition lines and constrained text wrapping.
+  - **Sequence Lifelines & Science Connectors:** Supports `strokeDash: number[]` (e.g. `[6, 4]`), arrowhead styles (`filled`, `open`, `diamond`, `none`), dynamic arrowhead scaling (`Math.max(10, strokeWidth * 5)`), and double-headed `bidirectional` connectors for equilibrium reactions.
+  - **3-Pass Layer Ordering (`renderScene`):** Pass 0 renders `container` shapes in the background, Pass 1 renders nodes/polygons/paths/stickers in the midground, and Pass 2 renders perimeter-docked connectors on top, resolving all z-order occlusion bugs without requiring manual z-index tags.
+  - **Procedural Sketching:** Integrates `roughjs` for organic, hand-drawn node boundaries, double strokes, and textured fills (`hachure`, `zigzag`, `cross-hatch`), with clean vector path fallbacks when `roughness: 0`.
   - **Fluid Generative Connectors:** Replaces rigid straight lines with smooth cubic Bézier splines (`ctx.bezierCurveTo`) whose control points curve gracefully based on relative orientation, terminating in tangent-aligned arrowheads with rounded line caps.
   - **Tactile Paper Backdrops:** Composites a subtle warm parchment and paper grain texture in the viewport and offscreen snapshot captures.
   - **Editorial Color Harmonies:** Built-in Risograph palettes (terracotta, sage mint, warm cobalt, sunflower gold) that soften harsh saturated primaries into print-grade tones.
@@ -246,6 +251,22 @@ Consumed by `functions/api/websearch.ts` (production) and the `dev-api-endpoints
 - `sessionTurns`: Array<SessionTurnRecord> (persisted in IndexedDB `session_turns`).
 - `chatMessages`: Array<{ id: string, sender: 'user' | 'agent', text: string, timestamp: number }>.
 - `activeDocument`: `{ name: string, pageCount: number, status: 'idle' | 'parsing' | 'indexed' | 'error' } | null`.
+
+### 4. `Canvas2D` Scene Graph (`Canvas2dShape`)
+- `id`: string (unique identifier)
+- `type`: `Canvas2dShapeType` (`rectangle` | `ellipse` | `diamond` | `sticker` | `text` | `freedraw` | `arrow` | `line` | `polygon` | `path` | `container`)
+- `x`, `y`: number (coordinates / translation origin)
+- `width?`, `height?`: number (dimensions)
+- `text?`, `subtitle?`: string (label and micro-badge)
+- `d?`: string (SVG path data)
+- `points?`: Array<[number, number]> (polygon vertices)
+- `strokeDash?`: number[] (e.g. `[6, 4]`)
+- `arrowhead?`: `'filled' | 'open' | 'diamond' | 'none'`
+- `bidirectional?`: boolean
+- `compartments?`: string[] (UML class divisions)
+- `startId?`, `endId?`: string (docking foreign keys)
+- `fillColor?`, `strokeColor?`, `strokeWidth?`, `textColor?`, `fontSize?`: visual properties
+- `roughness?`, `bowing?`, `fillStyle?`, `hachureAngle?`, `hachureGap?`, `curved?`, `palette?`: artistic properties
 
 ## File Structure
 
