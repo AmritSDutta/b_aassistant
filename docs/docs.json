@@ -15,7 +15,7 @@
       },
       {
         "group": "Capabilities",
-        "pages": ["cockpit-ui", "webmcp", "agent-guide", "canvas-and-pdf", "document-processing", "research-tools", "tavily-search", "ddg-search", "sessions-vault"]
+        "pages": ["cockpit-ui", "webmcp", "agent-guide", "canvas-and-pdf", "document-processing", "research-tools", "symbols-and-math", "tavily-search", "ddg-search", "sessions-vault"]
       },
       {
         "group": "Voice Agent",
