@@ -62,7 +62,7 @@ Micro-interactions measurably improve UX and alter time perception — animation
 - [NN/g — Chatbot & AI chat design guidelines](https://www.nngroup.com/articles/ai-chatbots-design-guidelines)
 - [Excalidraw UX teardown — empty states must teach](https://typenorm.com/articles/excalidraw-ux-teardown)
 
-**Implemented:** "agent is thinking" pulse while the last message is from the user; 0.18s message entrance fades; per-message copy button; dropzone drag-over highlight; first-load **WelcomeModal** with a 7-step how-to-use guide (re-openable via the sidebar "tips" link); `prefers-reduced-motion` kill-switch for all animation.
+**Implemented:** clean immediate timeline message logging; 0.18s message entrance fades; per-message copy button; dropzone drag-over highlight; first-load **WelcomeModal** with a 7-step how-to-use guide (re-openable via the sidebar "tips" link); `prefers-reduced-motion` kill-switch for all animation.
 
 ## Supporting references
 - **Chat readability optimum (already met):** 60–75 characters per line with ~1.4–1.6 line-height — bAssistant's Lora 72ch / 1.75 reading column sits at this optimum ([NN/g chatbot guidelines](https://www.nngroup.com/articles/ai-chatbots-design-guidelines), [ai-tldr.dev chatbot UX patterns](https://ai-tldr.dev/learn/building-ai-apps/ai-ux-patterns/chatbot-ux-patterns)).
@@ -77,7 +77,7 @@ Micro-interactions measurably improve UX and alter time perception — animation
 | Zen popup maximize | `ChatArea.tsx` ⤢ expand overlay |
 | Highlights | `ChatArea.tsx` ☆/★, `BlankSlot.tsx` Session Highlights |
 | Progress | `ChatArea.tsx` 2px bar; `App.tsx` session strip |
-| Calm + alive | thinking pulse, entrance fades, copy, drag-over, `WelcomeModal.tsx`, reduced-motion guard |
+| Calm + alive | immediate logging, entrance fades, copy, drag-over, `WelcomeModal.tsx`, reduced-motion guard |
 | High-Efficiency Parsing | `src/lib/liteparseService.ts`, `src/lib/bm25.ts` |
 
 ## 7. Effective Document Parsing & Retrieval (LiteParse & LlamaIndex Research)

@@ -94,8 +94,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     }
   };
 
-  const isThinking = messages.length > 0 && messages[messages.length - 1].sender === 'user';
-
   const renderMessage = (msg: ChatMessage) => (
     <div
       key={msg.id}
@@ -155,19 +153,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     </div>
   );
 
-  const renderThinking = () => (
-    <div className="p-3 rounded-lg bg-[var(--card)] border-l-4 border-l-[var(--accent)] flex items-center gap-2">
-      <span className="font-sans text-[11px]" style={{ color: 'var(--ink-soft)' }}>
-        agent is thinking
-      </span>
-      <span className="flex gap-1">
-        <span className="thinking-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-        <span className="thinking-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-        <span className="thinking-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-      </span>
-    </div>
-  );
-
   const renderStream = (endRef: React.RefObject<HTMLDivElement>) => (
     <div className="flex-1 overflow-y-auto p-4 space-y-4 relative" onScroll={handleScroll}>
       {/* Reading progress: sense of investment while catching up */}
@@ -176,7 +161,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         style={{ width: `${progress}%`, background: 'var(--note)' }}
       />
       {messages.map(renderMessage)}
-      {isThinking && renderThinking()}
       <div ref={endRef} />
     </div>
   );

@@ -43,13 +43,16 @@ describe('ChatArea long-dwell enrichments', () => {
     expect(bar?.style.width).toBe('0%');
   });
 
-  it('shows the thinking shimmer only while the last message is from the user', () => {
+  it('renders user prompt cleanly without any misleading thinking shimmer', () => {
     const { getByText, queryByText, rerender } = render(
       <ChatArea messages={[userMsg]} onSendMessage={() => {}} />
     );
-    expect(getByText('agent is thinking')).toBeTruthy();
+    expect(getByText('Map the system architecture')).toBeTruthy();
+    expect(getByText('user:')).toBeTruthy();
+    expect(queryByText('agent is thinking')).toBeNull();
 
     rerender(<ChatArea messages={[userMsg, agentMsg]} onSendMessage={() => {}} />);
+    expect(getByText('Drawing the diagram now.')).toBeTruthy();
     expect(queryByText('agent is thinking')).toBeNull();
   });
 

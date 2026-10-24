@@ -165,7 +165,7 @@ Source: `research.md` (dwell-time mechanisms 1–6).
 - **Chat popup maximize:** ⤢ expands the dialogue into a full-screen reader (Escape/✕ closes) with the same stream, input, and font controls — the zen reading mode.
 - **Reading comfort:** A- / A+ font steps (15/17/19px) persisted across sessions; 2px reading-progress bar atop the stream for a sense of investment.
 - **Session Highlights:** users star (☆/★) any message; starred messages collect in sidebar Section 3 and clicking one scrolls the dialogue to it — the revisit loop.
-- **Alive-but-calm feedback:** "agent is thinking" pulse while awaiting a reply, 0.18s message entrance fades, per-message copy button, dropzone drag-over highlight, and gentle session strip (messages · highlights · minutes). All motion disabled under `prefers-reduced-motion`.
+- **Alive-but-calm feedback:** 0.18s message entrance fades, per-message copy button, dropzone drag-over highlight, clean immediate message logging, and gentle session strip (messages · highlights · minutes). All motion disabled under `prefers-reduced-motion`.
 
 ### 7. SEO, Crawler Discoverability & Indexing Standards
 - **Meta Description & Content Summary:** Comprehensive `<meta name="description">` defining bAssistant as a 100% private, client-side AI Business Analyst workstation with interactive HTML5 canvas diagramming, local document retrieval, and WebMCP agent tools.
@@ -279,7 +279,7 @@ Acceptance criteria:
 - Keyless Tavily web search with automatic DuckDuckGo fallback.
 - Isolated voice module in `src/voice/` featuring `gemini-3.8-live` full-duplex audio, multi-provider subagents (Google Gemini, OpenAI `gpt-6-luna`/`gpt-5-nano`, Mistral AI, Requesty AI, Ollama Cloud), preflight audio modal, and AES-GCM-256 key encryption.
 - User Preferences manager (`UserPreferencesModal`) storing up to 10 preferences (max 120 chars each) in browser storage.
-- Long-dwell UI layer: warm token dual themes, onboarding WelcomeModal, chat popup maximize, A-/A+ persisted font steps, reading-progress bar, Session Highlights in sidebar Section 3, thinking pulse, copy/star message actions, drag-over dropzone feedback, and session strip.
+- Long-dwell UI layer: warm token dual themes, onboarding WelcomeModal, chat popup maximize, A-/A+ persisted font steps, reading-progress bar, Session Highlights in sidebar Section 3, immediate chat history logging, copy/star message actions, drag-over dropzone feedback, and session strip.
 - Complete WebMCP tool suite (19 tools including `get_current_time` and `get_user_preferences`).
 - Cloudflare Pages deployment configuration.
 - Project documentation:

@@ -113,7 +113,7 @@ Bottom 40% pane of the main workspace, plus a full-screen reader popup:
 - **Symbol Humanization & Sequence Formatting (`symbolHumanizer.ts`):** Transforms LaTeX math notations, arrows (`$\rightarrow$`, `\rightarrow`, `$\to$`, `$\Rightarrow$`, `$\Leftarrow$`, `$\leftrightarrow$`), and comparison/math operators into clean Unicode symbols (`→`, `⇒`, `≤`, `≠`, `×`). Applies `whitespace-pre-line` to preserve multi-line sequence flows (e.g. `Client → Gateway → Service → DB`) on distinct lines rather than collapsing into run-on paragraphs. Protects currency values like `$100` and `$50M`.
 - **Reading-progress bar:** 2px violet bar at the top of the stream tracking scroll position.
 - **Popup maximize:** ⤢ opens the chat as a full-screen reader overlay (same stream/input/controls); Escape or ✕ closes.
-- **Per-message actions:** ☆/★ highlight toggle (violet) and copy-to-clipboard, revealed on hover; "agent is thinking" pulse while the last message is from the user; 0.18s entrance fades (disabled under `prefers-reduced-motion`).
+- **Per-message actions:** ☆/★ highlight toggle (violet) and copy-to-clipboard, revealed on hover; clean immediate timeline message logging (no misleading thinking pulse); 0.18s entrance fades (disabled under `prefers-reduced-motion`).
 - Automatic scrolling (`scrollIntoView({ behavior: 'smooth' })`) to the latest chat turn upon new message arrivals.
 - Multi-line textarea prompt input supporting Enter to submit and Shift+Enter for newlines.
 - Updates chat state and registers messages for `get_chat_history`.
